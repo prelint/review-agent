@@ -180,6 +180,55 @@ double-dispatch. Neither helps with two runs in flight at once.
 **Single run, guaranteed. Concurrent runs, best effort.** If concurrency becomes
 routine, the fix is a lease on the PR, not a shared ledger.
 
+### GitHub is the ledger that survives
+
+`.review-agent/` is gitignored and does not outlive the run, so the *next* run started
+cold: every item took the "No previous hash → New item" row, and `substance_hash` — the
+field built to tell a typo from a new claim — had nothing to compare against. Worse,
+intake skipped `author == SELF`, which threw away the only record of what the last run
+decided. On PR #10 that was six discarded comments, two of them our own prior verdicts.
+
+The record was already there. Stage 5 replies in every thread and resolves what it
+fixed, so Stage 1 rebuilds the last ledger by parsing its own markers back. The
+alternative was committing the ledger to the repo, which puts run state in the diff of
+every PR it reviews and makes two concurrent runs fight over a tracked file. GitHub
+already stores exactly this, keyed by comment, visible to a human, and free.
+
+`SELF` comes from `gh api user --jq .login`, and a marker counts only where all three of
+authorship, position and shape agree: `author == SELF`, in the comment's trailer and not
+inside a quote, parseable JSON. The first draft required the marker alone, on the reasoning that a human
+running this under their own token has their own comments arrive as `SELF`. That reasoning
+is right and the rule it produced was not — it made the marker sufficient rather than
+necessary, so anyone able to comment could mint one, and `substance_hash` is computable
+from a public body and a pinned `normalise()`. A forged `fixed` would have closed a
+reviewer's blocker without touching the code.
+
+Position carries the rest. GitHub's Quote reply copies our body, HTML comments included,
+into somebody else's words, and under a human token those words arrive as `SELF` too.
+Requiring the trailer, and rejecting `>`-quoted lines, separates a record we wrote from a
+record someone quoted. The first draft of this said "last line", which was wrong in the
+other direction: the summary carries a dozen markers and only one can be last, so it
+silently read one and dropped the rest.
+
+The residual is an account compromise, which is already game over. There is no signing
+key here because there is nowhere to keep one: `DESIGN.md` bans home-directory state, and
+a secret in the repo is not a secret.
+
+## The ledger holds our findings too
+
+Nine findings, nine commits, and `.review-agent/pr-10.json` recorded none of them. The
+file had one array, `items`, so intake had a ledger and the review did not. A finding
+cut by the five-finding cap or suppressed by the silence rule left no trace anywhere,
+and `surviving_blockers` was an integer Stage 4 decremented by hand with nothing
+checking a decrement against a real fix.
+
+So `findings` is a second array in the same file, reconciled the same way. The
+alternative was a separate artifact for our side of the review; it lost because Stage 5
+would then have two files to close and one of them to forget. The blocker count is now
+computed from that array — `BLOCKER`, and neither `fixed` nor `rebutted` — instead of
+maintained beside it, for the same reason the run count below is not written here as a
+number.
+
 ## Why the gate is two filters, not one
 
 Stage 3 runs them in series because they catch different things.

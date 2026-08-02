@@ -29,11 +29,19 @@ DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
 HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
                                            # Stage 4 commits, so it is stale after that
+SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
+                                           # prior comments to rebuild the last ledger
 LEDGER=".review-agent/pr-${PR}.json"
 ```
 
 Confirm `DIFF_BASE` resolves and `git diff "$DIFF_BASE" --stat` is non-empty. Fail
 here, in the parent, rather than inside eight subagents that each rediscover it.
+
+**Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
+or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — and the
+substitution leaves the empty string with nothing to catch it. Both duplicate-review
+guards compare against `SELF`, so an empty one makes them match nothing, and the fleet
+posts a fresh full review on an unchanged head every hour with no signal anywhere.
 
 If the PR is closed or merged, stop. Say so and stop.
 
@@ -52,13 +60,19 @@ The short version, because getting it wrong is how the last one failed:
 - Read all four surfaces: top-level comments, inline comments, **review bodies**,
   and **the PR description**.
 - Content-hash each surface so a no-op edit does not re-trigger and a real one does.
+- **Rebuild the previous ledger** from the markers on our own prior comments before
+  classifying. Do not skip them — they are the only record that survives a run.
 
-Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, each
-with `id`, `author`, `surface`, `state`, `path`, `line`, `thread_id`, `body_hash`,
-`substance_hash`, and a `claims` array. **Status lives on a claim, never on the item** —
+Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, in the
+schema `reference/intake.md` defines. That file owns the field list; a second copy here
+would drift from it. **Status lives on a claim, never on the item** —
 one comment carrying fourteen numbered points is fourteen claims with fourteen statuses,
 and an item closes when every one of them does. Everything downstream is measured
 against this file.
+
+The ledger's second array, `findings`, is ours. Stage 1 writes it empty, Stage 3 fills
+it, Stage 4 and Stage 5 close it. Our findings get a status for the same reason
+reviewers' claims do.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
@@ -146,6 +160,10 @@ downgrade: label it and say what you would need to check it. `Blocker:` requires
 know the condition is reachable for reasons the diff does not show. A downgrade with
 no stated condition is a review bug; send it back.
 
+**Stage 3 ends by writing every survivor into the ledger's `findings` array**, one
+entry each at `status: "open"`, carrying its fingerprint, category, severity and score.
+A finding that is not in the ledger is one nothing can hold you to.
+
 ---
 
 ## Stage 4: Fix — one finding, one commit
@@ -169,11 +187,11 @@ Commit immediately. Do not batch. Do not defer to a later "ship" step. An interr
 run must leave a clean tree, and `git log` must be a complete answer to "did you
 address this?".
 
-**A blocker you fix stops being a blocker.** Decrement `surviving_blockers` in the
-ledger in the same step that commits the fix. Stage 3 writes what survived the gate and
-nothing else lowers it, so an unlowered count reaches Stage 5 and posts `failure` on a
-head with nothing left wrong. The field is blockers still unfixed, not a record of what
-Stage 3 found.
+**A blocker you fix stops being a blocker.** Set that finding's `status` to `fixed`
+with its commit SHA in the same step that commits. The blocker count is derived from
+those statuses, so there is nothing to decrement and no way for the count to drift from
+what `git log` shows. Only `fixed` and `rebutted` stop something blocking: a blocker you
+post or defer is still unfixed and still counts.
 
 **Fix every instance the finding reaches.** Correcting a pattern in one file and
 leaving its copies is not a smaller fix, it is a half-migration — and the un-migrated
@@ -207,7 +225,9 @@ Read `reference/output.md`. In order:
    SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
    `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
    but its thread ID is null). An item is closed when all of its claims are; one claim
-   still `open` means Stage 5 is not done.
+   still `open` means Stage 5 is not done. **Then reconcile `findings` the same way** —
+   all five endings settle here, `posted` and `dropped` included, because the commit
+   status in step 5 counts anything still `open`. Step 7 posts what is marked `posted`.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
 4. **Never report success with an open item or a surviving `Blocker:`.** That refusal
@@ -228,8 +248,9 @@ Read `reference/output.md`. In order:
 - At most **5 non-blocking findings** posted. More than that, give a count.
 - Severity prefix on every finding: `Blocker:` / `Required:` / `Nit:` / `FYI:`.
   Unlabelled feedback reads as mandatory and wastes the author's time.
-- Every finding carries `<!-- review-agent: category=<c> fingerprint=<f> score=<n> -->`
-  so it can be found again. It does not render.
+- Every finding carries an invisible marker so the next run can find it again, and the
+  summary carries one per item without a thread. `reference/output.md` owns the format —
+  it writes them, and a second copy here would drift from it.
 
 ### Writing
 

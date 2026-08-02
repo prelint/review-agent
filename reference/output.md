@@ -74,6 +74,43 @@ missing.` Never let it read as complete. Never invent a thread ID.
 Verify `fixed` claims against `git log`, not against your own memory of having made
 the edit. The commit must exist.
 
+### Our own findings
+
+The `findings` array reconciles too, and nothing in it stays `open` either. `intake.md`
+owns the five endings and what each means; a second definition here would drift from it,
+exactly as the item schema did. What belongs to Stage 5 is the evidence bar: `fixed`
+needs a commit SHA that exists in `git log`, `deferred` needs a reason and an issue link,
+`rebutted` needs the evidence quoted. `posted` and `dropped` need the decision below.
+
+**All five settle here, including `posted` and `dropped`.** What the summary carries is
+computable before it is written — severity, the five-finding cap, and whether anything
+blocks — so decide it in this section and let section 7 post exactly what is marked
+`posted`. Settling them at section 7 puts them after section 5's counters, which read
+`status`: every run that posted a finding would then count it open and red a clean head.
+
+`dropped` is the ending the author never reads, so it is the one that has to record why.
+Three causes, all legitimate:
+
+- **The cap.** Section 7's "plus N similar" line is the count; a `dropped` finding
+  missing from it has vanished.
+- **Silence.** Section 7 posts nothing when nothing blocks and every item is closed, so
+  an unfixed `Required:` is dropped by it too — not only nits. Silence is a decision not
+  to spend the author's attention, never a decision to forget.
+- **Dedupe.** `verification.md` suppresses a finding matching a reviewer's ledger item or
+  one we posted on an earlier run. Record which it merged into.
+
+A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
+that nothing blocking survived, and dedupe never suppresses a blocker.
+
+**Stamp `reconciled_at_head` when reconciliation finishes**: `git rev-parse HEAD`, never
+`$HEAD_SHA`. Stage 0 bound that before Stage 4 committed anything, so the two fields
+together record how far the head moved under the review.
+
+**Say it when the two differ**, in the summary's verdict line: the head moved while the
+review ran and the verdict is against the later one. The ledger holding both is
+gitignored and dies with the run, so a field nobody ever reads out loud is a field that
+did not survive to be read.
+
 ## 3. Re-check eligibility
 
 Before writing anything public:
@@ -82,8 +119,9 @@ Before writing anything public:
 gh pr view "$PR" --json state,mergedAt,baseRefName,isDraft
 ```
 
-Stop if closed, merged, or the base branch changed. Posting a review into a merged PR
-is pure noise and it happened in the record.
+Stop if closed, merged, or the base branch changed — changed against the ledger's
+`base`, which Stage 0 bound and the diff was taken against. Posting a review into a
+merged PR is pure noise and it happened in the record.
 
 ## 4. Refuse to report success
 
@@ -120,12 +158,15 @@ has blocked every clean head:
 
 ```bash
 OPEN_CLAIMS=$(python3 -c 'import json,sys
-closed = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
-print(sum(1 for i in json.load(open(sys.argv[1]))["items"]
-           for c in i["claims"] if c["status"] not in closed))' "$LEDGER")
+led = json.load(open(sys.argv[1]))
+closed_claim   = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
+closed_finding = {"fixed", "posted", "deferred", "rebutted", "dropped"}
+print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in closed_claim)
+    + sum(1 for f in led.get("findings", []) if f.get("status") not in closed_finding))' "$LEDGER")
 
 BLOCKERS=$(python3 -c 'import json,sys
-print(json.load(open(sys.argv[1]))["surviving_blockers"])' "$LEDGER")
+print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
+          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER")
 
 if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
@@ -143,14 +184,28 @@ has the same defect plus one more: the commit it names is not on the remote yet.
 **Both counts come from the ledger, never from memory.** `$OPEN_CLAIMS` is every claim
 whose status is not one of the five section 2 accepts — **claims, because that is where
 status lives**; an item carries none, and `i["status"]` raises `KeyError` on every
-ledger `intake.md` describes. `$BLOCKERS` is `surviving_blockers`, which Stage 3 writes
-and Stage 4 decrements as it fixes. Read it after Stage 4, never before — the count
-that survived the gate is not the count still open, and posting the first one reds a
-head where every blocker is already fixed. Section 7's silence rule is a separate
-question and keeps its Stage 3 wording: a blocker found and fixed still gets said out
-loud. An unassigned counter makes `[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else`
-branch posts `failure` on a clean head — the exact defect this section exists to
-prevent.
+ledger `intake.md` describes — plus every finding of ours still open. `$BLOCKERS` is
+derived from that same array: `BLOCKER` findings that are neither `fixed` nor
+`rebutted`. Nothing decrements it, so it cannot disagree with the statuses it is
+computed from.
+
+`closed_finding` is `intake.md`'s five endings, spelled out because bash cannot read a
+table. Add a sixth status there and not here and every finding carrying it counts as
+open, which reds a clean head — the one place the two-copies rule could not be avoided,
+so it is the one place to check when a status is added.
+
+**Both read the ledger with `.get`, never `[]`.** A ledger written before `findings`
+existed, or by a run that stopped early, raises `KeyError` on a subscript; the counter
+captures empty, `[ "" -eq 0 ]` is a bash error, and the `else` branch posts `failure` on
+a head with nothing left wrong. A missing array is zero findings, which is the honest
+reading and the one that keeps the status truthful.
+
+Compute both after Stage 4, never before — the count that survived the gate is not the
+count still open, and posting the first one reds a head where every blocker is already
+fixed. Section 7's silence rule is a separate question and keeps its Stage 3 wording: a
+blocker found and fixed still gets said out loud. An unassigned counter makes
+`[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a clean
+head — the exact defect this section exists to prevent.
 
 `success` needs both at zero — exactly the condition section 4 refuses to report
 success without, so the status cannot disagree with the summary.
@@ -168,9 +223,28 @@ repository, and a required check that nothing reliably posts blocks every merge.
 Inline findings get inline replies **on their own thread**, never as a top-level
 comment:
 
+**Never interpolate a body into a shell command.** Build the JSON in `python3` and pipe
+it in. Replies quote code, so they carry backticks, and `-f body="$REPLY"` hands those to
+the shell: this file's own review posted three replies whose every quoted term had been
+deleted by command substitution, marker intact and sentences gutted.
+
 ```bash
-gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" -f body="$REPLY"
+python3 -c 'import json,sys; print(json.dumps({"body": sys.stdin.read()}))' < reply.md \
+  | gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" --input -
 ```
+
+To update a comment already posted, same payload with `--method PATCH`. **The endpoint
+depends on which kind it is, and the two ID spaces do not overlap:**
+
+| Comment | PATCH |
+|---|---|
+| an inline reply on a thread | `repos/$REPO/pulls/comments/$REPLY_ID` |
+| the summary, and any top-level comment | `repos/$REPO/issues/comments/$COMMENT_ID` |
+
+The summary is an issue comment, not a review comment. Sending its ID to
+`pulls/comments` returns 404 — checked against this repo — and the summary is edited on
+every run, so getting this wrong breaks the carrier for `top` items, `review` items, the
+PR description and every finding, on the second run of every PR.
 
 Reply templates — keep them this short:
 
@@ -180,6 +254,38 @@ Reply templates — keep them this short:
 
 Never open with "Thanks", "Good catch", or "You're absolutely right". State the fix.
 The commit shows you heard it.
+
+### The marker
+
+**Every reply ends with one marker, in its trailer.** It is the next run's ledger;
+`$LEDGER` is gitignored and does not survive. Without it the next run sees a resolved
+thread and an unchanged hash and still cannot tell what was decided, so it re-opens the
+item and does the work again.
+
+```html
+<!-- review-agent: {"item":3640790504,"substance":"sha256:9f2a...","claims":{"1":{"status":"fixed","sha":"abc123f"},"2":{"status":"deferred","issue":42}}} -->
+```
+
+**JSON, and only constrained values** — ids, hex, status words, issue numbers. No prose,
+ever. The delimited form this replaced (`claims=1:fixed:abc,2:rebutted`) broke on the
+first resolution containing a comma or a colon, which a deferral's issue URL always does.
+Evidence and reasons live in the reply text, where a human reads them; the marker carries
+only what the next run has to parse.
+
+**In the trailer, because position is half the trust rule.** `intake.md` reads a marker
+only from a `SELF` comment where every line after it is another marker or blank, and no
+line of it is `>`-quoted. Put markers at the very bottom, after the last visible line,
+with nothing under them. A reply carries one; the summary carries many.
+
+**Edit the existing reply; never post a second one.** A thread carries exactly one
+marker-bearing reply of ours, updated in place, so there is no accumulation and no
+tiebreak to get wrong.
+
+**Reply only when something moved** — the claim's status, or the item's `substance_hash`,
+since the marker already on that thread. A rebuttal and a deferral are never resolved, by
+the rule below, so their threads stay open forever: without this test an hourly fleet
+posts an identical reply to each of them every hour, against a shared secondary rate
+limit, and every run afterwards pages the grown comment set back in.
 
 ### Resolve threads
 
@@ -224,11 +330,47 @@ work is done, the PR still looks unaddressed, and nothing says why.
 Otherwise, one top-level comment. Hard caps:
 
 - **2,000 characters.** Not a target — a limit.
-- **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed."
+- **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
+  one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
 - Every finding carries an invisible marker so it can be found again later:
-  `<!-- review-agent: category=<c> fingerprint=<f> score=<n> -->`. Without it,
-  category is unrecoverable from a posted comment and calibration is impossible.
+  `<!-- review-agent: {"fingerprint":"<f>","category":"<c>","score":88,"severity":"REQUIRED","status":"posted"} -->`.
+  `severity` and `status` are not optional — section 5's counters read exactly those two
+  fields off every finding, and a rebuilt finding missing them counts as neither open nor
+  closed. Without the marker, category is unrecoverable from a posted comment and
+  calibration is impossible.
+- **A status with a destination carries it.** `"status":"deferred","issue":42` and
+  `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
+  `rebutted` need nothing more: the reason is the visible text beside the marker. A
+  status restored without its destination is a status nothing can act on — a deferral
+  whose issue is unrecoverable reads as handled and points nowhere.
+
+### The summary is one comment per PR, edited in place
+
+Post it once and **edit that same comment on later runs**. It is the carrier for
+everything without a thread: `top` items, `review` items, the PR description, and every
+finding whose ending `git` cannot show. Each gets one marker, in the trailer.
+
+**A `fixed` finding is recovered from `git log`, not from a marker.** Stage 4 writes
+`Finding: <specialist>/<fingerprint>` into the commit that fixes it, so
+`git log --fixed-strings --grep="<fingerprint>"` on the current branch answers both questions
+at once: whether we fixed it, and whether the fix is still here. A force-push or a dropped
+rebase takes the commit and the grep result together, and the finding re-opens.
+
+That is the ancestry check the claim side does by hand, for free and with no SHA to keep
+in sync — which is why the marker has no resolution field for `fixed`. Putting one there
+would be a second copy of something `git log` already holds, and the copy is the half that
+goes stale.
+
+An inline comment has a thread to reply in. The other three surfaces have none, so a
+second top-level comment per run is the only alternative, and that is the noise the
+2,000-character cap exists to stop. Bots in this record already work this way — one
+summary, edited on each run — which is why intake watermarks on `updated_at`.
+
+**When silence suppresses the summary and no prior one exists, nothing carries.** Those
+items re-verify on the next run at the cost of one verification pass. That is the price
+of not announcing a clean review, and it is the right way round: a wasted pass, never a
+wrong answer.
 
 ### Shape
 
