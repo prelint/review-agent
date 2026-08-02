@@ -68,11 +68,16 @@ evidence decides, not the login.
 
 ## Status
 
-Ran end to end once, on its own PR #10. Found eight things, fixed eight, one commit
-each. One was a blocker: three lenses would have silently skipped themselves.
+Every run has been on this repo, most on its own PR #10. For the count, ask git:
+`git log --grep='Finding:' | wc -l`. A number written here goes stale inside a day — the
+last one did, and disagreed with [`docs/DESIGN.md`](docs/DESIGN.md).
 
-Stages 1–3 have run many times. Stage 4 has run once. A clean result means the lenses
-found nothing, not that the pipeline is proven — don't use it as a merge gate yet.
+The first end-to-end run found eight things and fixed eight, one commit each. One was a
+blocker: three lenses would have silently skipped themselves.
+
+Stage 4 has never run against an unfamiliar codebase — different test environment,
+different layout, a failing test it has to write. A clean result means the lenses found
+nothing, not that the pipeline is proven. Don't use it as a merge gate yet.
 
 Not built: per-repo overrides, and calibration
 ([`reference/calibration.md`](reference/calibration.md) says plainly what is missing).

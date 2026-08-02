@@ -348,9 +348,11 @@ price is eighteen calls on a one-line diff. On this repo that is the right trade
 high-volume repository it may not be, and a fast-path bypass for trivially small diffs
 is the obvious lever — a deployment question, not a design one. Not built.
 
-**Stage 4 has run twice, both on this repo.** Sequencing works at small n on a codebase
+**Stage 4 has only ever run on this repo.** Sequencing works at small n on a codebase
 the agent knows. That is not evidence it works on an unfamiliar one, and a clean result
-still means the lenses found nothing rather than that the pipeline is proven.
+still means the lenses found nothing rather than that the pipeline is proven. The count
+is `git log --grep='Finding:'` and is not kept here as a number: it was written as a
+number twice, in two files, and the two disagreed within half an hour.
 
 ## Calibration
 
