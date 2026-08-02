@@ -71,7 +71,7 @@ A finding posted today must be identifiable months later by a process that was n
 running when it was posted. One invisible marker does it:
 
 ```html
-<!-- review-agent: category=tenancy fingerprint=backend/apps/billing/services.py:142:tenancy score=88 -->
+<!-- review-agent: category=tenancy fingerprint=backend/apps/billing/services.py:charge_org:tenancy score=88 -->
 ```
 
 HTML comments do not render on GitHub. Without this, category is unrecoverable from a

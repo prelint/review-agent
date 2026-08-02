@@ -132,7 +132,9 @@ dies here.
 
 ## Dedupe
 
-Findings carry a `fingerprint` of `path:line:category`.
+Findings carry a `fingerprint` of `path:anchor:category` — a greppable symbol, never a
+bare line number, because the key has to survive code moving above it. See
+`specialists/_schema.md`.
 
 - Same fingerprint from two specialists → keep the one with better evidence, record
   both categories on it.
