@@ -82,13 +82,12 @@ Dispatch specialists in parallel, one subagent each. Every specialist reads
 `specialists/_schema.md` first, then its own file, and returns findings in the
 schema's JSON — one object per line, nothing else.
 
-**Always on:** `coherence`, `spec-drift`, `silent-failure`.
+**Always on:** `coherence`, `correctness`, `spec-drift`, `silent-failure`,
+`maintainability`, `testing`.
 
 **Dispatch only specialists whose file exists.** Check before dispatching; a missing
 file is a skip, not an error, and the summary must name what was skipped. Coverage you
-do not have is coverage you say you do not have. `correctness`, `security`, `testing`,
-`performance`, `maintainability`, `api-contract` and `data-migration` are not written
-yet — see the README — so today they always skip.
+do not have is coverage you say you do not have.
 
 **Conditional**, on the paths the diff touches:
 
@@ -101,7 +100,7 @@ yet — see the README — so today they always skip.
 | `infra-deploy` | CDK, Terraform, CI workflows, Dockerfiles, deploy scripts |
 | `data-migration` | migrations, schema changes, backfills |
 | `api-contract` | routes, schemas, serialisers, generated clients |
-| `performance` | queries in loops, list endpoints, render paths |
+| `performance` | queries in loops, list endpoints, render paths, serialisation, cache use |
 | `resource-limits` | request handlers, background jobs, queue consumers, loops over customer input, shared-table queries, external calls |
 | `llm-pipeline` | prompts, model calls, evals, token budgets |
 | `observability` | new failure paths, new background work, new external calls |

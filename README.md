@@ -59,7 +59,14 @@ Written: [`tenancy`](specialists/tenancy.md), [`money`](specialists/money.md),
 [`silent-failure`](specialists/silent-failure.md),
 [`resource-limits`](specialists/resource-limits.md),
 [`coherence`](specialists/coherence.md),
-[`red-team`](specialists/red-team.md).
+[`red-team`](specialists/red-team.md),
+[`correctness`](specialists/correctness.md),
+[`security`](specialists/security.md),
+[`testing`](specialists/testing.md),
+[`performance`](specialists/performance.md),
+[`maintainability`](specialists/maintainability.md),
+[`api-contract`](specialists/api-contract.md),
+[`data-migration`](specialists/data-migration.md).
 
 The first nine fill gaps that produced real bugs in the record and that no existing
 library covered. `docs/DESIGN.md` names the bug behind each one.
@@ -73,17 +80,11 @@ list. It runs on risk surface, never on diff size.
 ## Status
 
 Done: design, `SKILL.md`, all four `reference/` files, the specialist contract, and
-the eleven specialists above.
+the eighteen specialists above.
 
-**Not yet written** — `SKILL.md` dispatches these and the files do not exist:
-`correctness`, `security`, `testing`, `performance`, `maintainability`,
-`api-contract`, `data-migration`. They are ports of the previous set, rewritten to
-`specialists/_schema.md`. Until they land, Stage 2 skips them and names the skip in
-its summary.
-
-**Do not treat this as a merge gate yet.** `security` and `correctness` are among the
-missing lenses, so a clean review currently means "the nine written lenses found
-nothing", not "this was reviewed". That is fine for a fleet reading the skip notice;
+**It has still never been run end to end.** Every review so far has been by hand or by
+an external bot. A clean result means the lenses found nothing, not that the pipeline
+works. Treat it as a merge gate only after it has run on real PRs;
 it is misleading to a human treating a green review as approval.
 
 Also outstanding: a `REVIEW.md`-style per-repo override, and `comment-analyzer` /
