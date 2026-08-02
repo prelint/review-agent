@@ -144,8 +144,17 @@ bare line number, because the key has to survive code moving above it. See
   again.** Link the ledger item and handle it there. Restating a bot's finding back
   at it was a real source of noise.
 - Same fingerprint as a finding **we** posted on an earlier run → do not post it again.
-  `intake.md`'s previous-run load puts it in the ledger; carry its status forward. A
-  fleet reviewing the same PR every hour otherwise re-posts the same nit every hour.
+  `intake.md`'s previous-run load puts it in the ledger with the status its marker
+  carries; carry that forward. A fleet reviewing the same PR every hour otherwise
+  re-posts the same nit every hour.
+  **A `BLOCKER` is never suppressed this way.** Post it again and reconcile it again: a
+  blocker that was posted and not fixed is still blocking, and the marker it matched is a
+  public comment anyone can write. Silencing a blocker on a fingerprint match would let a
+  PR author retire review of their own code by pasting one line.
+
+Every suppression above is a real ending, so record it: the finding is `dropped`, with
+the ledger item or the fingerprint it merged into. A suppressed finding with no status
+sits `open` forever and reds a clean head.
 
 ---
 

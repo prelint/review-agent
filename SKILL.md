@@ -37,6 +37,12 @@ LEDGER=".review-agent/pr-${PR}.json"
 Confirm `DIFF_BASE` resolves and `git diff "$DIFF_BASE" --stat` is non-empty. Fail
 here, in the parent, rather than inside eight subagents that each rediscover it.
 
+**Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
+or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — and the
+substitution leaves the empty string with nothing to catch it. Both duplicate-review
+guards compare against `SELF`, so an empty one makes them match nothing, and the fleet
+posts a fresh full review on an unchanged head every hour with no signal anywhere.
+
 If the PR is closed or merged, stop. Say so and stop.
 
 ---

@@ -560,6 +560,10 @@ does not change, only the place the status sits.
 | `split_branch` | Stage 1 | which branches of the claim split fired, so the count check is auditable afterwards |
 | `reconciled_at_head` | Stage 5 | the SHA reconciliation ran against — `head_sha` is Stage 0's and Stage 4 has committed since |
 
+A sixth invented field, `skipped_self`, is deliberately not here. It recorded the
+comments the old classify step threw away; nothing is thrown away now, and `prior`
+records what was read instead.
+
 **A field a run needs and this schema lacks is a bug here.** All five above were
 invented at runtime before they were written down, and one earlier run parked a claim in
 an `embedded_claims` field that has never existed. Add the field, or delete the rule

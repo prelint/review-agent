@@ -76,15 +76,11 @@ the edit. The commit must exist.
 
 ### Our own findings
 
-The `findings` array reconciles too, and nothing in it stays `open` either.
-
-| Status | Requires |
-|---|---|
-| `fixed` | a commit SHA that exists in `git log` |
-| `posted` | the finding appears in the summary comment this stage writes |
-| `deferred` | a reason **and** an issue link |
-| `rebutted` | the evidence disproving our own claim, quoted |
-| `dropped` | which of section 7's two rules kept it out of the summary |
+The `findings` array reconciles too, and nothing in it stays `open` either. `intake.md`
+owns the five endings and what each means; a second definition here would drift from it,
+exactly as the item schema did. What belongs to Stage 5 is the evidence bar: `fixed`
+needs a commit SHA that exists in `git log`, `deferred` needs a reason and an issue link,
+`rebutted` needs the evidence quoted. `posted` and `dropped` need the decision below.
 
 **All five settle here, including `posted` and `dropped`.** What the summary carries is
 computable before it is written — severity, the five-finding cap, and whether anything
@@ -92,18 +88,28 @@ blocks — so decide it in this section and let section 7 post exactly what is m
 `posted`. Settling them at section 7 puts them after section 5's counters, which read
 `status`: every run that posted a finding would then count it open and red a clean head.
 
-`dropped` is the ending the author never reads, and it has two legitimate causes. The
-five-finding cap: the "plus N similar" line is the count, and a `dropped` finding
-missing from it has vanished. Silence: a run whose only findings are `Nit:`/`FYI:`
-posts nothing, and those findings still get recorded here. Silence is a decision not to
-spend the author's attention, never a decision to forget.
+`dropped` is the ending the author never reads, so it is the one that has to record why.
+Three causes, all legitimate:
 
-A `BLOCKER` is never `dropped` — the cap is on non-blocking findings, and silence
-requires that nothing blocking survived.
+- **The cap.** Section 7's "plus N similar" line is the count; a `dropped` finding
+  missing from it has vanished.
+- **Silence.** Section 7 posts nothing when nothing blocks and every item is closed, so
+  an unfixed `Required:` is dropped by it too — not only nits. Silence is a decision not
+  to spend the author's attention, never a decision to forget.
+- **Dedupe.** `verification.md` suppresses a finding matching a reviewer's ledger item or
+  one we posted on an earlier run. Record which it merged into.
+
+A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
+that nothing blocking survived, and dedupe never suppresses a blocker.
 
 **Stamp `reconciled_at_head` when reconciliation finishes**: `git rev-parse HEAD`, never
 `$HEAD_SHA`. Stage 0 bound that before Stage 4 committed anything, so the two fields
-together are the only record of how far the head moved under the review.
+together record how far the head moved under the review.
+
+**Say it when the two differ**, in the summary's verdict line: the head moved while the
+review ran and the verdict is against the later one. The ledger holding both is
+gitignored and dies with the run, so a field nobody ever reads out loud is a field that
+did not survive to be read.
 
 ## 3. Re-check eligibility
 
@@ -182,6 +188,11 @@ ledger `intake.md` describes — plus every finding of ours still open. `$BLOCKE
 derived from that same array: `BLOCKER` findings that are neither `fixed` nor
 `rebutted`. Nothing decrements it, so it cannot disagree with the statuses it is
 computed from.
+
+`closed_finding` is `intake.md`'s five endings, spelled out because bash cannot read a
+table. Add a sixth status there and not here and every finding carrying it counts as
+open, which reds a clean head — the one place the two-copies rule could not be avoided,
+so it is the one place to check when a status is added.
 
 **Both read the ledger with `.get`, never `[]`.** A ledger written before `findings`
 existed, or by a run that stopped early, raises `KeyError` on a subscript; the counter
