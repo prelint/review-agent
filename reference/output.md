@@ -354,8 +354,18 @@ For that third case only:
   land in section 7's line even on an otherwise silent run.
 - **A `rebutted`, `deferred` or `informational` claim keeps its status.** `unresolvable`
   requires a commit SHA and section 2 bars it without one. Those claims are correctly
-  decided; what failed is telling the author. Report that separately, with the same URLs,
-  so it cannot pass as delivered.
+  decided; what failed is telling the author.
+
+**Record the failure on the claim, not in the status.** Set `delivery: "failed"` with the
+URL on any claim whose reply or resolve errored, whatever its status. Status says what we
+decided; `delivery` says whether the author was told, and the two are independent.
+
+Routing this through `unresolvable` alone loses exactly the claims that cannot take it.
+Four inline comments, two rebutted and two deferred, every reply erroring: each claim
+keeps a status section 5 counts as closed, no claim is `unresolvable`, so the status posts
+`success`, section 7 stays silent, and four reviewer comments got no answer on a PR that
+reads as handled. That is what `unresolvable` was invented to prevent, reached by the
+other door.
 
 If the summary comment itself cannot be posted, say so in the session output and exit
 non-zero. There is nowhere left to write it down, and a review nobody can see must not
@@ -394,12 +404,18 @@ enough:
 
 ```
 N item(s) fixed but not resolvable — thread ID missing: <urls>. Close them by hand.
-N item(s) fixed but not resolvable — reply failed: <urls>. Close them by hand.
+N reply/resolve call(s) failed, so these were decided but not answered: <urls>.
 ```
 
 **One line per cause, never one line for all of them.** The remediation differs — a
-missing thread ID is information that is gone, a 403 is a token to change — and a single
-label over a mixed set sends the maintainer to check the wrong thing.
+missing thread ID is information that is gone, an errored call is something to retry — and
+a single label over a mixed set sends the maintainer to check the wrong thing. The second
+line is not "fixed but not resolvable": the claims on it may be rebuttals or deferrals,
+and calling those fixed would be worse than saying nothing.
+
+**A third exception: any claim carrying `delivery: "failed"`.** Same reason as the other
+two. The decision is sound and the author never heard it, so silence would report a
+conversation that did not happen.
 
 Silence here would be a lie of exactly the kind the ledger exists to prevent: the
 work is done, the PR still looks unaddressed, and nothing says why.

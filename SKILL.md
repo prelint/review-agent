@@ -108,8 +108,9 @@ Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
 `**Runs when**` clause it tests against the diff — and answers in one of the kinds
 `specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
 
-**A lens answered only if its response parses**: every line is JSON, and the last one is
-a terminal kind. Anything else is a dead lens — empty, truncated mid-line, or prose.
+**A lens answered only if its response parses**: every line is JSON, and it ends in a
+terminal kind — or in a `cleared` object, which is `red-team`'s complete answer when it
+found nothing. Anything else is a dead lens: empty, truncated mid-line, or prose.
 Keying this on emptiness alone would miss the commoner shape, a subagent killed at its
 output cap after emitting two findings of five: the response is non-empty, so it passes
 as complete, and the three that never arrived are invisible.
