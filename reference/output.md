@@ -225,17 +225,36 @@ Reply templates — keep them this short:
 Never open with "Thanks", "Good catch", or "You're absolutely right". State the fix.
 The commit shows you heard it.
 
-**Every reply ends with one marker.** It is the next run's ledger; `$LEDGER` is
-gitignored and does not survive.
+### The marker
+
+**Every reply ends with one marker, as its last line.** It is the next run's ledger;
+`$LEDGER` is gitignored and does not survive. Without it the next run sees a resolved
+thread and an unchanged hash and still cannot tell what was decided, so it re-opens the
+item and does the work again.
 
 ```html
-<!-- review-agent: item=3640790504 substance=sha256:9f2a… claims=1:fixed:abc123f,2:rebutted,3:deferred:#42 -->
+<!-- review-agent: {"item":3640790504,"substance":"sha256:9f2a...","claims":{"1":{"status":"fixed","sha":"abc123f"},"2":{"status":"deferred","issue":42}}} -->
 ```
 
-One line per item, carrying the `substance_hash` the decision was made against and every
-claim's status with its SHA or issue link. Without it the next run sees a resolved
-thread and an unchanged hash and still cannot tell what was decided, so it re-opens the
-item and does the work again. `intake.md` parses it.
+**JSON, and only constrained values** — ids, hex, status words, issue numbers. No prose,
+ever. The delimited form this replaced (`claims=1:fixed:abc,2:rebutted`) broke on the
+first resolution containing a comma or a colon, which a deferral's issue URL always does.
+Evidence and reasons live in the reply text, where a human reads them; the marker carries
+only what the next run has to parse.
+
+**Last line, because position is half the trust rule.** `intake.md` reads a marker only
+from a `SELF` comment whose last line it is — a Quote reply copies our body, HTML
+comments included, into someone else's words.
+
+**Edit the existing reply; never post a second one.** A thread carries exactly one
+marker-bearing reply of ours, updated in place, so there is no accumulation and no
+tiebreak to get wrong.
+
+**Reply only when something moved** — the claim's status, or the item's `substance_hash`,
+since the marker already on that thread. A rebuttal and a deferral are never resolved, by
+the rule below, so their threads stay open forever: without this test an hourly fleet
+posts an identical reply to each of them every hour, against a shared secondary rate
+limit, and every run afterwards pages the grown comment set back in.
 
 ### Resolve threads
 
@@ -284,8 +303,27 @@ Otherwise, one top-level comment. Hard caps:
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
 - Every finding carries an invisible marker so it can be found again later:
-  `<!-- review-agent: category=<c> fingerprint=<f> score=<n> -->`. Without it,
-  category is unrecoverable from a posted comment and calibration is impossible.
+  `<!-- review-agent: {"fingerprint":"<f>","category":"<c>","score":88,"severity":"REQUIRED","status":"posted"} -->`.
+  `severity` and `status` are not optional — section 5's counters read exactly those two
+  fields off every finding, and a rebuilt finding missing them counts as neither open nor
+  closed. Without the marker, category is unrecoverable from a posted comment and
+  calibration is impossible.
+
+### The summary is one comment per PR, edited in place
+
+Post it once and **edit that same comment on later runs**. It is the carrier for
+everything without a thread: `top` items, `review` items, the PR description, and every
+finding. Each gets one marker, below the visible text.
+
+An inline comment has a thread to reply in. The other three surfaces have none, so a
+second top-level comment per run is the only alternative, and that is the noise the
+2,000-character cap exists to stop. Bots in this record already work this way — one
+summary, edited on each run — which is why intake watermarks on `updated_at`.
+
+**When silence suppresses the summary and no prior one exists, nothing carries.** Those
+items re-verify on the next run at the cost of one verification pass. That is the price
+of not announcing a clean review, and it is the right way round: a wasted pass, never a
+wrong answer.
 
 ### Shape
 
