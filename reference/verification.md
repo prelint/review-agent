@@ -97,10 +97,19 @@ judge.
 
 **Watch for a dead scorer.** The failure mode is silent: a scorer that errors on every
 call returns unparseable output, every finding counts as 100, and the review looks
-unusually decisive. Two signatures, both cheap to check before posting — every finding
-in a review scoring exactly 100, or no finding ever landing between 80 and 99. Say so
-in the summary when you see either. A gate that has stopped filtering reads exactly
-like a gate that found nothing to filter.
+unusually decisive. Three signatures, all cheap to check before posting — every finding
+in a review scoring exactly 100, no finding ever landing between 80 and 99, or the gate
+killing nothing at all across a whole run. Say so in the summary when you see any of
+them. A gate that has stopped filtering reads exactly like a gate that found nothing to
+filter.
+
+**None of the three catches a scorer that is wrong but plausible.** A misconfigured
+prompt returning 88, 91, 95 for everything passes all of them and suppresses exactly
+nothing while looking healthy. No signature computed from the scores alone can — the
+numbers are the thing under suspicion. The only check that reaches it is reading the
+findings against their scores, which is `calibration.md`'s hand sample and is the
+reason that sample is not optional there. Until one has been taken, a scoring run is
+evidence that the scorer answered, never evidence that it judged.
 
 **The scorer is blind to any earlier score.** Shown a previous number, a second pass
 anchors to it and stops being independent, which is the whole mechanism.
