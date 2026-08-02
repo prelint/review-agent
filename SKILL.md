@@ -29,6 +29,8 @@ DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
 HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
                                            # Stage 4 commits, so it is stale after that
+SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
+                                           # prior comments to rebuild the last ledger
 LEDGER=".review-agent/pr-${PR}.json"
 ```
 
@@ -52,6 +54,8 @@ The short version, because getting it wrong is how the last one failed:
 - Read all four surfaces: top-level comments, inline comments, **review bodies**,
   and **the PR description**.
 - Content-hash each surface so a no-op edit does not re-trigger and a real one does.
+- **Rebuild the previous ledger** from the markers on our own prior comments before
+  classifying. Do not skip them — they are the only record that survives a run.
 
 Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, each
 with `id`, `author`, `surface`, `state`, `path`, `line`, `thread_id`, `body_hash`,

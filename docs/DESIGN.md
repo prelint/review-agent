@@ -120,6 +120,24 @@ double-dispatch. Neither helps with two runs in flight at once.
 **Single run, guaranteed. Concurrent runs, best effort.** If concurrency becomes
 routine, the fix is a lease on the PR, not a shared ledger.
 
+### GitHub is the ledger that survives
+
+`.review-agent/` is gitignored and does not outlive the run, so the *next* run started
+cold: every item took the "No previous hash → New item" row, and `substance_hash` — the
+field built to tell a typo from a new claim — had nothing to compare against. Worse,
+intake skipped `author == SELF`, which threw away the only record of what the last run
+decided. On PR #10 that was six discarded comments, two of them our own prior verdicts.
+
+The record was already there. Stage 5 replies in every thread and resolves what it
+fixed, so Stage 1 rebuilds the last ledger by parsing its own markers back. The
+alternative was committing the ledger to the repo, which puts run state in the diff of
+every PR it reviews and makes two concurrent runs fight over a tracked file. GitHub
+already stores exactly this, keyed by comment, visible to a human, and free.
+
+`SELF` comes from `gh api user --jq .login`. The marker, not the login, decides what is
+a record: a human running this under their own token has their own comments arrive as
+`SELF`, and those are ordinary items.
+
 ## The ledger holds our findings too
 
 Nine findings, nine commits, and `.review-agent/pr-10.json` recorded none of them. The

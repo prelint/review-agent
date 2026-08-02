@@ -143,6 +143,9 @@ bare line number, because the key has to survive code moving above it. See
 - Same finding as a reviewer's existing comment in the ledger → **do not post it
   again.** Link the ledger item and handle it there. Restating a bot's finding back
   at it was a real source of noise.
+- Same fingerprint as a finding **we** posted on an earlier run → do not post it again.
+  `intake.md`'s previous-run load puts it in the ledger; carry its status forward. A
+  fleet reviewing the same PR every hour otherwise re-posts the same nit every hour.
 
 ---
 

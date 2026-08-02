@@ -211,6 +211,18 @@ Reply templates — keep them this short:
 Never open with "Thanks", "Good catch", or "You're absolutely right". State the fix.
 The commit shows you heard it.
 
+**Every reply ends with one marker.** It is the next run's ledger; `$LEDGER` is
+gitignored and does not survive.
+
+```html
+<!-- review-agent: item=3640790504 substance=sha256:9f2a… claims=1:fixed:abc123f,2:rebutted,3:deferred:#42 -->
+```
+
+One line per item, carrying the `substance_hash` the decision was made against and every
+claim's status with its SHA or issue link. Without it the next run sees a resolved
+thread and an unchanged hash and still cannot tell what was decided, so it re-opens the
+item and does the work again. `intake.md` parses it.
+
 ### Resolve threads
 
 Resolve a thread when its fix commit exists **and** `thread_id` is not null. Skip the
