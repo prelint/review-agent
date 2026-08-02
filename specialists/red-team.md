@@ -82,6 +82,12 @@ and follow both. Then run two concurrently and name the interleaving.
 now returns early, returns a different type, or fails differently — does its caller
 know? This is where most silent regressions live.
 
+**Does this contradict a rule that is already here?** A new status, flag, default or
+guard that an existing rule elsewhere handles differently. The new code is right, the
+old rule is right, and together they are wrong — usually because the old one is
+outside the diff and nothing put them side by side. Grep for the terms the new rule
+governs and read what already decides them.
+
 **Does this reintroduce something?** `git log -S` on the key line. A fix that undoes a
 previous deliberate fix is the most expensive finding available.
 

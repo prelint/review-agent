@@ -36,13 +36,19 @@ is *not* in the hunk:
 - **Missed call sites.** A signature change, a new required argument, or a new case in
   something implemented per-surface, where a sibling was missed. If the siblings no
   longer share a builder there is no compile error and no failing test.
+- **Contradicted rules.** A new rule, status, default, or guard that something already
+  in the file — or in a sibling file — decides differently. The new hunk reads
+  correctly; the pair is incoherent, and the older half is not in the diff so nobody
+  sees them together.
 
-Spotting either requires already suspecting it, so they are named here rather than
-left to instinct.
+Spotting any of the three requires already suspecting it, so they are named here
+rather than left to instinct.
 
 **One focused grep per named risk. Never a general crawl.** When the diff changes a
 literal or a signature, grep for the *old* value or the *old* arity once and check the
-hits. That is the whole budget — do not go reading the codebase to feel thorough.
+hits. When it adds a rule or a status, grep for the thing that rule governs and read
+what already decides it. That is the whole budget — do not go reading the codebase to
+feel thorough.
 
 ## Verify before you claim
 
