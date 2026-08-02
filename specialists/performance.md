@@ -31,16 +31,22 @@ is an N+1" is a category; "this could be slow" is an adjective.
 
 **Never invent a number.** An estimate shows its arithmetic and cites both inputs. A
 fabricated millisecond is worse than none: it survives Filter 2 by looking like
-measurement. Where the multiplier is not in the repo, the band is `unverified` and you
-say what you would measure.
+measurement.
+
+Where the repo gives no multiplier, the finding still ships — the quantity rule bars an
+invented number, not an honest gap. Band it `unverified`, state the shape you can prove
+("one query per row, row count unbounded by the endpoint"), and name the measurement
+that would settle it. Severity then comes from that shape, not from a number you do not
+have. A missing multiplier never silently drops the finding.
 
 ## Check
 
 **Queries inside loops.** Quote the loop, the query, and what sizes the loop. A
 serialiser resolver is a loop with no `for`, so a resolver that hits the database is an
 N+1 with nothing to see. A query whose result does not depend on the loop variable is
-the same bug with a cheaper proof. In Django, check the prefetch is still live:
-`.filter()`, `.all()` and `.exclude()` on a prefetched relation re-query.
+the same bug with a cheaper proof. In Django, check the prefetch is still live: `.filter()` and `.exclude()` on a
+prefetched relation re-query, bare `.all()` uses the cache. Flagging `.all()` is the
+common false positive here.
 
 **The new query can reach an index.** Does one exist for the new `WHERE`, `ORDER BY`
 or join column — quote the migration or `Meta.indexes`. Then the half reviewers miss:

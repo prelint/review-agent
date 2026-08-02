@@ -93,7 +93,7 @@ do not have is coverage you say you do not have.
 
 | Specialist | Runs when the diff touches |
 |---|---|
-| `security` | auth, sessions, tokens, permissions, or any request-handling path |
+| `security` | auth, sessions, tokens, permissions, any request-handling path, a webhook handler, crypto, secrets, a server-side fetch, a subprocess, a template, a file path built from input, or a React or Django escape hatch |
 | `tenancy` | any ORM query, any endpoint returning per-customer data |
 | `money` | billing, credits, invoices, vouchers, refunds, usage metering, Stripe |
 | `idempotency` | webhooks, event handlers, queue consumers, retries, cron |
