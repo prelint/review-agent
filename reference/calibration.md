@@ -137,7 +137,7 @@ evidence.
 | Number | Where | Basis |
 |---|---|---|
 | 1 missing-test finding reported in full | `specialists/testing.md` | None. Chosen to stop coverage sweeps. Raised twice in review as arbitrary — a diff with three untested branches has three gaps. Now overflows to a count rather than dropping, so the cap bounds volume without losing information. Whether the right number is 1 or 2 is answerable from the logs. |
-| 80 score threshold | `reference/verification.md` | None. Conservative in the direction trust erodes. |
+| 80 score threshold | `reference/verification.md` | None. Conservative in the direction trust erodes. Chosen under a five-band rubric where the practical floor was 100; nobody has measured whether the continuous scale now sits nearer "highly confident" or nearer "only certainty passes". Revisit once the lenses have produced a sample. |
 | 40 / 60 useful-rate bands | this file | Industry write-ups, not measured here, not measured on agent-authored PRs. |
 | 2,000 character summary cap | `reference/output.md` | Measured — the old median posted comment was 1,718 and the worst was 10,289. The only number here with a source. |
 | 5 non-blocking findings | `reference/output.md` | None. |

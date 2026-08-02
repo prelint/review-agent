@@ -340,6 +340,18 @@ citation is half a finding.
 focused grep per named risk, never a general crawl. `red-team` lists the four shapes
 under "not a finding" so it stops competing for them.
 
+## Known limits
+
+**Cost scales with lens count, not diff size.** Every lens is dispatched on every
+review and answers for itself, which is what removed the drifting dispatch table. The
+price is eighteen calls on a one-line diff. On this repo that is the right trade. For a
+high-volume repository it may not be, and a fast-path bypass for trivially small diffs
+is the obvious lever — a deployment question, not a design one. Not built.
+
+**Stage 4 has run twice, both on this repo.** Sequencing works at small n on a codebase
+the agent knows. That is not evidence it works on an unfamiliar one, and a clean result
+still means the lenses found nothing rather than that the pipeline is proven.
+
 ## Calibration
 
 Not implemented. `reference/calibration.md` has the mechanism and says so in its first
