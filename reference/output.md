@@ -30,7 +30,7 @@ Every claim on every ledger item must be one of:
 | `rebutted` | the evidence that refutes it, quoted |
 | `deferred` | a reason **and** an issue link — always, no exceptions |
 | `informational` | nothing — it asked for nothing |
-| `unresolvable` | **a commit SHA that exists in `git log`**, on an `inline` item whose `thread_id` is `null` |
+| `unresolvable` | **a commit SHA that exists in `git log`**, plus an `inline` item whose `thread_id` is `null`, or a reply or resolve that errored |
 
 `deferred` needs a destination. There are two honest endings for anything you accept
 and do not fix: fix it now, or file it where someone will see it. "Noted it" is not a
@@ -64,11 +64,14 @@ deferral. Do not proceed with an open item and a summary that implies completene
 is `inline` and `thread_id` is `null`, because pagination dropped the thread or its first
 comment was deleted.
 
-**Only `inline` items can be unresolvable.** A top-level comment and a review body have
-no thread, so a null `thread_id` on either is the right answer rather than a failure, and
-they close as `fixed` or `informational` like anything else. Reading null as a failure on
-every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
+**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment and
+a review body have no thread, so null on either is the right answer rather than a failure,
+and they close as `fixed` or `informational` like anything else. Reading null as a failure
+on every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
 about threads that never existed.
+
+The other cause is section 6's: a reply or a resolve that returned an error. Any surface
+can hit that one.
 
 A missing thread ID is not permission to skip the fix. An item with no commit is
 `open`, or `deferred` with a reason; it is never `unresolvable`. The status describes
@@ -219,6 +222,17 @@ success without, so the status cannot disagree with the summary.
 Section 7's silence does not reach this. A status is not a comment: a clean review
 posts `success` here and still posts no summary comment.
 
+**If the ledger is missing or will not parse, post no status at all.** Say so in the
+session output and exit non-zero. `success` is barred by section 4 on a ledger you cannot
+read, and `failure` is a guess about a head you know nothing about — the `else` branch
+would post it on every run whose ledger went missing, including clean ones. A context
+that is absent is a maintainer's question; a context that is wrong is one they act on.
+
+This is the one place `gh`'s counterpart rule does not transfer: a malformed *history*
+file is skipped line by line and the run continues, because history is an optimisation.
+The ledger is the artifact this stage exists to reconcile, so an unreadable one means
+Stage 5 has nothing to say and has to say that.
+
 Treat a permission error as expected, not as a failure — many tokens cannot write
 statuses, and the review is still valid without one. Never instruct anyone to turn on
 branch protection as part of a review: that is a maintainer's decision about their own
@@ -299,6 +313,31 @@ gh api graphql -f query='
 **Never auto-resolve a rebuttal or a deferral.** Those stay open for a human. Replying
 is not resolving; resolving is the claim that the work is done.
 
+### When the reply or the resolve fails
+
+**Check the exit code. A call that errored is not a call that happened.** Both of these
+fail on real PRs: the reply POST 403s on a token without write access and 404s when the
+PR was closed underneath the run, and `resolveReviewThread` errors when the thread was
+deleted or the token cannot resolve.
+
+The rule for both is the same, and it has two halves:
+
+- **Never abort.** The fixes are committed and pushed. A run that dies here throws away
+  a completed review because it could not announce it, which is strictly worse than
+  announcing it badly.
+- **Never let it pass as done.** Downgrade that claim to `unresolvable` and carry on with
+  the other threads.
+
+`unresolvable` already means "fixed, and we cannot close the loop on GitHub". It now has
+two causes — an inline item with a null `thread_id`, and a reply or resolve that failed —
+and both land in the same place: section 7 posts the count and the URLs even on an
+otherwise silent run, so a human closes by hand. Say which cause in the session output;
+a 403 on every thread is a token problem and a 404 on one is a deleted comment.
+
+If the summary comment itself cannot be posted, say so in the session output and exit
+non-zero. There is nowhere left to write it down, and a review nobody can see must not
+report itself as delivered.
+
 **A thread already resolved on arrival is not evidence its claim is closed.** Anyone
 can resolve a thread — including a previous run that closed it by proxy. Reconcile the
 claim on its own merits and, when it turns out to be open, say so in the reply rather
@@ -317,7 +356,7 @@ that status, post — even when nothing blocks and everything else is clean. One
 enough:
 
 ```
-N item(s) fixed but not resolvable — thread ID missing: <urls>. Close them by hand.
+N item(s) fixed but not resolvable — <thread ID missing | reply failed | resolve failed>: <urls>. Close them by hand.
 ```
 
 Silence here would be a lie of exactly the kind the ledger exists to prevent: the
