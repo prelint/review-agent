@@ -90,22 +90,29 @@ schema's JSON — one object per line, nothing else.
 file is a skip, not an error, and the summary must name what was skipped. Coverage you
 do not have is coverage you say you do not have.
 
-**Conditional**, on the paths the diff touches:
+**Conditional.** Each lens states its own trigger on line 5 of its file, as
+`**Runs when** …`. That clause is the authority. `SKILL.md` does not restate it — a
+trigger written in two places drifts, and this table did: eleven of twelve rows had
+already diverged from the file they described.
 
-| Specialist | Runs when the diff touches |
+Read them all in one call and decide from what you read:
+
+```bash
+grep -H '^\*\*Runs when\*\*' specialists/*.md
+```
+
+| Lens | |
 |---|---|
-| `security` | auth, sessions, tokens, permissions, any request-handling path, a webhook handler, crypto, secrets, a server-side fetch, a subprocess, a template, a file path built from input, or a React or Django escape hatch |
-| `tenancy` | any ORM query, any endpoint returning per-customer data |
-| `money` | billing, credits, invoices, vouchers, refunds, usage metering, Stripe |
-| `idempotency` | webhooks, event handlers, queue consumers, retries, cron |
-| `infra-deploy` | CDK, Terraform, CI workflows, Dockerfiles, deploy scripts |
-| `data-migration` | migrations, schema changes, backfills |
-| `api-contract` | routes, schemas, serialisers, generated clients |
-| `performance` | queries in loops, list endpoints, render paths, serialisation, cache use |
-| `resource-limits` | request handlers, background jobs, queue consumers, loops over customer input, shared-table queries, external calls |
-| `llm-pipeline` | prompts, model calls, evals, token budgets |
-| `observability` | new failure paths, new background work, new external calls |
-| `red-team` | money, auth, tenancy, migrations, infra, or a state machine — and always on a fix for a production incident. Never gated on diff size. |
+| `security` `tenancy` `money` `idempotency` | `resource-limits` `performance` `api-contract` `data-migration` |
+| `infra-deploy` `llm-pipeline` `observability` | `red-team` |
+
+**Stage 2 decides, never the lens.** A dispatched specialist reviews; it does not get
+to conclude it should not have been dispatched. A self-skip is silent, and silence
+reads as coverage.
+
+**Name every skip and why**, in the summary. "Skipped: `money`, `tenancy` — no billing
+or per-tenant query in the diff" is the honest form. Coverage you do not have is
+coverage you say you do not have.
 
 Give each specialist **the absolute path of its working directory**, the diff command,
 the PR description, and its own checklist. Do not give it the other specialists'
