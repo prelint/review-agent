@@ -108,11 +108,23 @@ Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
 `**Runs when**` clause it tests against the diff — and answers in one of the kinds
 `specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
 
-**A lens answered only if its response parses**: every line is JSON, the last one carries
-a `kind`, and where that is `end` its `findings` count matches the objects that carry
-no `kind` — the findings, not everything received.
-Anything else is a dead lens — empty, truncated mid-line, prose, or a count that does not
-add up.
+**A lens answered only if its response parses, and the terminator matches its shape.**
+Every line is JSON, the last one carries a `kind`, and that kind is the one its own
+response requires:
+
+| Response | Must end with |
+|---|---|
+| one or more findings | `end`, whose `findings` count equals the objects carrying no `kind` |
+| no findings | `clean`, `not-dispatched`, or `cleared` for `red-team` |
+
+Anything else is a dead lens — empty, truncated mid-line, prose, an unrecognised `kind`, a
+count that does not add up, or **findings closed by something other than `end`**.
+
+That last case is the one a terminator alone does not catch. Checking the count only when
+the last line happens to be `end` lets a lens truncated after two findings of five land on
+a stray `clean` and pass as answered, with the count check — the entire reason `end`
+exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
+means the lens reviewed and found nothing.
 
 Keying this on emptiness alone would miss the commoner shape, and so would checking only
 that the last line is valid: a subagent killed at its output cap after emitting two

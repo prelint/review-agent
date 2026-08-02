@@ -125,8 +125,11 @@ died mid-response on this repo's PR #31 and returned an empty string, which unde
 rule was a legal way of saying "reviewed, nothing found" — from the one always-on lens
 that owns the defects no other lens sees.
 
-**Every response's last line carries a `kind`.** With findings, that is a count of what
-you sent:
+**Every response's last line carries a `kind`, and which one is not your choice.** With
+findings it is `end`, carrying a count of what you sent. With none it is `clean`,
+`not-dispatched`, or — for `red-team` — `cleared`. Findings closed by anything but `end`
+is a malformed response, and Stage 2 reads it as a crash: `clean` after findings says you
+reviewed and found nothing, directly contradicting the findings above it.
 
 ```json
 {"kind":"end","specialist":"correctness","findings":3}
