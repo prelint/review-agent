@@ -1,9 +1,10 @@
 # Stage 3: The gate
 
-Two filters in series. Neither substitutes for the other.
+Three filters in series. None substitutes for another.
 
 Filter 1 kills findings that are not real. Filter 2 kills findings that are real and
-not worth the author's time. A single filter does one or the other.
+not worth the author's time. Filter 3 downgrades findings that are real, worth
+raising, and unlikely to fire — it never drops. No one of them does another's job.
 
 ---
 
@@ -46,7 +47,9 @@ not, and that is the entire mechanism.
 ### Rubric — pass this text unchanged
 
 > Score this finding 0–100 for how confident you are that it is a real issue worth
-> raising on this pull request.
+> raising on this pull request. **Any integer is legal — the bands below are anchors,
+> not the only allowed answers.** Interpolate: a finding stronger than the 75 anchor
+> but short of certainty is an 85.
 >
 > - **0** — Not confident at all. A false positive that does not survive light
 >   scrutiny, or a pre-existing issue not introduced by this change.
@@ -63,11 +66,53 @@ not, and that is the entire mechanism.
 > If the finding cites a project convention, verify the convention file actually says
 > that. Do not take the finder's word for it.
 >
+> You have not been told any previous score for this finding, and must not ask for
+> one. Score it from the evidence alone.
+>
 > Return only: `{"score": N, "why": "<one sentence>"}`
 
 ### Threshold
 
 **Below 80 dies.** No exceptions, no "but it's cheap to mention".
+
+**The threshold follows the `category` field, never the lens that emitted it.** A lens
+may emit on another's behalf — `security` emits the production-reachable test key as
+`category: "money"` when `money` is not dispatched — and once per-category thresholds
+exist, that finding is scored against `money`'s number. The category is the claim about
+what kind of defect this is; the emitter is an implementation detail of who noticed it.
+Scoring by emitter would give one defect two different bars depending on which lens saw
+it first, which is the whole reason the handoff stamps a category at all.
+
+**The rubric must stay continuous for that number to mean anything.** A five-value
+rubric — 0/25/50/75/100 — under a threshold of 80 admits only 100, silently killing
+every "highly confident, verified, directly affects functionality" finding at 75.
+That is a live bug in the plugin this rubric came from
+([claude-plugins-official #1852](https://github.com/anthropics/claude-plugins-official/issues/1852))
+and it was inherited here verbatim. If you ever tighten the rubric back to fixed
+bands, move the threshold onto a band.
+
+**An unparseable or missing score counts as 100, not 0.** Fail toward keeping the
+finding. A scorer that errors out must not silently suppress what it was asked to
+judge.
+
+**Watch for a dead scorer.** The failure mode is silent: a scorer that errors on every
+call returns unparseable output, every finding counts as 100, and the review looks
+unusually decisive. Three signatures, all cheap to check before posting — every finding
+in a review scoring exactly 100, no finding ever landing between 80 and 99, or the gate
+killing nothing at all across a whole run. Say so in the summary when you see any of
+them. A gate that has stopped filtering reads exactly like a gate that found nothing to
+filter.
+
+**None of the three catches a scorer that is wrong but plausible.** A misconfigured
+prompt returning 88, 91, 95 for everything passes all of them and suppresses exactly
+nothing while looking healthy. No signature computed from the scores alone can — the
+numbers are the thing under suspicion. The only check that reaches it is reading the
+findings against their scores, which is `calibration.md`'s hand sample and is the
+reason that sample is not optional there. Until one has been taken, a scoring run is
+evidence that the scorer answered, never evidence that it judged.
+
+**The scorer is blind to any earlier score.** Shown a previous number, a second pass
+anchors to it and stops being independent, which is the whole mechanism.
 
 Per-category thresholds are the plan, not the present. Today every category uses 80.
 
@@ -87,7 +132,9 @@ dies here.
 
 ## Dedupe
 
-Findings carry a `fingerprint` of `path:line:category`.
+Findings carry a `fingerprint` of `path:anchor:category` — a greppable symbol, never a
+bare line number, because the key has to survive code moving above it. See
+`specialists/_schema.md`.
 
 - Same fingerprint from two specialists → keep the one with better evidence, record
   both categories on it.

@@ -66,9 +66,9 @@ forever when the far end hangs. Check the client's default — several are "no t
 spanning a network call, an LLM completion, or a large loop. Quote the lock acquisition
 and the longest thing inside it.
 
-**Connection and pool use is bounded.** A query inside a loop, a task that opens its
-own connection, a fan-out wider than the pool. On Aurora with a read replica, also:
-does this force the writer when the replica would do?
+**Connection and pool use is bounded.** A task that opens its own connection, a
+fan-out wider than the pool. A query inside a loop and writer-vs-replica routing are
+`performance` — they make each unit cheaper without changing the bound.
 
 **Queue depth has a ceiling and a shedding rule.** Unbounded enqueue plus a fixed
 consumer rate is a backlog that never drains. What happens at depth *n*?

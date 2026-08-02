@@ -71,7 +71,7 @@ A finding posted today must be identifiable months later by a process that was n
 running when it was posted. One invisible marker does it:
 
 ```html
-<!-- review-agent: category=tenancy fingerprint=backend/apps/billing/services.py:142:tenancy score=88 -->
+<!-- review-agent: category=tenancy fingerprint=backend/apps/billing/services.py:charge_org:tenancy score=88 -->
 ```
 
 HTML comments do not render on GitHub. Without this, category is unrecoverable from a
@@ -127,6 +127,21 @@ Industry write-ups on AI review adoption. Not a controlled study, not measured h
 and not measured on agent-authored PRs at all. The shape is right — trust erodes
 faster from noise than from a miss — but the numbers are placeholders to be replaced
 by our own outcomes. Tunable, not evidence.
+
+## Numbers with no source
+
+Every threshold in this repo that was chosen rather than measured. Each is a candidate
+for the first real calibration pass, and each is written here so nobody mistakes it for
+evidence.
+
+| Number | Where | Basis |
+|---|---|---|
+| 1 missing-test finding reported in full | `specialists/testing.md` | None. Chosen to stop coverage sweeps. Raised twice in review as arbitrary — a diff with three untested branches has three gaps. Now overflows to a count rather than dropping, so the cap bounds volume without losing information. Whether the right number is 1 or 2 is answerable from the logs. |
+| 80 score threshold | `reference/verification.md` | None. Conservative in the direction trust erodes. Chosen under a five-band rubric where the practical floor was 100; nobody has measured whether the continuous scale now sits nearer "highly confident" or nearer "only certainty passes". Revisit once the lenses have produced a sample. |
+| 40 / 60 useful-rate bands | this file | Industry write-ups, not measured here, not measured on agent-authored PRs. |
+| 2,000 character summary cap | `reference/output.md` | Measured — the old median posted comment was 1,718 and the worst was 10,289. The only number here with a source. |
+| 5 non-blocking findings | `reference/output.md` | None. |
+| 400 words per lens | `specialists/_schema.md` | None. |
 
 ## Order of work
 

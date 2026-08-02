@@ -186,19 +186,21 @@ Two more from `pr-review-toolkit` are worth porting later and are not urgent:
 `comment-analyzer` (comments that no longer describe the code) and
 `type-design-analyzer`.
 
-### What the seven outstanding ones reuse, and from where
+### What the last seven reused, and from where
 
-gstack's specialists are 45–60 lines: a scope header, a JSON schema, a flat list of
-categories. The **taxonomies are good and port wholesale** — its `security.md` is
+All seven have landed. This is the record of where each came from, not a plan.
+
+gstack's specialists were 45–60 lines: a scope header, a JSON schema, a flat list of
+categories. The **taxonomies were good and ported wholesale** — its `security.md` was
 seven categories and ~35 concrete checks.
 
-What they lack is the half that makes a finding survive Stage 3: no evidence bar, no
+What they lacked was the half that makes a finding survive Stage 3: no evidence bar, no
 failure-scenario requirement, and **no "not a finding" section at all**. A checklist
 that says what to look for and never what to ignore is a false-positive generator.
 
-Every port keeps the categories and gains the suppression rules.
+Every port kept the categories and gained the suppression rules.
 
-| Specialist | Port from | Write fresh |
+| Specialist | Ported from | Written fresh |
 |---|---|---|
 | `security` | gstack `specialists/security.md` — all 7 categories | Suppressions from `exclusions.md` #1–15; evidence bar |
 | `testing` | gstack `specialists/testing.md` — all 6 categories | "Not a finding", especially: missing coverage is never a standalone finding |
@@ -240,10 +242,11 @@ oversight.
 ## Resource limits are in scope, and the exclusions were wrong
 
 Three of the exclusions — denial of service, rate limiting, memory and CPU exhaustion
-— were carried over from a security-only exclusion list without checking whether they
-transfer. They do not.
+— were carried over from
+[claude-code-security-review](https://github.com/anthropics/claude-code-security-review)
+without checking whether they transfer. They do not.
 
-That kind of list is written for a lens whose only job is finding exploitable
+That list serves a lens whose only job is finding exploitable
 vulnerabilities. Resource exhaustion is out of scope there by definition, and it
 generates enormous false-positive volume because almost any loop can be framed as a
 DoS vector. Both true, and neither survives the move to a general review of a metered
@@ -336,6 +339,20 @@ citation is half a finding.
 `_schema.md` keeps only the budget rule that genuinely applies to every lens — one
 focused grep per named risk, never a general crawl. `red-team` lists the four shapes
 under "not a finding" so it stops competing for them.
+
+## Known limits
+
+**Cost scales with lens count, not diff size.** Every lens is dispatched on every
+review and answers for itself, which is what removed the drifting dispatch table. The
+price is eighteen calls on a one-line diff. On this repo that is the right trade. For a
+high-volume repository it may not be, and a fast-path bypass for trivially small diffs
+is the obvious lever — a deployment question, not a design one. Not built.
+
+**Stage 4 has only ever run on this repo.** Sequencing works at small n on a codebase
+the agent knows. That is not evidence it works on an unfamiliar one, and a clean result
+still means the lenses found nothing rather than that the pipeline is proven. The count
+is `git log --grep='Finding:'` and is not kept here as a number: it was written as a
+number twice, in two files, and the two disagreed within half an hour.
 
 ## Calibration
 

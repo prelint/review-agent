@@ -27,7 +27,8 @@ BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
 git fetch origin "$BASE" --quiet
 DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
-HEAD_SHA=$(git rev-parse HEAD)
+HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
+                                           # Stage 4 commits, so it is stale after that
 LEDGER=".review-agent/pr-${PR}.json"
 ```
 
@@ -53,8 +54,11 @@ The short version, because getting it wrong is how the last one failed:
 - Content-hash each surface so a no-op edit does not re-trigger and a real one does.
 
 Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, each
-with `id`, `author`, `surface`, `path`, `line`, `thread_id`, `body_hash`, and
-`status: "open"`. Everything downstream is measured against this file.
+with `id`, `author`, `surface`, `state`, `path`, `line`, `thread_id`, `body_hash`,
+`substance_hash`, and a `claims` array. **Status lives on a claim, never on the item** —
+one comment carrying fourteen numbered points is fourteen claims with fourteen statuses,
+and an item closes when every one of them does. Everything downstream is measured
+against this file.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
@@ -82,30 +86,23 @@ Dispatch specialists in parallel, one subagent each. Every specialist reads
 `specialists/_schema.md` first, then its own file, and returns findings in the
 schema's JSON — one object per line, nothing else.
 
-**Always on:** `coherence`, `spec-drift`, `silent-failure`.
+**Dispatch every lens whose file exists.** All of them, every review. Do not decide
+which apply — you would be reading their triggers to guess at what they will conclude
+from reading their own.
 
-**Dispatch only specialists whose file exists.** Check before dispatching; a missing
-file is a skip, not an error, and the summary must name what was skipped. Coverage you
-do not have is coverage you say you do not have. `correctness`, `security`, `testing`,
-`performance`, `maintainability`, `api-contract` and `data-migration` are not written
-yet — see the README — so today they always skip.
+Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
+`**Runs when**` clause it tests against the diff — and does one of two things:
+reviews, or returns a `kind: "not-dispatched"` object naming why it does not apply.
+Both are answers. Neither is silence.
 
-**Conditional**, on the paths the diff touches:
+That is the whole dispatch rule. There is no table here to drift from the files — the
+trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
 
-| Specialist | Runs when the diff touches |
-|---|---|
-| `security` | auth, sessions, tokens, permissions, or any request-handling path |
-| `tenancy` | any ORM query, any endpoint returning per-customer data |
-| `money` | billing, credits, invoices, vouchers, refunds, usage metering, Stripe |
-| `idempotency` | webhooks, event handlers, queue consumers, retries, cron |
-| `infra-deploy` | CDK, Terraform, CI workflows, Dockerfiles, deploy scripts |
-| `data-migration` | migrations, schema changes, backfills |
-| `api-contract` | routes, schemas, serialisers, generated clients |
-| `performance` | queries in loops, list endpoints, render paths |
-| `resource-limits` | request handlers, background jobs, queue consumers, loops over customer input, shared-table queries, external calls |
-| `llm-pipeline` | prompts, model calls, evals, token budgets |
-| `observability` | new failure paths, new background work, new external calls |
-| `red-team` | money, auth, tenancy, migrations, infra, or a state machine — and always on a fix for a production incident. Never gated on diff size. |
+**Every `not-dispatched` reason goes in the summary.** "Not dispatched: `money`,
+`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have
+is coverage you say you do not have.
+
+A missing file is a different thing: it is a skip, not an error, and it is also named.
 
 Give each specialist **the absolute path of its working directory**, the diff command,
 the PR description, and its own checklist. Do not give it the other specialists'
@@ -121,9 +118,9 @@ has not finished thinking.
 
 ---
 
-## Stage 3: Gate — two filters in series
+## Stage 3: Gate — three filters in series
 
-Read `reference/verification.md`. Both filters run; neither substitutes for the other.
+Read `reference/verification.md`. All three run; none substitutes for another.
 
 **Filter 1 — quote or drop.** A finding ships only if it quotes the verbatim
 `file:line` that motivates it. "Field X doesn't exist on Y" must quote Y's class
@@ -140,11 +137,21 @@ pattern is dropped regardless of score.
 Dedupe by `fingerprint` across specialists. When two lenses find the same thing, keep
 the one with the better evidence and record both categories.
 
+**Filter 3 — likelihood.** Score says whether the claim is true; likelihood says
+whether it ever fires. Every finding arrives with a `likelihood` band and a named
+`condition`. `remote` downgrades one step — `Blocker:`→`Required:`,
+`Required:`→`Nit:` — keeping the condition in the text. `unverified` does not
+downgrade: label it and say what you would need to check it. `Blocker:` requires
+`plausible` or better. **This filter downgrades and never drops** — the author may
+know the condition is reachable for reasons the diff does not show. A downgrade with
+no stated condition is a review bug; send it back.
+
 ---
 
 ## Stage 4: Fix — one finding, one commit
 
-For each surviving finding and each ledger item you have accepted:
+For each surviving finding and each **claim** you have accepted — claims, not items: a
+comment's fourteen points are fourteen decisions, and accepting one accepts one:
 
 1. Make the fix.
 2. Run the narrowest test that covers it. If none exists and the finding is a bug,
@@ -161,6 +168,21 @@ For each surviving finding and each ledger item you have accepted:
 Commit immediately. Do not batch. Do not defer to a later "ship" step. An interrupted
 run must leave a clean tree, and `git log` must be a complete answer to "did you
 address this?".
+
+**A blocker you fix stops being a blocker.** Decrement `surviving_blockers` in the
+ledger in the same step that commits the fix. Stage 3 writes what survived the gate and
+nothing else lowers it, so an unlowered count reaches Stage 5 and posts `failure` on a
+head with nothing left wrong. The field is blockers still unfixed, not a record of what
+Stage 3 found.
+
+**Fix every instance the finding reaches.** Correcting a pattern in one file and
+leaving its copies is not a smaller fix, it is a half-migration — and the un-migrated
+sites drift from the new shape, which is the recurring source of the bugs the next
+review then finds. Before you commit, grep for what you just changed: the old value,
+the old signature, the old wording. One grep per fix.
+
+This is the same defect `coherence` reports on other people's diffs. It applies to
+yours. A finding is not closed while a copy of it survives somewhere the diff reaches.
 
 Do not push until Stage 5 has verified the ledger.
 
@@ -181,16 +203,22 @@ Read `reference/output.md`. In order:
 
 1. **Re-fetch** the PR. New comments since Stage 1 open new ledger items; process
    them or say explicitly that you are deferring them.
-2. **Reconcile the ledger.** Every item must be `fixed` (with a commit SHA),
-   `rebutted` (with evidence), or `deferred` (with a reason). An item still `open`
-   means Stage 5 is not done.
+2. **Reconcile the ledger, claim by claim.** Every claim must be `fixed` (with a commit
+   SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
+   `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
+   but its thread ID is null). An item is closed when all of its claims are; one claim
+   still `open` means Stage 5 is not done.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
-4. **Push.**
-5. **Reply in threads, not at the top.** Inline findings get inline replies on their
+4. **Never report success with an open item or a surviving `Blocker:`.** That refusal
+   is the gate.
+5. **Push**, then post the commit status if the repo wants one — optional,
+   repo-dependent, and after the push so it lands on the SHA that is now the head.
+   See `reference/output.md`.
+6. **Reply in threads, not at the top.** Inline findings get inline replies on their
    own thread. Resolve a thread only when its fix commit exists; never auto-resolve a
    rebuttal.
-6. **Post the summary — or don't.** If nothing blocking survived Stage 3 and every
+7. **Post the summary — or don't.** If nothing blocking survived Stage 3 and every
    ledger item is closed, post nothing. A clean PR does not need an announcement.
 
 ### Output caps
