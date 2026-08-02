@@ -2,7 +2,7 @@
 
 Read `_schema.md` first.
 
-**Runs when** the diff changes executable code.
+**Runs on every review.**
 
 **Why this exists:** every other lens asks a domain question. This one asks the plain
 one — given the inputs this code can receive, does it produce the right answer? It also
@@ -77,6 +77,10 @@ read, and what picks the connection — a task enqueued before `commit` is the u
 ## Not a finding
 
 - **A logic or boundary claim with no counterexample.** No input, no finding.
+- **Anything vague on a diff that changes no executable code.** The bar does not relax
+  when the artifact is prose: a stated fact that is false — a wrong version, a wrong
+  lock level, a rule contradicting another rule — is a wrong answer and is yours,
+  quoted the same way. Anything short of that is not, and nothing is the right output.
 - **A null check on a value whose producer cannot return null.** Quote the producer
   before asking for the guard. Django's `cleaned_data` is `{}`-initialised.
 - **"Field X does not exist on model Y"** off a grep of the class body — the largest

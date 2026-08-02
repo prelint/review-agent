@@ -2,9 +2,7 @@
 
 Read `_schema.md` first.
 
-**Runs when** the diff adds a file, moves code between files, adds an abstraction or a
-type boundary, or restructures code that already worked. Skip one-line fixes and
-generated files.
+**Runs on every review.**
 
 **Why this exists:** the next change to this code is the one that breaks, and no other
 lens asks whether it can be made safely. It is also the easiest lens here to turn into
@@ -68,6 +66,9 @@ already-typed code it is the type checker's problem, not yours.
 
 ## Not a finding
 
+- Anything in a one-line fix or a generated file, and anything at all where the diff
+  adds no file, moves no code between files, adds no abstraction or type boundary, and
+  restructures nothing that already worked. Output nothing.
 - Naming or design you would have chosen differently, where the author's is not worse.
 - Function length, file length, nesting depth or parameter count on their own.
 - The second copy of anything, unless the two must change together.

@@ -2,8 +2,7 @@
 
 Read `_schema.md` first.
 
-**Runs when** the diff adds or edits a test, changes test configuration, or adds a
-behaviour branch.
+**Runs on every review.**
 
 **Why this exists:** nothing ever read the tests a diff contains. A suite accumulates
 mock-call assertions that pass whatever the code does, and a lens counting only absent
@@ -79,6 +78,9 @@ input that flips it.
 
 ## Not a finding
 
+- Anything at all, where the diff adds or edits no test, changes no test
+  configuration, and adds no behaviour branch. Output nothing — zero findings is the
+  normal result for this lens, not a gap in it.
 - Missing tests as a count, a percentage, or a list. Exclusion #21.
 - A second missing-test finding. Keep the worst, drop the rest.
 - `assert_called_once_with` where the collaborator call **is** the contract — an
