@@ -166,16 +166,18 @@ context that only ever goes red can never clear, and a maintainer who then requi
 has blocked every clean head:
 
 ```bash
-OPEN_CLAIMS=$(python3 -c 'import json,sys
+if ! OPEN_CLAIMS=$(python3 -c 'import json,sys
 led = json.load(open(sys.argv[1]))
 closed_claim   = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
 closed_finding = {"fixed", "posted", "deferred", "rebutted", "dropped"}
 print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in closed_claim)
-    + sum(1 for f in led.get("findings", []) if f.get("status") not in closed_finding))' "$LEDGER")
-
-BLOCKERS=$(python3 -c 'import json,sys
+    + sum(1 for f in led.get("findings", []) if f.get("status") not in closed_finding))' "$LEDGER") \
+|| ! BLOCKERS=$(python3 -c 'import json,sys
 print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
-          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER")
+          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER"); then
+  echo "review-agent: $LEDGER missing or unreadable — no status posted" >&2
+  exit 1
+fi
 
 if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
@@ -325,14 +327,21 @@ The rule for both is the same, and it has two halves:
 - **Never abort.** The fixes are committed and pushed. A run that dies here throws away
   a completed review because it could not announce it, which is strictly worse than
   announcing it badly.
-- **Never let it pass as done.** Downgrade that claim to `unresolvable` and carry on with
-  the other threads.
+- **Never let it pass as done.** Report it, and carry on with the other threads.
 
-`unresolvable` already means "fixed, and we cannot close the loop on GitHub". It now has
-two causes — an inline item with a null `thread_id`, and a reply or resolve that failed —
-and both land in the same place: section 7 posts the count and the URLs even on an
-otherwise silent run, so a human closes by hand. Say which cause in the session output;
-a 403 on every thread is a token problem and a 404 on one is a deleted comment.
+**A `fixed` claim whose reply or resolve failed becomes `unresolvable`.** That status
+already means "fixed, and we cannot close the loop on GitHub", so it now has two causes —
+an inline item with a null `thread_id`, and a call that errored — and both land in the
+same place: section 7 posts the count and the URLs even on an otherwise silent run.
+
+**A `rebutted`, `deferred` or `informational` claim keeps its status.** `unresolvable`
+requires a commit SHA, and section 2 is explicit that a claim without one is never
+`unresolvable`; downgrading here would contradict it. Those claims are already correctly
+decided — what failed is telling the author. Report the failed reply in the session
+output and in section 7's line, with the same URLs, so it still cannot pass as delivered.
+
+Say which cause in the session output either way: a 403 on every thread is a token
+problem, a 404 on one is a deleted comment.
 
 If the summary comment itself cannot be posted, say so in the session output and exit
 non-zero. There is nowhere left to write it down, and a review nobody can see must not
@@ -350,7 +359,21 @@ resolved on arrival, claim closed two commits later by this run.
 Push the fixes and stop. A clean PR does not need an announcement, and the record's
 worst comment was 10 KB reporting "0 blocking, 6 informational".
 
-**One exception: `unresolvable`.** Silence means "nothing needs your attention", and an
+**Two exceptions, and both mean "silence would be a lie".**
+
+**A dead lens.** Stage 2 requires naming a lens that returned nothing, and silence would
+delete exactly that. A run reporting a clean review while an always-on lens died reports
+coverage it does not have — and at fleet cadence nobody is watching the session output,
+so the summary is the only place it can land. One line, and it does not block:
+
+```
+No answer from: coherence. That lens's coverage is missing from this review.
+```
+
+Not-dispatched reasons are a different thing and stay out of this: they are a lens
+correctly declining, not a lens failing.
+
+**An `unresolvable` item.** Silence means "nothing needs your attention", and an
 `unresolvable` item leaves a thread open that nobody will close. If any item carries
 that status, post — even when nothing blocks and everything else is clean. One line is
 enough:

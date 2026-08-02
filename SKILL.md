@@ -110,8 +110,8 @@ findings, a `kind: "clean"` object if it reviewed and found nothing, or a
 `kind: "not-dispatched"` object naming what it looked for and did not find. All three
 are answers. **None of them is silence.**
 
-**An empty response is a dead lens, not a clean one.** Log it by name, carry on with the
-rest, and name it in the summary beside the not-dispatched reasons — a lens that died is
+**An empty response is a dead lens, not a clean one.** Name it in the session output
+always, and in the summary too whenever one is posted — a lens that died is
 coverage you did not get, and reporting a clean review without saying so is the same lie
 as reporting a clean review that never ran. Do not re-dispatch: a lens that returns
 nothing twice costs twice and answers once, and the run has already learned what it
