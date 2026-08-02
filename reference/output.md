@@ -263,8 +263,18 @@ python3 -c 'import json,sys; print(json.dumps({"body": sys.stdin.read()}))' < re
   | gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" --input -
 ```
 
-To update the reply already on a thread, same payload, `--method PATCH` against
-`repos/$REPO/pulls/comments/$REPLY_ID`. The summary comment is edited the same way.
+To update a comment already posted, same payload with `--method PATCH`. **The endpoint
+depends on which kind it is, and the two ID spaces do not overlap:**
+
+| Comment | PATCH |
+|---|---|
+| an inline reply on a thread | `repos/$REPO/pulls/comments/$REPLY_ID` |
+| the summary, and any top-level comment | `repos/$REPO/issues/comments/$COMMENT_ID` |
+
+The summary is an issue comment, not a review comment. Sending its ID to
+`pulls/comments` returns 404 — checked against this repo — and the summary is edited on
+every run, so getting this wrong breaks the carrier for `top` items, `review` items, the
+PR description and every finding, on the second run of every PR.
 
 Reply templates — keep them this short:
 
@@ -277,7 +287,7 @@ The commit shows you heard it.
 
 ### The marker
 
-**Every reply ends with one marker, as its last line.** It is the next run's ledger;
+**Every reply ends with one marker, in its trailer.** It is the next run's ledger;
 `$LEDGER` is gitignored and does not survive. Without it the next run sees a resolved
 thread and an unchanged hash and still cannot tell what was decided, so it re-opens the
 item and does the work again.
@@ -292,9 +302,10 @@ first resolution containing a comma or a colon, which a deferral's issue URL alw
 Evidence and reasons live in the reply text, where a human reads them; the marker carries
 only what the next run has to parse.
 
-**Last line, because position is half the trust rule.** `intake.md` reads a marker only
-from a `SELF` comment whose last line it is — a Quote reply copies our body, HTML
-comments included, into someone else's words.
+**In the trailer, because position is half the trust rule.** `intake.md` reads a marker
+only from a `SELF` comment where every line after it is another marker or blank, and no
+line of it is `>`-quoted. Put markers at the very bottom, after the last visible line,
+with nothing under them. A reply carries one; the summary carries many.
 
 **Edit the existing reply; never post a second one.** A thread carries exactly one
 marker-bearing reply of ours, updated in place, so there is no accumulation and no

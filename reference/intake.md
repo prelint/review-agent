@@ -290,14 +290,24 @@ Three rules, and all three are load-bearing:
    computable from a public body and a pinned `normalise()`, so a forged
    `claims=…:fixed:<any real SHA>` would close a reviewer's blocker without touching the
    code, and Stage 5 would post `success` on it.
-2. **Only the last line of the comment.** A marker anywhere else is inert, which is what
-   makes GitHub's Quote reply safe — it copies our body, HTML comments and all, into
-   somebody else's words.
-3. **A `SELF` comment whose last line is not a marker is an ordinary item.** When the
-   token belongs to a human, `SELF` is that human, and their own review comments arrive
-   under it. Authorship says the marker may be ours; position says it still is.
+2. **In the trailer, and not inside a quote.** A marker counts when every line after it
+   is another marker or blank, and no line of it begins with `>`. Markers anywhere else
+   in the body are inert.
+3. **A `SELF` comment with no marker in its trailer is an ordinary item.** When the token
+   belongs to a human, `SELF` is that human, and their own review comments arrive under
+   it. Authorship says the marker may be ours; position says it still is.
 
 Anything that fails these is not a parse failure. It is somebody else's text.
+
+**The trailer, not the last line.** The summary comment carries one marker per threadless
+item and one per finding — a dozen on a busy PR — and only one of them can ever be last.
+A last-line rule reads one and silently drops the rest, which breaks the carrier for three
+of the four surfaces while looking like it works.
+
+It is still what makes GitHub's Quote reply safe. Quoting copies our body, HTML comments
+included, into someone else's words: those lines arrive `>`-prefixed, and the quoter's own
+prose follows them, so a copied marker is neither unquoted nor in the trailer. Both halves
+matter — a bare quote with nothing written under it would otherwise end in our marker.
 
 ### What the load restores
 
@@ -325,14 +335,47 @@ separately — `{"claims": 11, "findings": 9}` — because a run that restores e
 and no finding looks healthy against a single total and re-posts every finding it ever
 made. `prior.unparsed` holds marker lines that failed to parse.
 
-**Two failures, and only one of them is ours:**
+**Three cases, and only one of them is ours:**
 
 - **No markers at all** is `source: "none"`. The PR predates them, or we have not posted
   here. Treat it as a first review. Do not call it a parse bug.
+- **Only legacy markers** is `source: "legacy"`. Read them, do not stop. See below.
 - **`unparsed` non-empty**, or zero findings carried while one of our summary comments
   exists, is a parse bug. Stop and say so — see "Refusing to run". A run that silently
   degrades to a cold start re-does every fix and re-replies in every thread, and the one
   record of why dies with the gitignored ledger.
+
+### The legacy marker
+
+Before this format there was a `key=value` one, written one per finding beside the finding
+itself rather than in a trailer:
+
+```html
+<!-- review-agent: category=tenancy fingerprint=backend/apps/billing/services.py:charge_org:tenancy score=88 -->
+```
+
+**Read it. Never treat it as unparsed.** Those markers are on real PRs this agent has
+already reviewed — thirteen on this repo's PR #10, two on #30, all authored by `SELF` —
+so the alternative is either halting on every PR with history, or cold-starting it and
+ingesting our own past review as a reviewer's claims. Both were live before this rule.
+
+A legacy marker restores a finding at `status: "posted"` with `severity: null`, because
+the old format carried neither. It is enough to dedupe against, which is what stops the
+next run re-posting a nit it already made. It is **not** enough to count as a blocker, and
+a null severity never does — `verification.md` already refuses to suppress a `BLOCKER` on
+a fingerprint match, so a legacy finding that is still real gets re-found and re-posted at
+its true severity.
+
+Legacy markers are read where they sit, not in a trailer, because the old format put one
+beside each finding. Rule 1 still applies: a legacy marker on someone else's comment is
+inert.
+
+**Split it on the keys, never on whitespace.** There are three — `category=`,
+`fingerprint=`, `score=` — and a value runs to the next one or to the end. The anchor
+inside a fingerprint contains spaces on real markers: `fingerprint=docs/DESIGN.md:gh auth
+status:correctness` is on PR #30 of this repo. A parser that reads values as
+whitespace-delimited tokens matches nothing on that line, so the marker is neither read
+nor recorded as unparsed, and the run cold-starts believing it found no history.
 
 Prefer `$LEDGER` where it exists and disagrees; it carries fields no marker does.
 
@@ -354,8 +397,8 @@ For each item, before any trust decision:
 
 1. **Is it addressed to us?** A comment that passes all three marker rules above is the
    previous run's record, parsed there; it is not an item and does not enter the ledger.
-   Everything else is an item, including a comment from `SELF` that carries no marker on
-   its last line. Skip resolved threads whose hash has not changed.
+   Everything else is an item, including a comment from `SELF` carrying no marker we
+   would read. Skip resolved threads whose hash has not changed.
 2. **Is it outdated?** Two sources, and they disagree: `position == null` on the REST
    comment, and `isOutdated` on the GraphQL thread. Take the union — outdated if
    **either** says so. Trusting `position` alone marks a comment live whose thread

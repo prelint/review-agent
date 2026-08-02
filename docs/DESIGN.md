@@ -135,8 +135,8 @@ every PR it reviews and makes two concurrent runs fight over a tracked file. Git
 already stores exactly this, keyed by comment, visible to a human, and free.
 
 `SELF` comes from `gh api user --jq .login`, and a marker counts only where all three of
-authorship, position and shape agree: `author == SELF`, last line of the comment,
-parseable JSON. The first draft required the marker alone, on the reasoning that a human
+authorship, position and shape agree: `author == SELF`, in the comment's trailer and not
+inside a quote, parseable JSON. The first draft required the marker alone, on the reasoning that a human
 running this under their own token has their own comments arrive as `SELF`. That reasoning
 is right and the rule it produced was not — it made the marker sufficient rather than
 necessary, so anyone able to comment could mint one, and `substance_hash` is computable
@@ -145,7 +145,10 @@ reviewer's blocker without touching the code.
 
 Position carries the rest. GitHub's Quote reply copies our body, HTML comments included,
 into somebody else's words, and under a human token those words arrive as `SELF` too.
-Requiring the last line separates a record we wrote from a record someone quoted.
+Requiring the trailer, and rejecting `>`-quoted lines, separates a record we wrote from a
+record someone quoted. The first draft of this said "last line", which was wrong in the
+other direction: the summary carries a dozen markers and only one can be last, so it
+silently read one and dropped the rest.
 
 The residual is an account compromise, which is already game over. There is no signing
 key here because there is nowhere to keep one: `DESIGN.md` bans home-directory state, and
