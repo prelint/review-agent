@@ -5,8 +5,8 @@ Read `_schema.md` first.
 **Runs when** the diff adds or edits a test, changes test configuration, or adds a
 behaviour branch.
 
-**Why this exists:** nothing ever read the tests a diff contains — `backend/tests`
-holds 1,927 mock-call assertions across 333 files, and a lens counting only absent
+**Why this exists:** nothing ever read the tests a diff contains. A suite accumulates
+mock-call assertions that pass whatever the code does, and a lens counting only absent
 tests never opens one. `../reference/exclusions.md` #21 bans missing coverage as a
 standalone finding, so absence had no owner either.
 
@@ -54,20 +54,22 @@ the requirement changed, the old test was wrong, the new behaviour is intended. 
 the description states none, the test was edited to make CI green. `backend/tests`
 has zero skip marks today, so one added here is deliberate.
 
-**The runner collects the file.** `pyproject.toml:85` sets `python_files =
-["test_*.py"]`; `frontend/vitest.config.ts:27` sets
-`include: ['tests/**/*.test.{ts,tsx}']`. A new `foo_test.py`, or a spec beside its
-component under `src/`, never runs. Quote the config and the new path.
+**The runner collects the file.** Read the project's own collection config —
+`python_files` in pytest, `include` in vitest — then check the new test path against
+it. A `foo_test.py` under a `test_*.py` pattern, or a spec beside its component when
+the runner only globs a `tests/` tree, never runs. Quote the config line and the new
+path.
 
 **The environment can produce the failure.** `transaction.on_commit` callbacks do not
 fire under pytest-django's default database fixture, so an effect scheduled there
-needs `django_capture_on_commit_callbacks` — used 116 times here — or
-`transaction=True`. The `readonly` alias exists only where `DB_READER_HOST` is set,
-so `config/db_router.py` falls through to `default` in every test: **no test can
-exercise replica routing or read-after-write staleness.**
+needs `django_capture_on_commit_callbacks` or `transaction=True`. Where a read-replica
+alias is only configured from an environment variable the test settings do not set,
+the router falls through to the default connection and **no test exercises replica
+routing or read-after-write staleness** — check before trusting one that claims to.
 
-**Flakes carry a named schedule.** `addopts` has `-n auto`, so tests run in separate
-processes in an order nothing fixes — module-level state, a mutated class attribute,
+**Flakes carry a named schedule.** Check `addopts` for `-n auto` or equivalent
+parallelism: where it is on, tests run in separate processes in an order nothing fixes,
+and module-level state, a mutated class attribute,
 a reused `QueryClient` cache or a shared external resource is a real flake here. Same
 bar for real `now()` where `freeze_time` exists, `time.sleep`, a tight `waitFor`,
 unseeded data, or an assertion on unordered results. Name the pair of tests or the
