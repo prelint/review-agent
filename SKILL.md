@@ -166,6 +166,12 @@ Commit immediately. Do not batch. Do not defer to a later "ship" step. An interr
 run must leave a clean tree, and `git log` must be a complete answer to "did you
 address this?".
 
+**A blocker you fix stops being a blocker.** Decrement `surviving_blockers` in the
+ledger in the same step that commits the fix. Stage 3 writes what survived the gate and
+nothing else lowers it, so an unlowered count reaches Stage 5 and posts `failure` on a
+head with nothing left wrong. The field is blockers still unfixed, not a record of what
+Stage 3 found.
+
 **Fix every instance the finding reaches.** Correcting a pattern in one file and
 leaving its copies is not a smaller fix, it is a half-migration — and the un-migrated
 sites drift from the new shape, which is the recurring source of the bugs the next

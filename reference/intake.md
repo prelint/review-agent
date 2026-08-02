@@ -371,8 +371,11 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
 ```
 
 `surviving_blockers` is the one field Stage 1 does not own: it writes `0`, Stage 3
-overwrites it with the count that survived the gate, and Stage 5's commit status reads
-it. Everything else here is Stage 1's.
+overwrites it with the count that survived the gate, **Stage 4 decrements it as it
+commits each blocker fix**, and Stage 5's commit status reads it. It is the live count
+of blockers still unfixed at read time, never a record of what Stage 3 found — a run
+that fixes every blocker it raised reads `0` here, and posts `failure` on a clean head
+if it does not. Everything else here is Stage 1's.
 
 `state` is the verdict on a `review` item — `APPROVED`, `CHANGES_REQUESTED`,
 `COMMENTED` — and `null` on every other surface. Carry it: it is the only field that

@@ -79,9 +79,10 @@ is pure noise and it happened in the record.
 ## 4. Refuse to report success
 
 The gate is the agent's own refusal, not a repository setting. **Do not report a clean
-result while a ledger item is open or a `Blocker:` survived Stage 3.** Say what is
-outstanding, in the session output and in the summary comment, and exit non-zero if the
-host gives you an exit code.
+result while a ledger item is open or a `Blocker:` is still unfixed.** A blocker that
+survived Stage 3 and was fixed in Stage 4 is not outstanding — what blocks is what is
+unfixed now, not what the gate saw. Say what is outstanding, in the session output and
+in the summary comment, and exit non-zero if the host gives you an exit code.
 
 That is the only enforcement this skill can carry, because it is the only one that
 works in a repository it knows nothing about. Assume no CI, no bot, no branch
@@ -131,7 +132,11 @@ has the same defect plus one more: the commit it names is not on the remote yet.
 
 **Both counts come from the ledger, never from memory.** `$OPEN_ITEMS` is every item
 whose status is not one of the five section 2 accepts; `$BLOCKERS` is
-`surviving_blockers`, which Stage 3 writes when it finishes. An unassigned counter
+`surviving_blockers`, which Stage 3 writes and Stage 4 decrements as it fixes. Read it
+after Stage 4, never before — the count that survived the gate is not the count still
+open, and posting the first one reds a head where every blocker is already fixed.
+Section 7's silence rule is a separate question and keeps its Stage 3 wording: a
+blocker found and fixed still gets said out loud. An unassigned counter
 makes `[ "$OPEN_ITEMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a
 clean head — the exact defect this section exists to prevent.
 
