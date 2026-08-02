@@ -11,7 +11,8 @@ were not off by one are 61% of measured LLM review false positives.
 
 **So the bar is a counterexample, not an argument.** Name one input and two outputs:
 what this code returns for it, and what it should. "The condition looks inverted" is not
-a finding. "`limit=0` takes the `else` branch at `:77` and returns the whole table" is.
+a finding. "`limit=0` takes the `else` branch at `:77` and returns the whole table, where the
+caller expects an empty page" is.
 
 **Severity floor:** a wrong value persisted or shown to a customer is `BLOCKER`. A crash
 on a normal request is `REQUIRED`. An error-path-only defect is `REQUIRED` at most.
@@ -42,7 +43,8 @@ cover what it receives? Only where the uncovered value is in the diff — if fin
 needs a grep, that is `coherence`.
 
 **Types survive the boundary.** Query-string parameters are strings. JSON round trips
-lose integer-versus-string identity. `Decimal` mixed with `float` becomes float. A
+lose integer-versus-string identity. `Decimal` and `float` do not mix — `Decimal('1.1') + 1.1` raises `TypeError`, so the
+bug is usually the `float()` someone added to silence it. A
 TypeScript `as` or `!` asserts a shape the producer may not guarantee — quote the
 producer. A key or hash over values whose type varies makes two keys for one thing.
 
@@ -57,7 +59,8 @@ names, paths and PR titles are attacker-controlled.
 
 **The framework call does what the framework says.** `update()`, `bulk_create` and
 `bulk_update` skip `save()`, signals and `full_clean`. A Django ORM call inside
-`async def` raises `SynchronousOnlyOperation`; `requests`, `open` and `time.sleep`
+`async def` raises `SynchronousOnlyOperation` — `aget`, `acreate` and `async for` are
+the supported path, so the finding is a sync call where an async one exists; `requests`, `open` and `time.sleep`
 there stall the loop.
 
 **Two concurrent callers of this same path.** Read-check-write with no unique constraint
