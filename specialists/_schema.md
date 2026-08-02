@@ -125,12 +125,24 @@ died mid-response on this repo's PR #31 and returned an empty string, which unde
 rule was a legal way of saying "reviewed, nothing found" — from the one always-on lens
 that owns the defects no other lens sees.
 
-Three terminal answers — every dispatch ends in exactly one — plus `cleared`, which
-accompanies findings rather than replacing them:
+**Every response's last line carries a `kind`.** With findings, that is a count of what
+you sent:
+
+```json
+{"kind":"end","specialist":"correctness","findings":3}
+```
+
+Without it a truncated response is undetectable: a lens killed at its output cap after
+two findings of five ends on a valid finding line and reads as complete. The count is
+what makes the loss visible — the orchestrator compares it against the objects it
+actually received.
+
+The kinds:
 
 | Kind | Means |
 |---|---|
-| findings | one object per finding, no `kind` field |
+| findings | one object per finding, no `kind` field, closed by `end` |
+| `end` | the last line after findings, carrying how many you sent |
 | `clean` | you reviewed and found nothing |
 | `not-dispatched` | line 5's trigger did not match the diff |
 | `cleared` | what you checked and found sound — `red-team` only, and it precedes findings rather than replacing them |

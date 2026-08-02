@@ -108,12 +108,15 @@ Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
 `**Runs when**` clause it tests against the diff — and answers in one of the kinds
 `specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
 
-**A lens answered only if its response parses**: every line is JSON, and it ends in a
-terminal kind — or in a `cleared` object, which is `red-team`'s complete answer when it
-found nothing. Anything else is a dead lens: empty, truncated mid-line, or prose.
-Keying this on emptiness alone would miss the commoner shape, a subagent killed at its
-output cap after emitting two findings of five: the response is non-empty, so it passes
-as complete, and the three that never arrived are invisible.
+**A lens answered only if its response parses**: every line is JSON, the last one carries
+a `kind`, and where that is `end` its `findings` count matches the objects you received.
+Anything else is a dead lens — empty, truncated mid-line, prose, or a count that does not
+add up.
+
+Keying this on emptiness alone would miss the commoner shape, and so would checking only
+that the last line is valid: a subagent killed at its output cap after emitting two
+findings of five ends on a perfectly good finding object. The count is what makes those
+three visible.
 
 **Name a dead lens** in the session output always, and in the summary too whenever one is
 posted. A lens that died is coverage you did not get, and reporting a clean review

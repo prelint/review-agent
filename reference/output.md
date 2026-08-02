@@ -177,7 +177,7 @@ print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in clo
 print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
           if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER"); then
   echo "review-agent: $LEDGER missing or unreadable — no status posted" >&2
-  exit 1
+  LEDGER_UNREADABLE=1
 fi
 
 if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
@@ -226,10 +226,17 @@ Section 7's silence does not reach this. A status is not a comment: a clean revi
 posts `success` here and still posts no summary comment.
 
 **If the ledger is missing or will not parse, post no status at all.** Say so in the
-session output and exit non-zero. `success` is barred by section 4 on a ledger you cannot
-read, and `failure` is a guess about a head you know nothing about — the `else` branch
-would post it on every run whose ledger went missing, including clean ones. A context
-that is absent is a maintainer's question; a context that is wrong is one they act on.
+session output. `success` is barred by section 4 on a ledger you cannot read, and
+`failure` is a guess about a head you know nothing about — the `else` branch would post it
+on every run whose ledger went missing, including clean ones. A context that is absent is
+a maintainer's question; a context that is wrong is one they act on.
+
+**Skip the status, not the rest of the stage.** Sections 6 and 7 still run from the
+reconciliation you did in section 2, and the non-zero exit comes at the end of Stage 5.
+Exiting here would be the abort section 6 forbids, in a block this file calls optional:
+the fixes are already pushed, so the run would leave commits on the PR with no reply, no
+marker and no summary — and the next run, finding no markers, would cold-start and do all
+of it again.
 
 This is the one place `gh`'s counterpart rule does not transfer: a malformed *history*
 file is skipped line by line and the run continues, because history is an optimisation.
