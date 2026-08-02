@@ -72,13 +72,25 @@ protection, no permission to change repository settings, and no maintainer who h
 configured anything.
 
 **Optional, for repos that want it binding.** Where the token can write statuses, post
-one and let the repo decide whether to require it:
+one and let the repo decide whether to require it. **Post it on both paths** — a
+context that only ever goes red can never clear, and a maintainer who then requires it
+has blocked every clean head:
 
 ```bash
+if [ "$OPEN_ITEMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
+
 gh api "repos/$REPO/statuses/$HEAD_SHA" \
-  -f state=failure -f context="review-agent" \
-  -f description="<N> open, <N> blocking"
+  -f state="$STATE" -f context="review-agent" \
+  -f description="$OPEN_ITEMS open, $BLOCKERS blocking"
 ```
+
+`$OPEN_ITEMS` counts ledger items that are not `fixed`, `rebutted`, `deferred`,
+`informational` or `unresolvable`. `$BLOCKERS` counts `Blocker:` findings surviving
+Stage 3. `success` needs both at zero — exactly the condition section 4 refuses to
+report success without, so the status cannot disagree with the summary.
+
+Section 7's silence does not reach this. A status is not a comment: a clean review
+posts `success` here and still posts no summary comment.
 
 Treat a permission error as expected, not as a failure — many tokens cannot write
 statuses, and the review is still valid without one. Never instruct anyone to turn on
