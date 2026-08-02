@@ -88,7 +88,13 @@ read, and what picks the connection — a task enqueued before `commit` is the u
 - **A pattern this file already used before the diff**, which the diff follows.
 - **Another lens's defect.** N+1 and slow paths are `performance`. A swallowed exception
   or a default hiding absence is `silent-failure` — you own the wrong answer, not the
-  missing signal. Redelivery is `idempotency`; you own two concurrent callers.
+  missing signal. **Concurrency splits by what is wrong, not by who runs it.** The
+  missing atomicity mechanism — no unique constraint, no `select_for_update`, no
+  advisory lock — is `idempotency`, including check-then-act between two workers.
+  You own the case where the mechanism exists and the logic through it is still wrong:
+  a lock taken after the read it protects, a guard on the wrong key, a state machine
+  that admits an order it cannot handle. If the fix is "add the constraint", it is not
+  yours.
   Unvalidated model output is `llm-pipeline`.
 
 ## Evidence bar
@@ -99,5 +105,5 @@ give the index. For a coercion, give both types and the operation that mixes the
 
 "This could be None and would crash" is not a finding. "`_resolve_head` at
 `services.py:88` returns `None` when the branch is deleted, and `run.head_sha[:7]` at
-`:142` slices it, so a PR closed with its branch gone raises `TypeError` and the run
-never reaches `finalize`" is.
+`:142` slices it, so a PR closed with its branch gone raises `TypeError` where the
+caller expects the run to finalise as `SUPERSEDED`" is.
