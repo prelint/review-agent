@@ -6,7 +6,8 @@ If a rule has no evidence behind it, it does not belong in this repo.
 
 ## Zero dependencies
 
-Requires `git`, `gh`, `jq`, `python3`. Nothing else.
+Requires `git`, `gh`, `python3`. Nothing else — no standalone `jq`, since every
+filter runs through `gh --jq`, which is built in.
 
 No gstack, no plugin marketplace, no `~/.claude/skills/...` reads, no `~/.gstack/`
 state, no telemetry, no gbrain. The previous skill loaded 165 KB on every

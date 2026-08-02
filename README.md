@@ -3,7 +3,7 @@
 A pull-request review skill that reads every reviewer, verifies every finding twice,
 commits each fix on its own, and proves the loop is closed before it posts.
 
-Standalone. Requires `git`, `gh`, `jq`, `python3` and nothing else — no plugin
+Standalone. Requires `git`, `gh`, `python3` and nothing else — no plugin
 marketplace, no shared harness, no state in `$HOME`.
 
 ## Why

@@ -28,16 +28,22 @@ Every ledger item must be one of:
 | `rebutted` | the evidence that refutes it, quoted |
 | `deferred` | a reason, and an issue link if it is real work |
 | `informational` | nothing — it asked for nothing |
-| `unresolvable` | a `thread_id` of `null` from intake. The fix may exist; the thread cannot be closed. |
+| `unresolvable` | **a commit SHA that exists in `git log`**, plus a `thread_id` of `null` from intake |
 
 **An item still `open` means this stage is not done.** Go back to Stage 4 or record a
 deferral. Do not proceed with an open item and a summary that implies completeness.
 
-`unresolvable` is the one status that closes the ledger without closing the thread.
-It is reserved for an intake join failure — a `thread_id` of `null`, meaning
-pagination dropped the thread or its first comment was deleted. Fix the finding and
-commit as normal, then **say so in the summary**: `N item(s) fixed but not resolvable
-— thread ID missing.` Never let it read as complete. Never invent a thread ID.
+`unresolvable` is `fixed` that cannot close its thread. It carries **every requirement
+`fixed` carries** — a commit SHA verified against `git log` — plus one more: a
+`thread_id` of `null`, because pagination dropped the thread or its first comment was
+deleted.
+
+A missing thread ID is not permission to skip the fix. An item with no commit is
+`open`, or `deferred` with a reason; it is never `unresolvable`. The status describes
+a reporting limitation, not a lighter bar.
+
+Then **say so in the summary**: `N item(s) fixed but not resolvable — thread ID
+missing.` Never let it read as complete. Never invent a thread ID.
 
 Verify `fixed` claims against `git log`, not against your own memory of having made
 the edit. The commit must exist.
