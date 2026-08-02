@@ -3,7 +3,8 @@
 Read `_schema.md` first.
 
 **Runs when** the diff touches an ORM query, a serialiser, a list endpoint, a loop
-over rows, a migration, a React component, or a data-fetching hook.
+over rows, a React component, or a data-fetching hook. Migrations are
+`data-migration`; it owns lock duration and deploy-window cost.
 
 **Why this exists:** the taxonomy was never the problem. N+1 and missing pagination
 are easy to name and impossible to score — "this could be slow" reads the same whether
@@ -70,9 +71,9 @@ synchronous middleware in front of an async view forces a thread per request.
 re-ran: an object or array literal passed as a prop, a context value rebuilt every
 render, an effect that sets state it depends on. Never infer one from a missing hook.
 
-**Caches hit.** A key built from something that varies per call never hits. A memo
-with no eviction is a growing dict. Check the cache sits on the expensive side of the
-call, not after it.
+**Caches hit.** A key built from something that varies per call never hits. Check the
+cache sits on the expensive side of the call, not after it. A memo with no eviction is
+an unbounded cache — that is `resource-limits`.
 
 ## Not a finding
 
