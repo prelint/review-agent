@@ -153,11 +153,11 @@ led = json.load(open(sys.argv[1]))
 closed_claim   = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
 closed_finding = {"fixed", "posted", "deferred", "rebutted", "dropped"}
 print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in closed_claim)
-    + sum(1 for f in led["findings"] if f["status"] not in closed_finding))' "$LEDGER")
+    + sum(1 for f in led.get("findings", []) if f.get("status") not in closed_finding))' "$LEDGER")
 
 BLOCKERS=$(python3 -c 'import json,sys
-print(sum(1 for f in json.load(open(sys.argv[1]))["findings"]
-          if f["severity"] == "BLOCKER" and f["status"] not in {"fixed", "rebutted"}))' "$LEDGER")
+print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
+          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER")
 
 if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
@@ -179,6 +179,12 @@ ledger `intake.md` describes — plus every finding of ours still open. `$BLOCKE
 derived from that same array: `BLOCKER` findings that are neither `fixed` nor
 `rebutted`. Nothing decrements it, so it cannot disagree with the statuses it is
 computed from.
+
+**Both read the ledger with `.get`, never `[]`.** A ledger written before `findings`
+existed, or by a run that stopped early, raises `KeyError` on a subscript; the counter
+captures empty, `[ "" -eq 0 ]` is a bash error, and the `else` branch posts `failure` on
+a head with nothing left wrong. A missing array is zero findings, which is the honest
+reading and the one that keeps the status truthful.
 
 Compute both after Stage 4, never before — the count that survived the gate is not the
 count still open, and posting the first one reds a head where every blocker is already
