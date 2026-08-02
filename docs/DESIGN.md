@@ -186,19 +186,21 @@ Two more from `pr-review-toolkit` are worth porting later and are not urgent:
 `comment-analyzer` (comments that no longer describe the code) and
 `type-design-analyzer`.
 
-### What the seven outstanding ones reuse, and from where
+### What the last seven reused, and from where
 
-gstack's specialists are 45–60 lines: a scope header, a JSON schema, a flat list of
-categories. The **taxonomies are good and port wholesale** — its `security.md` is
+All seven have landed. This is the record of where each came from, not a plan.
+
+gstack's specialists were 45–60 lines: a scope header, a JSON schema, a flat list of
+categories. The **taxonomies were good and ported wholesale** — its `security.md` was
 seven categories and ~35 concrete checks.
 
-What they lack is the half that makes a finding survive Stage 3: no evidence bar, no
+What they lacked was the half that makes a finding survive Stage 3: no evidence bar, no
 failure-scenario requirement, and **no "not a finding" section at all**. A checklist
 that says what to look for and never what to ignore is a false-positive generator.
 
-Every port keeps the categories and gains the suppression rules.
+Every port kept the categories and gained the suppression rules.
 
-| Specialist | Port from | Write fresh |
+| Specialist | Ported from | Written fresh |
 |---|---|---|
 | `security` | gstack `specialists/security.md` — all 7 categories | Suppressions from `exclusions.md` #1–15; evidence bar |
 | `testing` | gstack `specialists/testing.md` — all 6 categories | "Not a finding", especially: missing coverage is never a standalone finding |
