@@ -197,6 +197,12 @@ gh api graphql -f query='
 **Never auto-resolve a rebuttal or a deferral.** Those stay open for a human. Replying
 is not resolving; resolving is the claim that the work is done.
 
+**A thread already resolved on arrival is not evidence its claim is closed.** Anyone
+can resolve a thread — including a previous run that closed it by proxy. Reconcile the
+claim on its own merits and, when it turns out to be open, say so in the reply rather
+than leaving a resolved thread standing over unfinished work. This repo had one:
+resolved on arrival, claim closed two commits later by this run.
+
 ## 7. The summary — or silence
 
 **If nothing blocking survived Stage 3 and every ledger item is closed, post nothing.**
