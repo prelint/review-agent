@@ -105,16 +105,25 @@ which apply — you would be reading their triggers to guess at what they will c
 from reading their own.
 
 Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
-`**Runs when**` clause it tests against the diff — and does one of two things:
-reviews, or returns a `kind: "not-dispatched"` object naming why it does not apply.
-Both are answers. Neither is silence.
+`**Runs when**` clause it tests against the diff — and returns one of three answers:
+findings, a `kind: "clean"` object if it reviewed and found nothing, or a
+`kind: "not-dispatched"` object naming what it looked for and did not find. All three
+are answers. **None of them is silence.**
+
+**An empty response is a dead lens, not a clean one.** Log it by name, carry on with the
+rest, and name it in the summary beside the not-dispatched reasons — a lens that died is
+coverage you did not get, and reporting a clean review without saying so is the same lie
+as reporting a clean review that never ran. Do not re-dispatch: a lens that returns
+nothing twice costs twice and answers once, and the run has already learned what it
+needed to say. This happened on PR #31 — `coherence` died mid-response and returned an
+empty string, which the specialist contract then accepted as "found nothing".
 
 That is the whole dispatch rule. There is no table here to drift from the files — the
 trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
 
-**Every `not-dispatched` reason goes in the summary.** "Not dispatched: `money`,
-`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have
-is coverage you say you do not have.
+**Every `not-dispatched` reason, and every dead lens, goes in the summary.** "Not
+dispatched: `money`, `tenancy` — no billing path or per-tenant query in the diff. No
+answer from: `coherence`." Coverage you do not have is coverage you say you do not have.
 
 A missing file is a different thing: it is a skip, not an error, and it is also named.
 
