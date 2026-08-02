@@ -192,10 +192,28 @@ substance_hash = sha256(normalise(body))         # the claim changed
 ```
 
 `normalise()` strips what a reviewer can edit without changing what they are asking
-for: markdown emphasis and heading marks, link and image syntax (keeping link text),
-HTML tags and comments, code-fence language tags, trailing punctuation, and repeated
-whitespace — then casefolds. It does **not** strip digits, identifiers, paths, or
-negations. "3/5" and "5/5" normalise differently; so do "must" and "must not".
+for. Apply these steps **in this order** — the hash is a contract between runs, and two
+implementations that differ by a step re-open every item on the next pass:
+
+1. Strip HTML comments, `<script>` and `<style>` blocks entirely.
+2. **Replace `<img …>` with its `alt` text**, not with nothing. Verdict badges live in
+   `alt` and nowhere else — strip the tag wholesale and a review can flip every point
+   from Agree to Disagree without moving the hash.
+3. Replace every other HTML tag with a single space, keeping the text between tags.
+4. Replace `[text](url)` with `text`; drop bare URLs.
+5. Strip markdown emphasis (`*`, `_`, `` ` ``), heading marks, blockquote marks, list
+   bullets and code-fence language tags.
+6. Collapse all whitespace runs to one space; strip leading and trailing whitespace.
+7. Strip trailing punctuation from the whole string.
+8. Casefold.
+
+It does **not** strip digits, identifiers, paths, or negations. "3/5" and "5/5"
+normalise differently; so do "must" and "must not".
+
+**Reproducibility is the point.** If a rerun hashes an unedited body differently, the
+comparison below is worthless and every item re-opens. Where the previous ledger and a
+fresh hash disagree on an item nobody touched, the bug is here — say so rather than
+treating it as an edit.
 
 Compare against the previous run's ledger:
 
@@ -250,12 +268,18 @@ For each item, before any trust decision:
 
 1. **Is it addressed to us?** Skip our own prior comments (`author == SELF`), and
    skip resolved threads whose hash has not changed.
-2. **Is it outdated?** `position == null` on an inline comment means the line no
-   longer exists. Do not silently drop it — a force-push can orphan a still-valid
+2. **Is it outdated?** Two sources, and they disagree: `position == null` on the REST
+   comment, and `isOutdated` on the GraphQL thread. Take the union — outdated if
+   **either** says so. Trusting `position` alone marks a comment live whose thread
+   GitHub already considers stale, which is the pair this repo saw on one of its own
+   threads. Do not silently drop it — a force-push can orphan a still-valid
    finding. Mark `outdated: true`, keep it in the ledger, and verify against the
    current code.
 3. **Is it a verdict?** A `review` item carries its verdict in `state`, not in `body`.
-   `CHANGES_REQUESTED` is `open` however empty the body: the request is in that
+   `DISMISSED` is `informational` — the verdict was withdrawn, so it asks for nothing,
+   and a review that moves `APPROVED` → `DISMISSED` between fetches has stopped
+   carrying a signal rather than started carrying one. `CHANGES_REQUESTED` is `open`
+   however empty the body: the request is in that
    review's inline comments, or it is nowhere and a human has to say which. `APPROVED`
    and `COMMENTED` fall through to the next question.
 4. **Does it ask for anything?** Some comments explain a decision rather than request
