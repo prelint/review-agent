@@ -185,11 +185,14 @@ Read `reference/output.md`. In order:
    means Stage 5 is not done.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
-4. **Push.**
-5. **Reply in threads, not at the top.** Inline findings get inline replies on their
+4. **Post the `review-agent` commit status** — `failure` if any ledger item is open or
+   any `Blocker:` survived, `success` only if neither. A crashed run posts nothing, and
+   a required-but-absent check blocks. See `reference/output.md`.
+5. **Push.**
+6. **Reply in threads, not at the top.** Inline findings get inline replies on their
    own thread. Resolve a thread only when its fix commit exists; never auto-resolve a
    rebuttal.
-6. **Post the summary — or don't.** If nothing blocking survived Stage 3 and every
+7. **Post the summary — or don't.** If nothing blocking survived Stage 3 and every
    ledger item is closed, post nothing. A clean PR does not need an announcement.
 
 ### Output caps

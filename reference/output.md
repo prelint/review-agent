@@ -59,7 +59,35 @@ gh pr view "$PR" --json state,merged,baseRefName,isDraft
 Stop if closed, merged, or the base branch changed. Posting a review into a merged PR
 is pure noise and it happened in the record.
 
-## 4. Push
+## 4. Post the gate
+
+A verdict that says "blocking" while the merge button stays green is advisory review,
+which is what this replaces. Stage 5 posts a commit status, and branch protection makes
+it binding.
+
+```bash
+STATE=failure   # any ledger item open, or any Blocker: survived Stage 3
+STATE=success   # every item resolved and nothing blocking
+gh api "repos/$REPO/statuses/$HEAD_SHA" \
+  -f state="$STATE" -f context="review-agent" \
+  -f description="<N> open, <N> blocking" \
+  -f target_url="<the summary comment, or the run log>"
+```
+
+Rules:
+
+- **Open ledger item → `failure`.** No exceptions. The ledger gate and the merge gate
+  are the same gate or neither is one.
+- **Any surviving `Blocker:` → `failure`**, even with the ledger clean.
+- **Never post `success` for a run that did not finish.** A crashed run posts nothing,
+  and a required-but-absent check blocks by default. Silence must fail closed.
+- Post it **before** the summary comment, so the status is up even if the comment
+  fails.
+
+Enable it once per repo: branch protection on the default branch, required status
+check `review-agent`. Until that is on, the status is decoration.
+
+## 5. Push
 
 ```bash
 git status --porcelain   # must be empty — Stage 4 commits as it goes
@@ -69,7 +97,7 @@ git push origin HEAD
 A non-empty tree here is a Stage 4 bug. Do not "fix" it with a catch-all commit —
 find the fix that did not commit and commit it with its finding cited.
 
-## 5. Reply in threads
+## 6. Reply in threads
 
 Inline findings get inline replies **on their own thread**, never as a top-level
 comment:
@@ -103,7 +131,7 @@ gh api graphql -f query='
 **Never auto-resolve a rebuttal or a deferral.** Those stay open for a human. Replying
 is not resolving; resolving is the claim that the work is done.
 
-## 6. The summary — or silence
+## 7. The summary — or silence
 
 **If nothing blocking survived Stage 3 and every ledger item is closed, post nothing.**
 Push the fixes and stop. A clean PR does not need an announcement, and the record's
