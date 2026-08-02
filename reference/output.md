@@ -103,6 +103,18 @@ is not resolving; resolving is the claim that the work is done.
 Push the fixes and stop. A clean PR does not need an announcement, and the record's
 worst comment was 10 KB reporting "0 blocking, 6 informational".
 
+**One exception: `unresolvable`.** Silence means "nothing needs your attention", and an
+`unresolvable` item leaves a thread open that nobody will close. If any item carries
+that status, post — even when nothing blocks and everything else is clean. One line is
+enough:
+
+```
+N item(s) fixed but not resolvable — thread ID missing: <urls>. Close them by hand.
+```
+
+Silence here would be a lie of exactly the kind the ledger exists to prevent: the
+work is done, the PR still looks unaddressed, and nothing says why.
+
 Otherwise, one top-level comment. Hard caps:
 
 - **2,000 characters.** Not a target — a limit.
@@ -141,10 +153,14 @@ bite hardest here:
 
 ## Refusing to post
 
-Post nothing when:
+Post nothing when **all** of these hold:
 
-- Everything found is in `exclusions.md`.
-- The only findings are `Nit:` or `FYI:` and no ledger item needed a reply.
+- No ledger item is `unresolvable`.
+- Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
+  and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
+
+The first condition is a gate, not one option among three. An `unresolvable` item
+posts regardless of what the other two say.
 
 Say what you did in the session output instead. The PR is not a log.
