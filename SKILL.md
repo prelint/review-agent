@@ -127,9 +127,10 @@ the specialist contract then accepted as "found nothing".
 That is the whole dispatch rule. There is no table here to drift from the files — the
 trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
 
-**Every `not-dispatched` reason, and every dead lens, goes in the summary.** "Not
-dispatched: `money`, `tenancy` — no billing path or per-tenant query in the diff. No
-answer from: `coherence`." Coverage you do not have is coverage you say you do not have.
+**Every `not-dispatched` reason goes in the summary.** "Not dispatched: `money`,
+`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have is
+coverage you say you do not have. Dead lenses are reported under their own rule above,
+which is stricter because a lens failing is not a lens declining.
 
 A missing file is a different thing: it is a skip, not an error, and it is also named.
 

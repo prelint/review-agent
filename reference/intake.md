@@ -154,8 +154,8 @@ Stage 5 must treat that item as unresolvable and say so, never silently skip it.
 **On `top` and `review` items, `None` is the correct value.** They have no thread to
 join, so nothing failed and nothing is owed. Applied to every surface, the rule reads
 ten of the thirteen items on this repo's PR #10 as unresolvable — every review body and
-every top-level comment — and `output.md` makes `unresolvable` the one status that
-overrides silence, so a clean run carrying a single top-level comment would announce
+every top-level comment — and `output.md` makes `unresolvable` a status that overrides
+silence, so a clean run carrying a single top-level comment would announce
 "10 item(s) fixed but not resolvable". The run that produced those numbers filed them
 `fixed` and `informational` instead, which was right and undocumented.
 
