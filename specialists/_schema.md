@@ -8,6 +8,33 @@ You do not see the other specialists' findings, and that is deliberate. Independ
 is what makes the dedupe in Stage 3 meaningful. Do not speculate about what another
 lens would say, and do not broaden past your own file to be helpful.
 
+**Do not read the other lens files.** Eighteen lenses each reading seventeen others is
+quadratic and buys nothing — the boundary you need is one line, and it is here:
+
+| Lens | Owns |
+|---|---|
+| `coherence` | a rule, state or sweep that contradicts or orphans something outside the diff |
+| `correctness` | logic that does not do what it claims |
+| `spec-drift` | the diff against the linked issue and the PR description |
+| `silent-failure` | errors swallowed; defaults that mask absence |
+| `maintainability` | whether the next person can change this safely |
+| `testing` | whether the tests would catch a regression |
+| `security` | auth bypass, injection, crypto misuse, secrets, XSS, deserialization |
+| `tenancy` | a cross-tenant read or write |
+| `money` | charges, ledgers, rounding, refunds, metering |
+| `idempotency` | the missing atomicity mechanism; at-least-once delivery |
+| `resource-limits` | a missing bound — rate limit, page cap, concurrency, timeout, lock scope |
+| `performance` | work slower than it needs to be |
+| `api-contract` | a breaking change to a published interface |
+| `data-migration` | schema change safety across the deploy window |
+| `infra-deploy` | IaC, CI, IAM, the rollback path |
+| `llm-pipeline` | prompt and consumer drift; model output as untrusted input |
+| `observability` | whether you find out when it breaks |
+| `red-team` | no checklist — locally correct, globally wrong |
+
+When something is not yours, write `routed to <lens>` in one clause and move on. Do not
+report it, and do not go and check what that lens says about it.
+
 ## Input
 
 - **Your working directory, as an absolute path.** It is given to you; do not guess it.
