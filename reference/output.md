@@ -37,6 +37,15 @@ and do not fix: fix it now, or file it where someone will see it. "Noted it" is 
 third ending — a silent deferral costs the fix entirely, and an issue costs one
 paragraph.
 
+**Too minor to file is too minor to defer.** A real finding that does not warrant an
+issue is not stuck between the two endings — it takes the first one at a lower
+severity: post it as `Nit:` or `FYI:` in the summary, under section 7's cap, and close
+the claim as `rebutted` citing the post. It has been said where the author will read
+it, which is all a trivial issue would have achieved. What is banned is the finding
+that goes nowhere at all, not the finding too small for a tracker. If it does not
+survive the 5-finding cap either, it was not worth raising and Filter 2 should have
+killed it.
+
 **Fold into an existing issue before opening one.** List the open set and match on
 surface — same file, same feature, same error — not on similar titles, which drift.
 This matters most when several agents review in parallel: each sees only its own work,
