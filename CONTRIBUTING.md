@@ -31,6 +31,12 @@ names — `author_association`, `substance_hash`, the ledger. Plain never means 
 Rules, procedures, and the evidence a rule rests on. A design decision gets one
 paragraph: the alternative, and why it lost.
 
+**Deleting a mechanism earns that paragraph too.** A rule you drop leaves no trace in
+the diff of the file that no longer has it, so it is invisible to every later reader
+and to this skill's own review. Record it in `docs/DESIGN.md` under "What the rewrite
+dropped" — what it did, and what does its job now. "Nothing does" is a valid answer
+and belongs there most of all.
+
 Delete: restated rationale, hedging, "we could also", how the file got this way,
 anything visible in the diff.
 

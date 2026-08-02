@@ -28,6 +28,66 @@ run-scoped ledger file. Nothing is written to the user's home directory.
 | Uncapped output | 226 posted comment bodies: median 1,718 chars, p90 4,180, max 10,289. The worst was 10 KB reporting *"0 blocking, 6 informational"*. | Hard caps in Stage 5, and nothing posts when nothing blocks. |
 | Everything through Bash | 14,249 Bash calls vs 2,113 Read and 2 Grep. 88 tool errors followed. | Stage 2 requires the native search tools; `gh` and `git` are the only sanctioned shell. |
 
+## What the rewrite dropped
+
+**Removing a mechanism costs the same paragraph as adding one: the alternative, and
+why it lost.** Nothing recorded these seven, and five open issues came out of them.
+
+The five failures above were removed on purpose. All seven below were removed by
+omission — gstack had them working, the rewrite did not carry them, and no file said
+so. Two deliberate decisions sit behind four of the seven, and both were right about
+the thing they were aimed at and wrong about what they took with them; they are the
+two paragraphs under the table, not extra rows.
+
+Citations are anchor-first, per `specialists/_schema.md`: the quoted string is the
+address and the number beside it is a hint. gstack is not vendored here and
+`gstack-upgrade` rewrites these files, so the numbers below are only true of the copy
+at `~/.claude/skills/gstack/review/` on the day they were taken. The anchors survive.
+
+| gstack has | Where | Here now |
+|---|---|---|
+| `NO FINDINGS` as an explicit clean result, and a consumer that reads it | `review/specialists/*.md` `If no findings:` :7, `review/SKILL.md` `If output is "NO FINDINGS"` :1380 | Silence, which is the same bytes as a crashed lens ([#13]) |
+| A dead or timed-out specialist logs and the run continues on partial results | `review/SKILL.md` `partial results are better than no results` :1370 | No rule ([#13]) |
+| A failed reply POST warns and continues | `greptile-triage.md` `If a reply POST fails` :92 | No rule, in the one stage forbidden from reporting false success ([#18]) |
+| A malformed state file skips its bad lines and continues | `greptile-triage.md` `never fail on a malformed history file` :57 | No rule ([#18]) |
+| The PR comes from the current branch, never an argument | `greptile-triage.md` `PR_NUMBER=$(gh pr view` :13 | A PR number, diffed against local `HEAD`, with nothing comparing the two ([#14]) |
+| Prior decisions read back off GitHub by matching markers in our own replies | `greptile-triage.md` `Escalation Detection` :156 | Our own comments are skipped ([#11]) |
+| Outcomes append to a per-project and a global history file | `greptile-triage.md` `History File Writes` :182 | Nothing ([#11]) |
+
+Not every gap here is a drop. `gh auth status` is the counter-example worth keeping
+straight: `intake.md` lists an unauthenticated `gh` as a reason to refuse the run and
+Stage 0 never checks it ([#26]), but gstack has no gate either. Its only use of the
+command is platform detection — reached when the remote matches neither `github.com`
+nor `gitlab`, and failing it selects git-native commands rather than stopping. That is
+a condition this repo invented and did not wire, not a mechanism it inherited and lost.
+
+The two decisions, and the rows each one cost.
+
+**`~/.gstack/` state** — rows six and seven. Banned above for good reasons: 165 KB
+per invocation, 46% of it harness preamble. That argument is about the *location*. It
+was applied to the *function*, and remembering what a previous run decided now has no
+home. `reference/calibration.md` reaches the same conclusion from scratch and names
+the two places that qualify — the repo and GitHub. Neither is built.
+
+**Skip silently** — rows one and two. gstack treats reviewer triage as additive: if
+the fetch fails, skip and say nothing (`greptile-triage.md` `Skip Greptile triage
+silently` :16). Inverting that was right, because silence reads as coverage you did
+not provide. The inversion reached dispatch and never reached the return, so
+`specialists/_schema.md` now says both "never return nothing" and "output nothing at
+all if you found nothing".
+
+One more from outside gstack. mattpocock's `code-review` pins its diff to a fixed
+point the caller supplies and refuses to run without one
+(`skills/engineering/code-review/SKILL.md` `Whatever the user said is the fixed
+point` :19). Both ancestors bind the diff to something the caller named. This skill
+binds it to whatever is checked out.
+
+[#11]: https://github.com/prelint/review-agent/issues/11
+[#13]: https://github.com/prelint/review-agent/issues/13
+[#14]: https://github.com/prelint/review-agent/issues/14
+[#18]: https://github.com/prelint/review-agent/issues/18
+[#26]: https://github.com/prelint/review-agent/issues/26
+
 ## Reading the changing review body
 
 Both the old paths watermark on `created_at`. Across all 454 sessions, `updated_at`
