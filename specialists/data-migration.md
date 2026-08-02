@@ -12,7 +12,8 @@ window: a `NotNullViolation` on `decision_recommendation`, and a backfill that r
 a column the old non-lot-aware code was still mutating. `infra-deploy` owns the
 rollback path for infrastructure; this lens owns it for data.
 
-**Ask of every operation: does the deployed image still work against this schema?** New
+**Ask of every operation: does the code at the merge base still work against this
+schema?** That is the deployed image, as close as you can get to it from here. New
 code ships after the migration and is safe by construction. Old code is what breaks,
 and it is not in the diff.
 
@@ -98,8 +99,17 @@ exists — `coherence`.
 
 ## Evidence bar
 
-Quote the operation **and** the code in the deployed image that it breaks. New code is
-not evidence; it ships after the migration. For a backfill, quote the loop or `UPDATE`
+Quote the operation **and** the code that breaks, read from the **merge base** —
+`git show "$DIFF_BASE":<path>`, never the working tree. Code added in this diff is not
+evidence: it ships after the migration.
+
+The merge base is the deployed image's stand-in, and it is the only version of it you
+can inspect. You have the diff and the repository; you have no access to what is
+running. Say "at the merge base" in the finding, not "in production" — the two differ
+by whatever landed on the base branch since the last deploy, and claiming to have read
+production when you read `git` is the kind of overclaim `verification.md` exists to
+kill. Where that gap could change the answer, band the finding `unverified` and name
+what would settle it. For a backfill, quote the loop or `UPDATE`
 and the `WHERE` that makes a second run a no-op, or show there is none. For a lock, name
 the table and how you sized it.
 
