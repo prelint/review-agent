@@ -8,6 +8,24 @@ raising, and unlikely to fire — it never drops. No one of them does another's 
 
 ---
 
+## First: an object with a `kind` is not a finding
+
+Split on the **presence** of that field, never on a list of its values. Anything carrying
+a `kind` reports coverage rather than a defect: pass it through untouched, never to a
+scorer, never into the ledger's `findings` array. `specialists/_schema.md` owns the list,
+and an enumeration here would drift from it — it already had, omitting `end`, which every
+findings response now carries.
+
+**A `kind` that is not one of `_schema.md`'s is a dead lens, not a pass-through.** Stage 2
+should have caught it; if one reaches here, name that lens as dead and say so, because
+passing it through silently is how an object that was meant to be a finding disappears
+behind a stray field.
+
+Every lens that finds nothing now emits one, so a run can hand this stage eighteen of
+them. Sent to Filter 1 they have no `file:line` to quote; sent to Filter 2 an unparseable
+score counts as 100 by the rule below and they survive, land in `findings` at `open`, and
+red a clean head.
+
 ## Filter 1 — quote or drop
 
 A finding ships only if it quotes the verbatim `file:line` that motivates it.

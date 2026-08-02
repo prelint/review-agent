@@ -68,7 +68,7 @@ already-typed code it is the type checker's problem, not yours.
 
 - Anything in a one-line fix or a generated file, and anything at all where the diff
   adds no file, moves no code between files, adds no abstraction or type boundary, and
-  restructures nothing that already worked. Output nothing.
+  restructures nothing that already worked. Emit the `clean` object.
 - Naming or design you would have chosen differently, where the author's is not worse.
 - Function length, file length, nesting depth or parameter count on their own.
 - The second copy of anything, unless the two must change together.

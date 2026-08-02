@@ -348,6 +348,23 @@ looking for problems.
 UX review is deliberately out — it wants a running app, not a diff. A decision, not an
 oversight.
 
+### Silence had to stop being a legal answer
+
+`_schema.md` carried both rules at once: never return nothing, and output nothing if you
+found nothing. So a lens that died and a lens that passed produced identical bytes, and
+the orchestrator counted both as coverage.
+
+The dogfooded review of PR #31 supplied the case while the fix was being written.
+`coherence` — always-on, and the owner of every defect no other lens sees — died
+mid-response and returned an empty string. Eighteen lenses ran, seventeen answered, and
+nothing in the skill could tell.
+
+Three answers now, and an empty response is none of them. gstack had this on line 7 of
+every specialist (`If no findings: output NO FINDINGS`) and in its orchestrator ("if any
+specialist subagent fails or times out, log the failure and continue"). The taxonomies
+were ported here and neither of those was — which is the second time a port kept the
+checklist and dropped the part that made it trustworthy.
+
 ## Resource limits are in scope, and the exclusions were wrong
 
 Three of the exclusions — denial of service, rate limiting, memory and CPU exhaustion

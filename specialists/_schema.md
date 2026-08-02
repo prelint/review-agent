@@ -106,9 +106,54 @@ If it does not, emit exactly one object and stop:
 Say what you looked for and did not find, not just "does not apply". The reason is
 read by a human deciding whether to trust a clean review.
 
-Never return nothing. Nothing is indistinguishable from a crash, and it reads as
-coverage you did not provide. Returning no findings *after* reviewing is different —
-that is the empty result below, and it is a valid and common outcome.
+### Reviewed, found nothing
+
+Say so. One object, and it is the whole response:
+
+```json
+{"kind":"clean","specialist":"testing","checked":"the three changed branches in prepare.py against the existing suite"}
+```
+
+**`checked` names what you examined**, in the terms someone could go and re-read: files,
+symbols, the specific risk you went looking for. "Nothing found" and "reviewed the diff"
+are not values — they restate the `kind` and put back the ambiguity the object exists to
+remove. A human decides from this field whether to trust the coverage claim.
+
+**Never return nothing.** An empty response is indistinguishable from a crash, and it
+reads as coverage you did not provide. This is not hypothetical: the `coherence` lens
+died mid-response on this repo's PR #31 and returned an empty string, which under the old
+rule was a legal way of saying "reviewed, nothing found" — from the one always-on lens
+that owns the defects no other lens sees.
+
+**Every response's last line carries a `kind`, and which one is not your choice.** With
+findings it is `end`, carrying a count of what you sent. With none it is `clean`,
+`not-dispatched`, or — for `red-team` — `cleared`. Findings closed by anything but `end`
+is a malformed response, and Stage 2 reads it as a crash: `clean` after findings says you
+reviewed and found nothing, directly contradicting the findings above it.
+
+```json
+{"kind":"end","specialist":"correctness","findings":3}
+```
+
+Without it a truncated response is undetectable: a lens killed at its output cap after
+two findings of five ends on a valid finding line and reads as complete. The count is
+what makes the loss visible — the orchestrator compares it against the objects carrying no
+`kind`. It counts findings, so a `cleared` line does not inflate it and `end` does not
+count itself.
+
+The kinds:
+
+| Kind | Means |
+|---|---|
+| findings | one object per finding, no `kind` field, closed by `end` |
+| `end` | the last line after findings, carrying how many you sent |
+| `clean` | you reviewed and found nothing |
+| `not-dispatched` | line 5's trigger did not match the diff |
+| `cleared` | what you checked and found sound — `red-team` only, and it precedes findings rather than replacing them |
+
+`clean` and `cleared` are different answers. `cleared` accompanies findings; `clean` is
+the response when there are none. Stage 3 passes both through untouched: never scored,
+never deduped, never posted.
 
 ### The cleared line
 
@@ -126,6 +171,10 @@ when a `BLOCKER` is present, and drops them otherwise.
 
 Keep each entry to one clause. The cleared list is evidence that the lens looked, not
 a second report.
+
+For `red-team`, a `cleared` object with no findings after it is already the complete
+answer; it does not also need a `clean` object, because it carries the same proof in more
+detail.
 
 ## Likelihood
 
@@ -181,8 +230,8 @@ read after further commits land, by which time every bare number in them is wron
 **400 words total across all your findings.** A lens that cannot say it in 400 words
 has not finished thinking.
 
-Prefer three verified findings to twelve suspicions. Output nothing at all if you
-found nothing — an empty response is a valid and common result.
+Prefer three verified findings to twelve suspicions. Finding nothing is a valid and
+common result; **saying nothing is not**. Emit the `clean` object above.
 
 ## Out of scope for every specialist
 

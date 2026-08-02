@@ -105,16 +105,49 @@ which apply — you would be reading their triggers to guess at what they will c
 from reading their own.
 
 Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
-`**Runs when**` clause it tests against the diff — and does one of two things:
-reviews, or returns a `kind: "not-dispatched"` object naming why it does not apply.
-Both are answers. Neither is silence.
+`**Runs when**` clause it tests against the diff — and answers in one of the kinds
+`specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
+
+**A lens answered only if its response parses, and the terminator matches its shape.**
+Every line is JSON, the last one carries a `kind`, and that kind is the one its own
+response requires:
+
+| Response | Must end with |
+|---|---|
+| one or more findings | `end`, whose `findings` count equals the objects carrying no `kind` |
+| no findings | `clean`, `not-dispatched`, or `cleared` for `red-team` |
+
+Anything else is a dead lens — empty, truncated mid-line, prose, an unrecognised `kind`, a
+count that does not add up, or **findings closed by something other than `end`**.
+
+That last case is the one a terminator alone does not catch. Checking the count only when
+the last line happens to be `end` lets a lens truncated after two findings of five land on
+a stray `clean` and pass as answered, with the count check — the entire reason `end`
+exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
+means the lens reviewed and found nothing.
+
+Keying this on emptiness alone would miss the commoner shape, and so would checking only
+that the last line is valid: a subagent killed at its output cap after emitting two
+findings of five ends on a perfectly good finding object. The count is what makes those
+three visible.
+
+**Name a dead lens** in the session output always, and in the summary too whenever one is
+posted. A lens that died is coverage you did not get, and reporting a clean review
+without saying so is the same lie as reporting a clean review that never ran.
+
+**It does not block, and it does not get re-dispatched.** Missing coverage is not a found
+defect, so gating a merge on one flaky subagent would cost more than it catches; and a
+lens that returns nothing twice costs twice and answers once. Name it and move. This
+happened on PR #31 — `coherence` died mid-response and returned an empty string, which
+the specialist contract then accepted as "found nothing".
 
 That is the whole dispatch rule. There is no table here to drift from the files — the
 trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
 
 **Every `not-dispatched` reason goes in the summary.** "Not dispatched: `money`,
-`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have
-is coverage you say you do not have.
+`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have is
+coverage you say you do not have. Dead lenses are reported under their own rule above,
+which is stricter because a lens failing is not a lens declining.
 
 A missing file is a different thing: it is a skip, not an error, and it is also named.
 
@@ -223,8 +256,8 @@ Read `reference/output.md`. In order:
    them or say explicitly that you are deferring them.
 2. **Reconcile the ledger, claim by claim.** Every claim must be `fixed` (with a commit
    SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
-   `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
-   but its thread ID is null). An item is closed when all of its claims are; one claim
+   `informational` (it asked for nothing), or `unresolvable` — which `reference/output.md`
+   defines, along with the two things that cause it. An item is closed when all of its claims are; one claim
    still `open` means Stage 5 is not done. **Then reconcile `findings` the same way** —
    all five endings settle here, `posted` and `dropped` included, because the commit
    status in step 5 counts anything still `open`. Step 7 posts what is marked `posted`.
