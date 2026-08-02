@@ -329,6 +329,7 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
   "head_sha": "03d1b784f",
   "pr_body_hash": "sha256:...",
   "pr_substance_hash": "sha256:...",
+  "surviving_blockers": 0,
   "items": [
     {
       "id": 3640790504,
@@ -349,6 +350,10 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
   ]
 }
 ```
+
+`surviving_blockers` is the one field Stage 1 does not own: it writes `0`, Stage 3
+overwrites it with the count that survived the gate, and Stage 5's commit status reads
+it. Everything else here is Stage 1's.
 
 `state` is the verdict on a `review` item — `APPROVED`, `CHANGES_REQUESTED`,
 `COMMENTED` — and `null` on every other surface. Carry it: it is the only field that

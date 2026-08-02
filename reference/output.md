@@ -94,6 +94,13 @@ context that only ever goes red can never clear, and a maintainer who then requi
 has blocked every clean head:
 
 ```bash
+OPEN_ITEMS=$(python3 -c 'import json,sys
+closed = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
+print(sum(1 for i in json.load(open(sys.argv[1]))["items"] if i["status"] not in closed))' "$LEDGER")
+
+BLOCKERS=$(python3 -c 'import json,sys
+print(json.load(open(sys.argv[1]))["surviving_blockers"])' "$LEDGER")
+
 if [ "$OPEN_ITEMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
 gh api "repos/$REPO/statuses/$(git rev-parse HEAD)" \
@@ -107,10 +114,14 @@ longer the PR's head. GitHub attaches a status to one commit and nothing carries
 forward, so a status on the stale SHA is invisible on the PR. Posting before the push
 has the same defect plus one more: the commit it names is not on the remote yet.
 
-`$OPEN_ITEMS` counts ledger items that are not `fixed`, `rebutted`, `deferred`,
-`informational` or `unresolvable`. `$BLOCKERS` counts `Blocker:` findings surviving
-Stage 3. `success` needs both at zero — exactly the condition section 4 refuses to
-report success without, so the status cannot disagree with the summary.
+**Both counts come from the ledger, never from memory.** `$OPEN_ITEMS` is every item
+whose status is not one of the five section 2 accepts; `$BLOCKERS` is
+`surviving_blockers`, which Stage 3 writes when it finishes. An unassigned counter
+makes `[ "$OPEN_ITEMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a
+clean head — the exact defect this section exists to prevent.
+
+`success` needs both at zero — exactly the condition section 4 refuses to report
+success without, so the status cannot disagree with the summary.
 
 Section 7's silence does not reach this. A status is not a comment: a clean review
 posts `success` here and still posts no summary comment.
