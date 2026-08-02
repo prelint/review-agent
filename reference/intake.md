@@ -386,13 +386,15 @@ costs one substitution.
 Stage 1 ends by writing `.review-agent/pr-${PR}.json`. Everything downstream is
 measured against it, and Stage 5 cannot finish while any entry is `open`.
 
+Two arrays. `items` is what reviewers said; `findings` is what we found. Both reconcile
+in Stage 5.
+
 ```json
 {
   "pr": 5370,
   "head_sha": "03d1b784f",
   "pr_body_hash": "sha256:...",
   "pr_substance_hash": "sha256:...",
-  "surviving_blockers": 0,
   "items": [
     {
       "id": 3640790504,
@@ -416,16 +418,39 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
         }
       ]
     }
+  ],
+  "findings": [
+    {
+      "fingerprint": "backend/apps/billing/services.py:charge_org:money",
+      "category": "money",
+      "severity": "BLOCKER",
+      "score": 88,
+      "path": "backend/apps/billing/services.py",
+      "anchor": "charge_org()",
+      "status": "open",
+      "resolution": null
+    }
   ]
 }
 ```
 
-`surviving_blockers` is the one field Stage 1 does not own: it writes `0`, Stage 3
-overwrites it with the count that survived the gate, **Stage 4 decrements it as it
-commits each blocker fix**, and Stage 5's commit status reads it. It is the live count
-of blockers still unfixed at read time, never a record of what Stage 3 found — a run
-that fixes every blocker it raised reads `0` here, and posts `failure` on a clean head
-if it does not. Everything else here is Stage 1's.
+Stage 1 writes `findings: []`. Stage 3 fills it with every survivor of the gate; Stage 4
+moves each status as it commits. A finding the five-finding cap cut is `dropped` with
+its reason, never absent — the run on this repo's PR #10 produced nine findings and
+nine commits and the ledger recorded none of them, so nothing could check a commit
+against the finding it claimed to fix.
+
+**Finding statuses.** `open`, `fixed` (a commit SHA), `posted` (it went in the summary
+and the author owns it), `deferred` (a reason and an issue link), `rebutted` (the
+evidence disproving our own claim), `dropped` (the summary never carried it — record
+which of `output.md`'s two rules kept it out). Not `informational` or `unresolvable`: a
+finding of ours always asks for something, and it has no thread to fail to close.
+
+**`surviving_blockers` is derived, never stored.** Count the `findings` whose `severity`
+is `BLOCKER` and whose `status` is neither `fixed` nor `rebutted` — the only two endings
+that stop something blocking. A posted or deferred blocker is still unfixed and still
+counts. The stored field was decremented by hand, and nothing checked a decrement
+against a real fix. `output.md` computes it where it is read.
 
 `state` is the verdict on a `review` item — `APPROVED`, `CHANGES_REQUESTED`,
 `COMMENTED` — and `null` on every other surface. Carry it: it is the only field that

@@ -120,6 +120,21 @@ double-dispatch. Neither helps with two runs in flight at once.
 **Single run, guaranteed. Concurrent runs, best effort.** If concurrency becomes
 routine, the fix is a lease on the PR, not a shared ledger.
 
+## The ledger holds our findings too
+
+Nine findings, nine commits, and `.review-agent/pr-10.json` recorded none of them. The
+file had one array, `items`, so intake had a ledger and the review did not. A finding
+cut by the five-finding cap or suppressed by the silence rule left no trace anywhere,
+and `surviving_blockers` was an integer Stage 4 decremented by hand with nothing
+checking a decrement against a real fix.
+
+So `findings` is a second array in the same file, reconciled the same way. The
+alternative was a separate artifact for our side of the review; it lost because Stage 5
+would then have two files to close and one of them to forget. The blocker count is now
+computed from that array — `BLOCKER`, and neither `fixed` nor `rebutted` — instead of
+maintained beside it, for the same reason the run count below is not written here as a
+number.
+
 ## Why the gate is two filters, not one
 
 Stage 3 runs them in series because they catch different things.

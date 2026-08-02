@@ -74,6 +74,30 @@ missing.` Never let it read as complete. Never invent a thread ID.
 Verify `fixed` claims against `git log`, not against your own memory of having made
 the edit. The commit must exist.
 
+### Our own findings
+
+The `findings` array reconciles too, and nothing in it stays `open` either.
+
+| Status | Requires |
+|---|---|
+| `fixed` | a commit SHA that exists in `git log` |
+| `posted` | the finding appears in the summary comment this stage writes |
+| `deferred` | a reason **and** an issue link |
+| `rebutted` | the evidence disproving our own claim, quoted |
+| `dropped` | which of section 7's two rules kept it out of the summary |
+
+`posted` and `dropped` are settled by section 7, so reconcile the findings array after
+you decide what the summary carries — not before, or the decision reads its own output.
+
+`dropped` is the ending the author never reads, and it has two legitimate causes. The
+five-finding cap: the "plus N similar" line is the count, and a `dropped` finding
+missing from it has vanished. Silence: a run whose only findings are `Nit:`/`FYI:`
+posts nothing, and those findings still get recorded here. Silence is a decision not to
+spend the author's attention, never a decision to forget.
+
+A `BLOCKER` is never `dropped` — the cap is on non-blocking findings, and silence
+requires that nothing blocking survived.
+
 ## 3. Re-check eligibility
 
 Before writing anything public:
@@ -120,12 +144,15 @@ has blocked every clean head:
 
 ```bash
 OPEN_CLAIMS=$(python3 -c 'import json,sys
-closed = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
-print(sum(1 for i in json.load(open(sys.argv[1]))["items"]
-           for c in i["claims"] if c["status"] not in closed))' "$LEDGER")
+led = json.load(open(sys.argv[1]))
+closed_claim   = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
+closed_finding = {"fixed", "posted", "deferred", "rebutted", "dropped"}
+print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in closed_claim)
+    + sum(1 for f in led["findings"] if f["status"] not in closed_finding))' "$LEDGER")
 
 BLOCKERS=$(python3 -c 'import json,sys
-print(json.load(open(sys.argv[1]))["surviving_blockers"])' "$LEDGER")
+print(sum(1 for f in json.load(open(sys.argv[1]))["findings"]
+          if f["severity"] == "BLOCKER" and f["status"] not in {"fixed", "rebutted"}))' "$LEDGER")
 
 if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
@@ -143,14 +170,17 @@ has the same defect plus one more: the commit it names is not on the remote yet.
 **Both counts come from the ledger, never from memory.** `$OPEN_CLAIMS` is every claim
 whose status is not one of the five section 2 accepts — **claims, because that is where
 status lives**; an item carries none, and `i["status"]` raises `KeyError` on every
-ledger `intake.md` describes. `$BLOCKERS` is `surviving_blockers`, which Stage 3 writes
-and Stage 4 decrements as it fixes. Read it after Stage 4, never before — the count
-that survived the gate is not the count still open, and posting the first one reds a
-head where every blocker is already fixed. Section 7's silence rule is a separate
-question and keeps its Stage 3 wording: a blocker found and fixed still gets said out
-loud. An unassigned counter makes `[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else`
-branch posts `failure` on a clean head — the exact defect this section exists to
-prevent.
+ledger `intake.md` describes — plus every finding of ours still open. `$BLOCKERS` is
+derived from that same array: `BLOCKER` findings that are neither `fixed` nor
+`rebutted`. Nothing decrements it, so it cannot disagree with the statuses it is
+computed from.
+
+Compute both after Stage 4, never before — the count that survived the gate is not the
+count still open, and posting the first one reds a head where every blocker is already
+fixed. Section 7's silence rule is a separate question and keeps its Stage 3 wording: a
+blocker found and fixed still gets said out loud. An unassigned counter makes
+`[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a clean
+head — the exact defect this section exists to prevent.
 
 `success` needs both at zero — exactly the condition section 4 refuses to report
 success without, so the status cannot disagree with the summary.
@@ -224,7 +254,8 @@ work is done, the PR still looks unaddressed, and nothing says why.
 Otherwise, one top-level comment. Hard caps:
 
 - **2,000 characters.** Not a target — a limit.
-- **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed."
+- **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
+  one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
 - Every finding carries an invisible marker so it can be found again later:
   `<!-- review-agent: category=<c> fingerprint=<f> score=<n> -->`. Without it,

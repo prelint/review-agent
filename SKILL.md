@@ -60,6 +60,10 @@ one comment carrying fourteen numbered points is fourteen claims with fourteen s
 and an item closes when every one of them does. Everything downstream is measured
 against this file.
 
+The ledger's second array, `findings`, is ours. Stage 1 writes it empty, Stage 3 fills
+it, Stage 4 and Stage 5 close it. Our findings get a status for the same reason
+reviewers' claims do.
+
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
 
@@ -146,6 +150,10 @@ downgrade: label it and say what you would need to check it. `Blocker:` requires
 know the condition is reachable for reasons the diff does not show. A downgrade with
 no stated condition is a review bug; send it back.
 
+**Stage 3 ends by writing every survivor into the ledger's `findings` array**, one
+entry each at `status: "open"`, carrying its fingerprint, category, severity and score.
+A finding that is not in the ledger is one nothing can hold you to.
+
 ---
 
 ## Stage 4: Fix — one finding, one commit
@@ -169,11 +177,11 @@ Commit immediately. Do not batch. Do not defer to a later "ship" step. An interr
 run must leave a clean tree, and `git log` must be a complete answer to "did you
 address this?".
 
-**A blocker you fix stops being a blocker.** Decrement `surviving_blockers` in the
-ledger in the same step that commits the fix. Stage 3 writes what survived the gate and
-nothing else lowers it, so an unlowered count reaches Stage 5 and posts `failure` on a
-head with nothing left wrong. The field is blockers still unfixed, not a record of what
-Stage 3 found.
+**A blocker you fix stops being a blocker.** Set that finding's `status` to `fixed`
+with its commit SHA in the same step that commits. The blocker count is derived from
+those statuses, so there is nothing to decrement and no way for the count to drift from
+what `git log` shows. Only `fixed` and `rebutted` stop something blocking: a blocker you
+post or defer is still unfixed and still counts.
 
 **Fix every instance the finding reaches.** Correcting a pattern in one file and
 leaving its copies is not a smaller fix, it is a half-migration — and the un-migrated
@@ -207,7 +215,9 @@ Read `reference/output.md`. In order:
    SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
    `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
    but its thread ID is null). An item is closed when all of its claims are; one claim
-   still `open` means Stage 5 is not done.
+   still `open` means Stage 5 is not done. **Then reconcile `findings` the same way** —
+   `fixed`, `rebutted` or `deferred` here; `posted` and `dropped` are settled at step 7,
+   when you decide what the summary carries.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
 4. **Never report success with an open item or a surviving `Blocker:`.** That refusal

@@ -34,8 +34,8 @@ Evidence for each: [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## The two ideas that matter
 
-**The ledger.** Stage 1 lists every open reviewer comment. Stage 5 can't finish while
-one is still open. That is the mechanical answer to "did you address this?" — asked
+**The ledger.** Stage 1 lists every open reviewer comment, and Stage 3 adds every
+finding of our own. Stage 5 can't finish while one is still open. That is the mechanical answer to "did you address this?" — asked
 thirteen times in two weeks because nothing could answer it. Guaranteed for one
 sequential run on one PR; two runs at once are best effort, and
 [`docs/DESIGN.md`](docs/DESIGN.md) says where the line is.
