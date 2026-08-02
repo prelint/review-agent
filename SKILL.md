@@ -57,9 +57,9 @@ The short version, because getting it wrong is how the last one failed:
 - **Rebuild the previous ledger** from the markers on our own prior comments before
   classifying. Do not skip them — they are the only record that survives a run.
 
-Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, each
-with `id`, `author`, `surface`, `state`, `path`, `line`, `thread_id`, `body_hash`,
-`substance_hash`, and a `claims` array. **Status lives on a claim, never on the item** —
+Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, in the
+schema `reference/intake.md` defines. That file owns the field list; a second copy here
+would drift from it. **Status lives on a claim, never on the item** —
 one comment carrying fourteen numbered points is fourteen claims with fourteen statuses,
 and an item closes when every one of them does. Everything downstream is measured
 against this file.

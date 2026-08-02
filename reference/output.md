@@ -98,6 +98,10 @@ spend the author's attention, never a decision to forget.
 A `BLOCKER` is never `dropped` — the cap is on non-blocking findings, and silence
 requires that nothing blocking survived.
 
+**Stamp `reconciled_at_head` when reconciliation finishes**: `git rev-parse HEAD`, never
+`$HEAD_SHA`. Stage 0 bound that before Stage 4 committed anything, so the two fields
+together are the only record of how far the head moved under the review.
+
 ## 3. Re-check eligibility
 
 Before writing anything public:
@@ -106,8 +110,9 @@ Before writing anything public:
 gh pr view "$PR" --json state,mergedAt,baseRefName,isDraft
 ```
 
-Stop if closed, merged, or the base branch changed. Posting a review into a merged PR
-is pure noise and it happened in the record.
+Stop if closed, merged, or the base branch changed — changed against the ledger's
+`base`, which Stage 0 bound and the diff was taken against. Posting a review into a
+merged PR is pure noise and it happened in the record.
 
 ## 4. Refuse to report success
 

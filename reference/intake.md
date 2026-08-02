@@ -168,7 +168,8 @@ not a dependency, and it would reject the concatenated objects anyway without `-
 
 ## Watermark
 
-**The rule: watermark on `max(created_at, updated_at)`.**
+**The rule: watermark on `max(created_at, updated_at)`.** Store it on the item as
+`watermark`.
 
 A bot that posts one summary comment and edits it on each run keeps `created_at`
 pinned to the first post forever. Only `updated_at` moves. A `created_at` watermark
@@ -250,8 +251,6 @@ re-open the item. No hash distinguishes that from a real change, and neither doe
 cheaper method than re-reading the comment — which is what the re-verify step above
 does anyway. The cost is one verification pass, not a fix cycle.
 
----
-
 ## The previous run
 
 **Rebuild the last ledger from our own comments before classifying anything.** Nothing
@@ -284,19 +283,9 @@ re-verify-existing-fix path is unreachable, and `substance_hash` is decoration �
 is what shipped: the field was added to the schema and nothing ever read a previous one.
 
 Prefer `$LEDGER` where it exists and disagrees; it carries fields no marker does. Record
-what you loaded at the ledger's top level, including markers you could not parse:
-
-```json
-"prior": {
-  "reviewed_at": "9a1c4e2",
-  "source": "markers",
-  "carried": 11,
-  "unparsed": []
-}
-```
-
-`source` is `markers`, `ledger`, or `none`. `carried` is claims restored, and a run that
-posted last time and carries nothing this time has a parse bug, not a clean PR.
+what you loaded in the ledger's `prior` block: `source` is `markers`, `ledger` or `none`,
+`carried` is claims restored, and `unparsed` holds marker lines you could not read. A run
+that posted last time and carries nothing this time has a parse bug, not a clean PR.
 
 ## The PR description
 
@@ -366,6 +355,11 @@ For each item, before any trust decision:
    **The count is checkable, so check it.** Compare the claim count against the highest
    number the author used before writing the ledger. Fourteen numbered points and
    thirteen claims is a dropped claim, not a judgement call.
+
+   **Record which branches matched, as `split_branch`.** One of `numbered`, `details`,
+   `callout`, `list-cite`, or `single`, and it is a list because the union rule above
+   means more than one can fire on one body. It is what makes the count check auditable
+   afterwards: `["single"]` on a comment carrying fourteen points names the bug.
 
    A review's overall disposition — the badge in its heading, its closing
    `Recommendation` — is the item's verdict, not a claim. Carry it on the item and do
@@ -443,9 +437,12 @@ in Stage 5.
 {
   "pr": 5370,
   "head_sha": "03d1b784f",
+  "base": "main",
+  "pr_updated_at": "2026-08-02T14:11:58Z",
   "pr_body_hash": "sha256:...",
   "pr_substance_hash": "sha256:...",
   "prior": {"reviewed_at": "9a1c4e2", "source": "markers", "carried": 11, "unparsed": []},
+  "reconciled_at_head": null,
   "items": [
     {
       "id": 3640790504,
@@ -457,9 +454,11 @@ in Stage 5.
       "path": "backend/apps/reviews/services/lifecycle/prepare.py",
       "line": 539,
       "thread_id": "PRRT_kwDO...",
+      "watermark": "2026-08-02T14:11:58Z",
       "body_hash": "sha256:...",
       "substance_hash": "sha256:...",
       "outdated": false,
+      "split_branch": ["single"],
       "claims": [
         {
           "n": 1,
@@ -511,6 +510,19 @@ distinguishes a blocking review from a bodiless one.
 claims is closed, and not before. A single-finding comment is one claim — the shape
 does not change, only the place the status sits.
 `resolution` carries the commit SHA, the evidence, or the reason.
+
+| Field | Written by | What it settles |
+|---|---|---|
+| `base` | Stage 0 | the ref the diff is against; Stage 5 refuses to post if it moved |
+| `pr_updated_at` | Stage 1 | the PR's own watermark |
+| `watermark` | Stage 1 | `max(created_at, updated_at)` on the item |
+| `split_branch` | Stage 1 | which branches of the claim split fired, so the count check is auditable afterwards |
+| `reconciled_at_head` | Stage 5 | the SHA reconciliation ran against — `head_sha` is Stage 0's and Stage 4 has committed since |
+
+**A field a run needs and this schema lacks is a bug here.** All five above were
+invented at runtime before they were written down, and one earlier run parked a claim in
+an `embedded_claims` field that has never existed. Add the field, or delete the rule
+that wanted it: an invented field is invisible to every stage that did not invent it.
 
 Commit the ledger directory to `.gitignore` — it is run state, not source.
 
