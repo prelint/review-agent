@@ -54,7 +54,7 @@ The short version, because getting it wrong is how the last one failed:
 - Content-hash each surface so a no-op edit does not re-trigger and a real one does.
 
 Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, each
-with `id`, `author`, `surface`, `path`, `line`, `thread_id`, `body_hash`, and
+with `id`, `author`, `surface`, `state`, `path`, `line`, `thread_id`, `body_hash`, and
 `status: "open"`. Everything downstream is measured against this file.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.

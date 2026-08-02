@@ -253,9 +253,13 @@ For each item, before any trust decision:
    longer exists. Do not silently drop it — a force-push can orphan a still-valid
    finding. Mark `outdated: true`, keep it in the ledger, and verify against the
    current code.
-3. **Does it ask for anything?** Some comments explain a decision rather than request
+3. **Is it a verdict?** A `review` item carries its verdict in `state`, not in `body`.
+   `CHANGES_REQUESTED` is `open` however empty the body: the request is in that
+   review's inline comments, or it is nowhere and a human has to say which. `APPROVED`
+   and `COMMENTED` fall through to the next question.
+4. **Does it ask for anything?** Some comments explain a decision rather than request
    a change. Record as `informational` and reply only if a question was asked.
-4. **Trust tier** — see below.
+5. **Trust tier** — see below.
 
 ## Trust tiers
 
@@ -327,6 +331,7 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
     {
       "id": 3640790504,
       "surface": "inline",
+      "state": null,
       "author": "cubic-dev-ai[bot]",
       "author_type": "Bot",
       "tier": "claim",
@@ -343,6 +348,9 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
 }
 ```
 
+`state` is the verdict on a `review` item — `APPROVED`, `CHANGES_REQUESTED`,
+`COMMENTED` — and `null` on every other surface. Carry it: it is the only field that
+distinguishes a blocking review from a bodiless one.
 `status` is one of `open`, `fixed`, `rebutted`, `deferred`, `informational`,
 `unresolvable`.
 `resolution` carries the commit SHA, the evidence, or the reason.
