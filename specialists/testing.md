@@ -51,8 +51,8 @@ response body, a rendered string. It is dense and mostly legitimate here.
 tolerance or timeout, a fuzzier matcher, a `skip`/`xfail`/`it.skip`, a rename the
 runner no longer collects, a regenerated snapshot. Only three justifications hold:
 the requirement changed, the old test was wrong, the new behaviour is intended. If
-the description states none, the test was edited to make CI green. `backend/tests`
-has zero skip marks today, so one added here is deliberate.
+the description states none, the test was edited to make CI green. Grep the suite for
+existing skip marks: where there are none, one added here is deliberate.
 
 **The runner collects the file.** Read the project's own collection config —
 `python_files` in pytest, `include` in vitest — then check the new test path against
