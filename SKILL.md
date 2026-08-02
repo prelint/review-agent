@@ -27,7 +27,8 @@ BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
 git fetch origin "$BASE" --quiet
 DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
-HEAD_SHA=$(git rev-parse HEAD)
+HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
+                                           # Stage 4 commits, so it is stale after that
 LEDGER=".review-agent/pr-${PR}.json"
 ```
 
@@ -195,9 +196,10 @@ Read `reference/output.md`. In order:
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
 4. **Never report success with an open item or a surviving `Blocker:`.** That refusal
-   is the gate. Posting a commit status is optional and repo-dependent — see
-   `reference/output.md`.
-5. **Push.**
+   is the gate.
+5. **Push**, then post the commit status if the repo wants one — optional,
+   repo-dependent, and after the push so it lands on the SHA that is now the head.
+   See `reference/output.md`.
 6. **Reply in threads, not at the top.** Inline findings get inline replies on their
    own thread. Resolve a thread only when its fix commit exists; never auto-resolve a
    rebuttal.

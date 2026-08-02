@@ -71,6 +71,21 @@ works in a repository it knows nothing about. Assume no CI, no bot, no branch
 protection, no permission to change repository settings, and no maintainer who has
 configured anything.
 
+Posting a commit status is optional and repo-dependent, and it belongs **after** the
+push. It is in section 5.
+
+## 5. Push
+
+```bash
+git status --porcelain   # must be empty — Stage 4 commits as it goes
+git push origin HEAD
+```
+
+A non-empty tree here is a Stage 4 bug. Do not "fix" it with a catch-all commit —
+find the fix that did not commit and commit it with its finding cited.
+
+### Then the commit status, if the repo wants one
+
 **Optional, for repos that want it binding.** Where the token can write statuses, post
 one and let the repo decide whether to require it. **Post it on both paths** — a
 context that only ever goes red can never clear, and a maintainer who then requires it
@@ -79,10 +94,16 @@ has blocked every clean head:
 ```bash
 if [ "$OPEN_ITEMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
-gh api "repos/$REPO/statuses/$HEAD_SHA" \
+gh api "repos/$REPO/statuses/$(git rev-parse HEAD)" \
   -f state="$STATE" -f context="review-agent" \
   -f description="$OPEN_ITEMS open, $BLOCKERS blocking"
 ```
+
+**Recompute the SHA here; never reuse `$HEAD_SHA`.** Stage 0 binds it before Stage 4
+has made a single fix commit, so by the time this runs it names a commit that is no
+longer the PR's head. GitHub attaches a status to one commit and nothing carries it
+forward, so a status on the stale SHA is invisible on the PR. Posting before the push
+has the same defect plus one more: the commit it names is not on the remote yet.
 
 `$OPEN_ITEMS` counts ledger items that are not `fixed`, `rebutted`, `deferred`,
 `informational` or `unresolvable`. `$BLOCKERS` counts `Blocker:` findings surviving
@@ -96,16 +117,6 @@ Treat a permission error as expected, not as a failure — many tokens cannot wr
 statuses, and the review is still valid without one. Never instruct anyone to turn on
 branch protection as part of a review: that is a maintainer's decision about their own
 repository, and a required check that nothing reliably posts blocks every merge.
-
-## 5. Push
-
-```bash
-git status --porcelain   # must be empty — Stage 4 commits as it goes
-git push origin HEAD
-```
-
-A non-empty tree here is a Stage 4 bug. Do not "fix" it with a catch-all commit —
-find the fix that did not commit and commit it with its finding cited.
 
 ## 6. Reply in threads
 
