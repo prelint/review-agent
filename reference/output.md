@@ -403,7 +403,7 @@ worst comment was 10 KB reporting "0 blocking, 6 informational".
 
 **Three exceptions, and each of them means "silence would be a lie".**
 
-**A dead lens.** Stage 2 requires naming a lens that returned nothing, and silence would
+**A dead lens.** Stage 2 requires naming a lens that did not answer, and silence would
 delete exactly that. A run reporting a clean review while an always-on lens died reports
 coverage it does not have — and at fleet cadence nobody is watching the session output,
 so the summary is the only place it can land. One line, and it does not block:
@@ -515,7 +515,7 @@ bite hardest here:
 Post nothing when **all** of these hold:
 
 - No claim is `unresolvable`.
-- No lens returned an empty response.
+- No lens was classified as dead.
 - Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
   and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
