@@ -59,33 +59,31 @@ gh pr view "$PR" --json state,merged,baseRefName,isDraft
 Stop if closed, merged, or the base branch changed. Posting a review into a merged PR
 is pure noise and it happened in the record.
 
-## 4. Post the gate
+## 4. Refuse to report success
 
-A verdict that says "blocking" while the merge button stays green is advisory review,
-which is what this replaces. Stage 5 posts a commit status, and branch protection makes
-it binding.
+The gate is the agent's own refusal, not a repository setting. **Do not report a clean
+result while a ledger item is open or a `Blocker:` survived Stage 3.** Say what is
+outstanding, in the session output and in the summary comment, and exit non-zero if the
+host gives you an exit code.
+
+That is the only enforcement this skill can carry, because it is the only one that
+works in a repository it knows nothing about. Assume no CI, no bot, no branch
+protection, no permission to change repository settings, and no maintainer who has
+configured anything.
+
+**Optional, for repos that want it binding.** Where the token can write statuses, post
+one and let the repo decide whether to require it:
 
 ```bash
-STATE=failure   # any ledger item open, or any Blocker: survived Stage 3
-STATE=success   # every item resolved and nothing blocking
 gh api "repos/$REPO/statuses/$HEAD_SHA" \
-  -f state="$STATE" -f context="review-agent" \
-  -f description="<N> open, <N> blocking" \
-  -f target_url="<the summary comment, or the run log>"
+  -f state=failure -f context="review-agent" \
+  -f description="<N> open, <N> blocking"
 ```
 
-Rules:
-
-- **Open ledger item → `failure`.** No exceptions. The ledger gate and the merge gate
-  are the same gate or neither is one.
-- **Any surviving `Blocker:` → `failure`**, even with the ledger clean.
-- **Never post `success` for a run that did not finish.** A crashed run posts nothing,
-  and a required-but-absent check blocks by default. Silence must fail closed.
-- Post it **before** the summary comment, so the status is up even if the comment
-  fails.
-
-Enable it once per repo: branch protection on the default branch, required status
-check `review-agent`. Until that is on, the status is decoration.
+Treat a permission error as expected, not as a failure — many tokens cannot write
+statuses, and the review is still valid without one. Never instruct anyone to turn on
+branch protection as part of a review: that is a maintainer's decision about their own
+repository, and a required check that nothing reliably posts blocks every merge.
 
 ## 5. Push
 

@@ -185,9 +185,9 @@ Read `reference/output.md`. In order:
    means Stage 5 is not done.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
-4. **Post the `review-agent` commit status** — `failure` if any ledger item is open or
-   any `Blocker:` survived, `success` only if neither. A crashed run posts nothing, and
-   a required-but-absent check blocks. See `reference/output.md`.
+4. **Never report success with an open item or a surviving `Blocker:`.** That refusal
+   is the gate. Posting a commit status is optional and repo-dependent — see
+   `reference/output.md`.
 5. **Push.**
 6. **Reply in threads, not at the top.** Inline findings get inline replies on their
    own thread. Resolve a thread only when its fix commit exists; never auto-resolve a
