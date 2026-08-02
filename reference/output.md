@@ -28,9 +28,20 @@ Every ledger item must be one of:
 |---|---|
 | `fixed` | a commit SHA that exists in `git log` |
 | `rebutted` | the evidence that refutes it, quoted |
-| `deferred` | a reason, and an issue link if it is real work |
+| `deferred` | a reason **and** an issue link — always, no exceptions |
 | `informational` | nothing — it asked for nothing |
 | `unresolvable` | **a commit SHA that exists in `git log`**, plus a `thread_id` of `null` from intake |
+
+`deferred` needs a destination. There are two honest endings for anything you accept
+and do not fix: fix it now, or file it where someone will see it. "Noted it" is not a
+third ending — a silent deferral costs the fix entirely, and an issue costs one
+paragraph.
+
+**Fold into an existing issue before opening one.** List the open set and match on
+surface — same file, same feature, same error — not on similar titles, which drift.
+This matters most when several agents review in parallel: each sees only its own work,
+so without reading the open set first they file colliding issues on one file. That
+happened here — seven agents filed the same finding seven times.
 
 Reconcile **claims**, not items. An item with nine closed claims and one open is an
 open item, and its comment gets one reply covering all ten — never one reply implying
