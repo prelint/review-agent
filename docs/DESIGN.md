@@ -31,7 +31,7 @@ run-scoped ledger file. Nothing is written to the user's home directory.
 ## What the rewrite dropped
 
 **Removing a mechanism costs the same paragraph as adding one: the alternative, and
-why it lost.** Nothing recorded these eight, and five open issues came out of them.
+why it lost.** Nothing recorded these seven, and five open issues came out of them.
 
 The five failures above were removed on purpose. These were removed by omission —
 gstack had them working, the rewrite did not carry them, and no file said so.
@@ -42,12 +42,18 @@ gstack had them working, the rewrite did not carry them, and no file said so.
 | A dead or timed-out specialist logs and the run continues on partial results | `review/SKILL.md:1399` | No rule ([#13]) |
 | A failed reply POST warns and continues | `greptile-triage.md:92` | No rule, in the one stage forbidden from reporting false success ([#18]) |
 | A malformed state file skips its bad lines and continues | `greptile-triage.md:57` | No rule ([#18]) |
-| `gh auth status` gates the run | `review/SKILL.md:814` | A stated refusal condition nothing checks ([#26]) |
 | The PR comes from the current branch, never an argument | `greptile-triage.md:13` | A PR number, diffed against local `HEAD`, with nothing comparing the two ([#14]) |
 | Prior decisions read back off GitHub by matching markers in our own replies | `greptile-triage.md:156` | Our own comments are skipped ([#11]) |
 | Outcomes append to a per-project and a global history file | `greptile-triage.md:182` | Nothing ([#11]) |
 
-Two were deliberate and got the wrong scope.
+Not every gap here is a drop. `gh auth status` is the counter-example worth keeping
+straight: `intake.md` lists an unauthenticated `gh` as a reason to refuse the run and
+Stage 0 never checks it ([#26]), but gstack has no gate either. Its only use of the
+command is platform detection — reached when the remote matches neither `github.com`
+nor `gitlab`, and failing it selects git-native commands rather than stopping. That is
+a condition this repo invented and did not wire, not a mechanism it inherited and lost.
+
+Two removals were deliberate and got the wrong scope.
 
 **`~/.gstack/` state.** Banned above for good reasons: 165 KB per invocation, 46% of
 it harness preamble. That argument is about the *location*. It was applied to the
