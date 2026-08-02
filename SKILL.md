@@ -88,9 +88,10 @@ schema's JSON — one object per line, nothing else.
 which apply — you would be reading their triggers to guess at what they will conclude
 from reading their own.
 
-Each lens reads its own `**Runs when**` clause against the diff and does one of two
-things: reviews, or returns a `kind: "not-dispatched"` object naming why it does not
-apply. Both are answers. Neither is silence.
+Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
+`**Runs when**` clause it tests against the diff — and does one of two things:
+reviews, or returns a `kind: "not-dispatched"` object naming why it does not apply.
+Both are answers. Neither is silence.
 
 That is the whole dispatch rule. There is no table here to drift from the files — the
 trigger is written once, on line 5 of the lens, and evaluated once, by the lens.

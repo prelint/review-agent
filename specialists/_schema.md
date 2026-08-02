@@ -67,9 +67,10 @@ JSON, one object per line, nothing else. No prose before or after.
 
 ### Not dispatched
 
-You are dispatched on every review. **Your first job is to read your own
-`**Runs when**` clause against the diff.** If it does not match, emit exactly one
-object and stop:
+You are dispatched on every review. **Your first job is to read line 5 of your own
+file.** It is either `**Runs on every review.**` — you review, always — or a
+`**Runs when**` clause you test against the diff. Only the second can fail to match.
+If it does not, emit exactly one object and stop:
 
 ```json
 {"kind":"not-dispatched","specialist":"money","why":"no billing, credits, invoice, voucher, refund, metering or Stripe path in the diff"}
