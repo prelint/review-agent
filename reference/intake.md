@@ -263,13 +263,39 @@ For each item, before any trust decision:
 5. **Split it into claims.** A comment is a container, not a finding. A decision review
    routinely carries ten or more numbered points, each with its own verdict — one on
    this repo carried fourteen. Split on the structure the author used: numbered
-   headings, `<details><summary>` blocks, `[!WARNING]` / `[!CAUTION]` callouts, or list
+   headings, `<details>` blocks, `[!WARNING]` / `[!CAUTION]` callouts, or list
    entries that each cite their own `file:line`. **Each claim becomes its own ledger
    entry with its own status.**
 
    Collapsing fourteen points into one item with one status loses thirteen of them the
    moment you close the first — and the ledger then reads as complete. That is the
    exact failure the ledger exists to prevent, so it is worth the extra parse.
+
+   Three ways the split loses claims anyway, all three seen on this repo's own PR:
+
+   **Run every branch over the whole body and take the union.** They are not
+   alternatives tried in order until one matches. The comment that carried fourteen
+   `<details>` points also carried five `Open questions` and a one-line
+   `Recommendation` below an `<h2></h2>` separator — twenty addressable units, of which
+   a first-match-wins rule records fourteen and never reads past the separator.
+
+   **Match the tag, not the string `<details>`.** `<details open>` is the same element,
+   and an author uses it on the point they most want read: here it carried the review's
+   only `Disagree`, and a pattern anchored on the bare tag dropped precisely that one.
+   Allow attributes on every tag you key on.
+
+   **A `<summary>` is not automatically a claim.** Bots wrap their own furniture in
+   one — `Important Files Changed`, `Prompt To Fix All With AI`. A block whose summary
+   asserts nothing about the code is chrome: skip it, and do not let it displace the
+   prose claim above it, which is where that comment's actual finding was.
+
+   **The count is checkable, so check it.** Compare the claim count against the highest
+   number the author used before writing the ledger. Fourteen numbered points and
+   thirteen claims is a dropped claim, not a judgement call.
+
+   A review's overall disposition — the badge in its heading, its closing
+   `Recommendation` — is the item's verdict, not a claim. Carry it on the item and do
+   not count it among them.
 
    A comment carrying one finding is one claim. The shape does not change; only the
    place the status sits.
