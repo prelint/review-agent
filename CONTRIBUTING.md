@@ -48,8 +48,18 @@ Then check: does the first line of each section state the rule?
 
 ## Reviewing a PR here
 
-Same bar for the review. `reference/output.md` sets the caps the agent posts under —
-2,000 characters, five non-blocking findings, verdict on line one. Hold human comments
-to it too.
+**Every PR to this repo is reviewed by this skill.** No exceptions, including PRs that
+change the skill itself — especially those. It is the only repo where we control both
+sides, so it is the only place a defect in the skill shows up as a defect in its own
+review.
+
+Run it, then read its output against what the human reviewers found. Anything they
+caught and it did not is a finding about the skill, and it goes in `docs/DESIGN.md`
+with the evidence. That is how `coherence` got written: three findings in a row that
+external reviewers caught and no lens owned.
+
+Same bar for the review itself. `reference/output.md` sets the caps — 2,000
+characters, five non-blocking findings, verdict on line one. Hold human comments to it
+too.
 
 A file that grew without gaining a rule is a finding.
