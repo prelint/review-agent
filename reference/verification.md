@@ -87,6 +87,13 @@ bands, move the threshold onto a band.
 finding. A scorer that errors out must not silently suppress what it was asked to
 judge.
 
+**Watch for a dead scorer.** The failure mode is silent: a scorer that errors on every
+call returns unparseable output, every finding counts as 100, and the review looks
+unusually decisive. Two signatures, both cheap to check before posting — every finding
+in a review scoring exactly 100, or no finding ever landing between 80 and 99. Say so
+in the summary when you see either. A gate that has stopped filtering reads exactly
+like a gate that found nothing to filter.
+
 **The scorer is blind to any earlier score.** Shown a previous number, a second pass
 anchors to it and stops being independent, which is the whole mechanism.
 
