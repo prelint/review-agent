@@ -99,6 +99,12 @@ read, and what picks the connection — a task enqueued before `commit` is the u
   a lock taken after the read it protects, a guard on the wrong key, a state machine
   that admits an order it cannot handle. If the fix is "add the constraint", it is not
   yours.
+  **Look for the mechanism before you decide which case you are in, and quote it.** A
+  race with a broken lock and a race with no lock read identically inside the hunk; the
+  `select_for_update` is often three lines above it, or on the `Meta`, or in a
+  migration. Absence from the hunk is not absence — this is the one focused grep
+  `_schema.md` allows you, and the named risk is the mechanism. Quote it and the finding
+  is yours; grep for it, fail to find it, say so, and it is `idempotency`'s.
   Unvalidated model output is `llm-pipeline`.
 
 ## Evidence bar
