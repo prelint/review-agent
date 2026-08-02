@@ -220,8 +220,8 @@ Read `reference/output.md`. In order:
    `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
    but its thread ID is null). An item is closed when all of its claims are; one claim
    still `open` means Stage 5 is not done. **Then reconcile `findings` the same way** —
-   `fixed`, `rebutted` or `deferred` here; `posted` and `dropped` are settled at step 7,
-   when you decide what the summary carries.
+   all five endings settle here, `posted` and `dropped` included, because the commit
+   status in step 5 counts anything still `open`. Step 7 posts what is marked `posted`.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
 4. **Never report success with an open item or a surviving `Blocker:`.** That refusal

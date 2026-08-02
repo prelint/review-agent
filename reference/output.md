@@ -86,8 +86,11 @@ The `findings` array reconciles too, and nothing in it stays `open` either.
 | `rebutted` | the evidence disproving our own claim, quoted |
 | `dropped` | which of section 7's two rules kept it out of the summary |
 
-`posted` and `dropped` are settled by section 7, so reconcile the findings array after
-you decide what the summary carries — not before, or the decision reads its own output.
+**All five settle here, including `posted` and `dropped`.** What the summary carries is
+computable before it is written — severity, the five-finding cap, and whether anything
+blocks — so decide it in this section and let section 7 post exactly what is marked
+`posted`. Settling them at section 7 puts them after section 5's counters, which read
+`status`: every run that posted a finding would then count it open and red a clean head.
 
 `dropped` is the ending the author never reads, and it has two legitimate causes. The
 five-finding cap: the "plus N similar" line is the count, and a `dropped` finding
