@@ -80,9 +80,10 @@ assignment, an `href` or `src` that can be `javascript:`, Django `mark_safe`, `|
 - **A hash used as a cache key, dedup key or content fingerprint.**
 - **A deliberate `auth=None`** on a flow that authenticates inside the handler body.
 - **Placeholder and test credentials** — `whsec_test_…`, `sk_test_…`, `EXAMPLE`. A
-  test key is not a secrets finding. But a test key a **production** path can reach is
-  `money` — route it, do not drop it. A diff touching auth without touching billing
-  dispatches this lens and not that one, so silence here means nobody sees it.
+  test key is not a secrets finding. A test key a **production** path can reach is,
+  and it is yours whenever the diff touches no billing surface: `money` returns
+  `not-dispatched` there and never looks. Emit it with `category: "money"`. Route it
+  to `money` only when the diff gives `money` something to run on.
 - **Open redirects, tabnabbing, prototype pollution, XS-Leaks** below high confidence.
 - **Command injection in a CI shell script** with no untrusted input reaching it.
 - **High entropy alone.** A long random-looking string is not a credential.
