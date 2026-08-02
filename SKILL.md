@@ -55,8 +55,10 @@ The short version, because getting it wrong is how the last one failed:
 
 Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, each
 with `id`, `author`, `surface`, `state`, `path`, `line`, `thread_id`, `body_hash`,
-`substance_hash`, and `status: "open"`. Everything downstream is measured against this
-file.
+`substance_hash`, and a `claims` array. **Status lives on a claim, never on the item** —
+one comment carrying fourteen numbered points is fourteen claims with fourteen statuses,
+and an item closes when every one of them does. Everything downstream is measured
+against this file.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
@@ -148,7 +150,8 @@ no stated condition is a review bug; send it back.
 
 ## Stage 4: Fix — one finding, one commit
 
-For each surviving finding and each ledger item you have accepted:
+For each surviving finding and each **claim** you have accepted — claims, not items: a
+comment's fourteen points are fourteen decisions, and accepting one accepts one:
 
 1. Make the fix.
 2. Run the narrowest test that covers it. If none exists and the finding is a bug,
@@ -200,10 +203,11 @@ Read `reference/output.md`. In order:
 
 1. **Re-fetch** the PR. New comments since Stage 1 open new ledger items; process
    them or say explicitly that you are deferring them.
-2. **Reconcile the ledger.** Every item must be `fixed` (with a commit SHA),
-   `rebutted` (with evidence), `deferred` (with a reason), `informational` (it asked
-   for nothing), or `unresolvable` (fixed, with a commit SHA, but its thread ID is
-   null). An item still `open` means Stage 5 is not done.
+2. **Reconcile the ledger, claim by claim.** Every claim must be `fixed` (with a commit
+   SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
+   `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
+   but its thread ID is null). An item is closed when all of its claims are; one claim
+   still `open` means Stage 5 is not done.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
 4. **Never report success with an open item or a surviving `Blocker:`.** That refusal

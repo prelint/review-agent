@@ -22,7 +22,7 @@ Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
 
 ## 2. Reconcile
 
-Every ledger item must be one of:
+Every claim on every ledger item must be one of:
 
 | Status | Requires |
 |---|---|
@@ -110,18 +110,19 @@ context that only ever goes red can never clear, and a maintainer who then requi
 has blocked every clean head:
 
 ```bash
-OPEN_ITEMS=$(python3 -c 'import json,sys
+OPEN_CLAIMS=$(python3 -c 'import json,sys
 closed = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
-print(sum(1 for i in json.load(open(sys.argv[1]))["items"] if i["status"] not in closed))' "$LEDGER")
+print(sum(1 for i in json.load(open(sys.argv[1]))["items"]
+           for c in i["claims"] if c["status"] not in closed))' "$LEDGER")
 
 BLOCKERS=$(python3 -c 'import json,sys
 print(json.load(open(sys.argv[1]))["surviving_blockers"])' "$LEDGER")
 
-if [ "$OPEN_ITEMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
+if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
 
 gh api "repos/$REPO/statuses/$(git rev-parse HEAD)" \
   -f state="$STATE" -f context="review-agent" \
-  -f description="$OPEN_ITEMS open, $BLOCKERS blocking"
+  -f description="$OPEN_CLAIMS open, $BLOCKERS blocking"
 ```
 
 **Recompute the SHA here; never reuse `$HEAD_SHA`.** Stage 0 binds it before Stage 4
@@ -130,15 +131,17 @@ longer the PR's head. GitHub attaches a status to one commit and nothing carries
 forward, so a status on the stale SHA is invisible on the PR. Posting before the push
 has the same defect plus one more: the commit it names is not on the remote yet.
 
-**Both counts come from the ledger, never from memory.** `$OPEN_ITEMS` is every item
-whose status is not one of the five section 2 accepts; `$BLOCKERS` is
-`surviving_blockers`, which Stage 3 writes and Stage 4 decrements as it fixes. Read it
-after Stage 4, never before — the count that survived the gate is not the count still
-open, and posting the first one reds a head where every blocker is already fixed.
-Section 7's silence rule is a separate question and keeps its Stage 3 wording: a
-blocker found and fixed still gets said out loud. An unassigned counter
-makes `[ "$OPEN_ITEMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a
-clean head — the exact defect this section exists to prevent.
+**Both counts come from the ledger, never from memory.** `$OPEN_CLAIMS` is every claim
+whose status is not one of the five section 2 accepts — **claims, because that is where
+status lives**; an item carries none, and `i["status"]` raises `KeyError` on every
+ledger `intake.md` describes. `$BLOCKERS` is `surviving_blockers`, which Stage 3 writes
+and Stage 4 decrements as it fixes. Read it after Stage 4, never before — the count
+that survived the gate is not the count still open, and posting the first one reds a
+head where every blocker is already fixed. Section 7's silence rule is a separate
+question and keeps its Stage 3 wording: a blocker found and fixed still gets said out
+loud. An unassigned counter makes `[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else`
+branch posts `failure` on a clean head — the exact defect this section exists to
+prevent.
 
 `success` needs both at zero — exactly the condition section 4 refuses to report
 success without, so the status cannot disagree with the summary.
@@ -243,7 +246,7 @@ bite hardest here:
 
 Post nothing when **all** of these hold:
 
-- No ledger item is `unresolvable`.
+- No claim is `unresolvable`.
 - Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
   and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
