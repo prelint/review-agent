@@ -144,11 +144,20 @@ for c in inline_comments:
 Three things the loop has to survive, all seen on real PRs: a parent comment that is
 not in the fetched set (paginated out, or deleted), an empty `comments.nodes` on a
 thread whose first comment was deleted, and — defensively — a cycle. Any of them
-yields `thread_id = None`, which is the explicit unresolvable below, never a crash.
+yields `thread_id = None` on an inline comment, which is the explicit unresolvable
+below, never a crash.
 
 A reply carries its parent's thread, so resolve the chain to its root before looking
-up. A `thread_id` of `None` on any item is a fetch or pagination failure — Stage 5
-must treat that item as unresolvable and say so, never silently skip it.
+up. **On an `inline` item**, a `thread_id` of `None` is a fetch or pagination failure —
+Stage 5 must treat that item as unresolvable and say so, never silently skip it.
+
+**On `top` and `review` items, `None` is the correct value.** They have no thread to
+join, so nothing failed and nothing is owed. Applied to every surface, the rule reads
+ten of the thirteen items on this repo's PR #10 as unresolvable — every review body and
+every top-level comment — and `output.md` makes `unresolvable` the one status that
+overrides silence, so a clean run carrying a single top-level comment would announce
+"10 item(s) fixed but not resolvable". The run that produced those numbers filed them
+`fixed` and `informational` instead, which was right and undocumented.
 
 **Verify the count.** Compare distinct thread IDs against the number of inline
 comments **whose `in_reply_to` is null** — only those start threads. Counting all

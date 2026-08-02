@@ -30,7 +30,7 @@ Every claim on every ledger item must be one of:
 | `rebutted` | the evidence that refutes it, quoted |
 | `deferred` | a reason **and** an issue link — always, no exceptions |
 | `informational` | nothing — it asked for nothing |
-| `unresolvable` | **a commit SHA that exists in `git log`**, plus a `thread_id` of `null` from intake |
+| `unresolvable` | **a commit SHA that exists in `git log`**, on an `inline` item whose `thread_id` is `null` |
 
 `deferred` needs a destination. There are two honest endings for anything you accept
 and do not fix: fix it now, or file it where someone will see it. "Noted it" is not a
@@ -60,9 +60,15 @@ the whole comment is handled.
 deferral. Do not proceed with an open item and a summary that implies completeness.
 
 `unresolvable` is `fixed` that cannot close its thread. It carries **every requirement
-`fixed` carries** — a commit SHA verified against `git log` — plus one more: a
-`thread_id` of `null`, because pagination dropped the thread or its first comment was
-deleted.
+`fixed` carries** — a commit SHA verified against `git log` — plus one more: `surface`
+is `inline` and `thread_id` is `null`, because pagination dropped the thread or its first
+comment was deleted.
+
+**Only `inline` items can be unresolvable.** A top-level comment and a review body have
+no thread, so a null `thread_id` on either is the right answer rather than a failure, and
+they close as `fixed` or `informational` like anything else. Reading null as a failure on
+every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
+about threads that never existed.
 
 A missing thread ID is not permission to skip the fix. An item with no commit is
 `open`, or `deferred` with a reason; it is never `unresolvable`. The status describes
@@ -279,8 +285,9 @@ limit, and every run afterwards pages the grown comment set back in.
 ### Resolve threads
 
 Resolve a thread when its fix commit exists **and** `thread_id` is not null. Skip the
-mutation entirely when it is null — calling it with an empty argument errors and the
-item is already accounted for as `unresolvable`.
+mutation entirely when it is null — calling it with an empty argument errors. On an
+`inline` item that null is the `unresolvable` case and is already accounted for; on a
+`top` or `review` item there is no thread to resolve and nothing is owed.
 
 ```bash
 gh api graphql -f query='

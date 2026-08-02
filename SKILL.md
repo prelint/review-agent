@@ -223,8 +223,9 @@ Read `reference/output.md`. In order:
    them or say explicitly that you are deferring them.
 2. **Reconcile the ledger, claim by claim.** Every claim must be `fixed` (with a commit
    SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
-   `informational` (it asked for nothing), or `unresolvable` (fixed, with a commit SHA,
-   but its thread ID is null). An item is closed when all of its claims are; one claim
+   `informational` (it asked for nothing), or `unresolvable` (an inline item, fixed with
+   a commit SHA, whose thread ID is null — never a top-level comment or a review body,
+   which have no thread and owe nothing). An item is closed when all of its claims are; one claim
    still `open` means Stage 5 is not done. **Then reconcile `findings` the same way** —
    all five endings settle here, `posted` and `dropped` included, because the commit
    status in step 5 counts anything still `open`. Step 7 posts what is marked `posted`.
