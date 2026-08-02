@@ -10,9 +10,11 @@ raising, and unlikely to fire — it never drops. No one of them does another's 
 
 ## First: an object with a `kind` is not a finding
 
-Split on that one field before any filter runs. `clean`, `not-dispatched` and `cleared`
-report coverage, not defects: pass them through untouched, never to a scorer, never into
-the ledger's `findings` array.
+Split on the **presence** of that field, never on a list of its values. Anything carrying
+a `kind` reports coverage rather than a defect: pass it through untouched, never to a
+scorer, never into the ledger's `findings` array. `specialists/_schema.md` owns the list,
+and an enumeration here would drift from it — it already had, omitting `end`, which every
+findings response now carries.
 
 Every lens that finds nothing now emits one, so a run can hand this stage eighteen of
 them. Sent to Filter 1 they have no `file:line` to quote; sent to Filter 2 an unparseable

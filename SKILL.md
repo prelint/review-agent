@@ -109,7 +109,8 @@ Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
 `specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
 
 **A lens answered only if its response parses**: every line is JSON, the last one carries
-a `kind`, and where that is `end` its `findings` count matches the objects you received.
+a `kind`, and where that is `end` its `findings` count matches the objects that carry
+no `kind` — the findings, not everything received.
 Anything else is a dead lens — empty, truncated mid-line, prose, or a count that does not
 add up.
 

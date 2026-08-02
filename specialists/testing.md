@@ -90,8 +90,8 @@ input that flips it.
 ## Not a finding
 
 - Anything at all, where the diff adds or edits no test, changes no test
-  configuration, and adds no behaviour branch. Output nothing — zero findings is the
-  normal result for this lens, not a gap in it.
+  configuration, and adds no behaviour branch. Emit the `clean` object — zero findings is
+  the normal result for this lens, not a gap in it, and saying so is not optional.
 - Missing tests as a count, a percentage, or a list. Exclusion #21.
 - A second missing-test finding. Keep the worst, drop the rest.
 - `assert_called_once_with` where the collaborator call **is** the contract — an

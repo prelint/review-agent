@@ -134,8 +134,9 @@ you sent:
 
 Without it a truncated response is undetectable: a lens killed at its output cap after
 two findings of five ends on a valid finding line and reads as complete. The count is
-what makes the loss visible — the orchestrator compares it against the objects it
-actually received.
+what makes the loss visible — the orchestrator compares it against the objects carrying no
+`kind`. It counts findings, so a `cleared` line does not inflate it and `end` does not
+count itself.
 
 The kinds:
 

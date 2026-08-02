@@ -167,24 +167,29 @@ context that only ever goes red can never clear, and a maintainer who then requi
 has blocked every clean head:
 
 ```bash
-if ! OPEN_CLAIMS=$(python3 -c 'import json,sys
+LEDGER_UNREADABLE=
+
+OPEN_CLAIMS=$(python3 -c 'import json,sys
 led = json.load(open(sys.argv[1]))
 closed_claim   = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
 closed_finding = {"fixed", "posted", "deferred", "rebutted", "dropped"}
 print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in closed_claim)
     + sum(1 for f in led.get("findings", []) if f.get("status") not in closed_finding))' "$LEDGER") \
-|| ! BLOCKERS=$(python3 -c 'import json,sys
+  || LEDGER_UNREADABLE=1
+
+BLOCKERS=$(python3 -c 'import json,sys
 print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
-          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER"); then
+          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER") \
+  || LEDGER_UNREADABLE=1
+
+if [ -n "$LEDGER_UNREADABLE" ]; then
   echo "review-agent: $LEDGER missing or unreadable — no status posted" >&2
-  LEDGER_UNREADABLE=1
+else
+  if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
+  gh api "repos/$REPO/statuses/$(git rev-parse HEAD)" \
+    -f state="$STATE" -f context="review-agent" \
+    -f description="$OPEN_CLAIMS open, $BLOCKERS blocking"
 fi
-
-if [ "$OPEN_CLAIMS" -eq 0 ] && [ "$BLOCKERS" -eq 0 ]; then STATE=success; else STATE=failure; fi
-
-gh api "repos/$REPO/statuses/$(git rev-parse HEAD)" \
-  -f state="$STATE" -f context="review-agent" \
-  -f description="$OPEN_CLAIMS open, $BLOCKERS blocking"
 ```
 
 **Recompute the SHA here; never reuse `$HEAD_SHA`.** Stage 0 binds it before Stage 4
@@ -336,36 +341,48 @@ is not resolving; resolving is the claim that the work is done.
 
 ### When the reply or the resolve fails
 
-**Check the exit code.** Then read it, because the three failures need three different
-answers and treating them alike gets each one wrong.
+**Check the exit code.** Then read it, because these failures need different answers and
+treating them alike gets each one wrong.
 
 **403 — the token cannot write. Stop the posting pass.** Report "no write access" once
 and exit non-zero. Do not mark N claims `unresolvable`: that status tells a human to close
 threads by hand, and no human can act on a permission this run never had. It is also
 unclosable by definition — the summary that would report those N claims is a write too,
-and it 403s as well, so the fleet would repeat the whole review every hour against a
-token that can never finish it. Section 5 already treats the same error on the commit
-status as expected rather than a failure.
+and it 403s as well. Section 5 already treats the same error on the commit status as
+expected rather than a failure.
+
+**Probe that permission in section 3, before Stage 2 runs.** A token that cannot write is
+a property of the run, not a surprise at the last step, and discovering it after eighteen
+lenses means the fleet pays for a full review every hour and dies at the same call with
+nothing recorded. Treat it as an ineligibility, the way a merged PR is.
 
 **404 — the PR moved. Re-run section 3's eligibility check.** If it is closed or merged,
 stop the posting pass and say so. A maintainer merging at thread 2 of 12 otherwise costs
 ten more failed writes and a summary telling them to hand-close ten threads on a merged
 PR, which is the noise section 3 exists to stop.
 
-**Anything else — one thread's problem. Carry on with the others.** A deleted thread, a
-transient 5xx, a secondary rate limit.
+**A secondary rate limit or a 429 — slow down, do not work harder.** Honour `Retry-After`
+before the next call, and stop the posting pass after three consecutive failures: mark the
+remaining claims `delivery: "failed"` and report them under section 7's second line.
+Treating throttling as a per-thread problem answers it with *more* requests — the
+landed-write check below adds a read per failure — while GitHub is asking for fewer, and
+the budget is shared with every other run in the fleet.
 
-For that third case only:
+**Anything else — one thread's problem. Carry on with the others.** A deleted thread, a
+transient 5xx.
+
+For that last case only:
 
 - **Never abort.** The fixes are committed and pushed. A run that dies here throws away a
   completed review because it could not announce it, which is strictly worse than
   announcing it badly.
 - **Check whether the write actually landed before you report it as failed.** A reply POST
   is not idempotent, and "created, then the response was lost" is a real 502. Re-fetch that
-  thread and look for our marker as the last line of a `SELF` comment. Present means the
-  reply landed and only the resolve is outstanding. Only a confirmed-absent reply is a
-  failed reply — otherwise the run announces a thread to close by hand that already
-  carries its answer, and next run's marker says the claim was closed all along.
+  thread and read our marker. **Match its payload against what this attempt meant to
+  write** — the claim statuses and the `substance` — because a thread that already carried
+  a marker from an earlier run will always have one, and presence alone would read a stale
+  `deferred` as proof that this run's `fixed` landed. A matching payload means the write
+  landed and only the resolve is outstanding; anything else is a confirmed-absent reply.
 - **A `fixed` claim whose reply or resolve is confirmed missing becomes `unresolvable`.**
   That status already means "fixed, and we cannot close the loop on GitHub", so it now has
   two causes — an inline item with a null `thread_id`, and a call that failed — and both
@@ -374,9 +391,18 @@ For that third case only:
   requires a commit SHA and section 2 bars it without one. Those claims are correctly
   decided; what failed is telling the author.
 
-**Record the failure on the claim, not in the status.** Set `delivery: "failed"` with the
-URL on any claim whose reply or resolve errored, whatever its status. Status says what we
-decided; `delivery` says whether the author was told, and the two are independent.
+**Record the failure on the claim, not in the status.** On any claim whose reply or
+resolve errored, whatever its status, set:
+
+```json
+"delivery": {"call": "resolve", "code": 502, "url": "https://github.com/..."}
+```
+
+Status says what we decided; `delivery` says whether the author was told, and the two are
+independent. **Which call, and its code** — a failed reply means the thread never got the
+answer, a failed resolve means it got the answer and stayed open. Reporting both as
+"decided but not answered" sends the maintainer to re-read a thread that already carries
+its reply, and the next run cannot tell that the non-idempotent reply already succeeded.
 
 Routing this through `unresolvable` alone loses exactly the claims that cannot take it.
 Four inline comments, two rebutted and two deferred, every reply erroring: each claim
@@ -385,9 +411,12 @@ keeps a status section 5 counts as closed, no claim is `unresolvable`, so the st
 reads as handled. That is what `unresolvable` was invented to prevent, reached by the
 other door.
 
-If the summary comment itself cannot be posted, say so in the session output and exit
+If the summary comment itself cannot be posted, apply the same landed-write check — it is
+the same non-idempotent create — and re-fetch the PR's comments for our marker before
+calling it failed. Only when it is confirmed absent: say so in the session output and exit
 non-zero. There is nowhere left to write it down, and a review nobody can see must not
-report itself as delivered.
+report itself as delivered. Declaring it failed when it landed is worse still: the next
+run finds the summary, and pays for a whole review to discover it was already delivered.
 
 **A thread already resolved on arrival is not evidence its claim is closed.** Anyone
 can resolve a thread — including a previous run that closed it by proxy. Reconcile the
@@ -401,7 +430,16 @@ resolved on arrival, claim closed two commits later by this run.
 Push the fixes and stop. A clean PR does not need an announcement, and the record's
 worst comment was 10 KB reporting "0 blocking, 6 informational".
 
-**Three exceptions, and each of them means "silence would be a lie".**
+**Four exceptions, and each of them means "silence would be a lie".**
+
+**An unreadable ledger.** Section 5 skips the status when it cannot read the ledger, and
+sections 6 and 7 then run with nothing to announce — so the PR ends up carrying no
+context and no comment, which is byte-for-byte what a clean review leaves behind. One
+line, because the session output is not a place anyone is watching:
+
+```
+Ledger unreadable — nothing in this run was reconciled. Re-run before trusting it.
+```
 
 **A dead lens.** Stage 2 requires naming a lens that did not answer, and silence would
 delete exactly that. A run reporting a clean review while an always-on lens died reports
@@ -440,7 +478,13 @@ work is done, the PR still looks unaddressed, and nothing says why.
 
 Otherwise, one top-level comment. Hard caps:
 
-- **2,000 characters.** Not a target — a limit.
+- **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
+  non-blocking findings first, down to the count line; then the not-dispatched reasons;
+  then prose. Never the markers, and never the three lines silence cannot suppress — a
+  dead lens, `unresolvable` items, failed deliveries. Those are the summary's whole
+  reason for existing on a run that would otherwise be quiet. The mandatory lines added
+  here spend budget that issue #23 already measured as nearly exhausted, so which line
+  gives has to be written down rather than decided in the moment.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
@@ -515,13 +559,15 @@ bite hardest here:
 Post nothing when **all** of these hold:
 
 - No claim is `unresolvable`.
+- No claim carries a `delivery` failure.
 - No lens was classified as dead.
+- The ledger parsed.
 - Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
   and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
 
-The first two are gates, not options among four. An `unresolvable` item or a dead lens
-posts regardless of what the others say — both are cases where silence states something
-untrue.
+The first three are gates, not options among five. An `unresolvable` item, an undelivered
+claim or a dead lens posts regardless of what the others say — each is a case where
+silence states something untrue.
 
 Say what you did in the session output instead. The PR is not a log.
