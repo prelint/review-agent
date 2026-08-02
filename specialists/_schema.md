@@ -65,6 +65,23 @@ JSON, one object per line, nothing else. No prose before or after.
 | `fingerprint` | yes | `path:line:category` |
 | `test_stub` | no | A failing test that would catch it, if you can write one cheaply |
 
+### Not dispatched
+
+You are dispatched on every review. **Your first job is to read your own
+`**Runs when**` clause against the diff.** If it does not match, emit exactly one
+object and stop:
+
+```json
+{"kind":"not-dispatched","specialist":"money","why":"no billing, credits, invoice, voucher, refund, metering or Stripe path in the diff"}
+```
+
+Say what you looked for and did not find, not just "does not apply". The reason is
+read by a human deciding whether to trust a clean review.
+
+Never return nothing. Nothing is indistinguishable from a crash, and it reads as
+coverage you did not provide. Returning no findings *after* reviewing is different —
+that is the empty result below, and it is a valid and common outcome.
+
 ### The cleared line
 
 A specialist that is asked to report what it checked and found sound — `red-team` is

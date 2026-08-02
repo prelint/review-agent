@@ -83,36 +83,22 @@ Dispatch specialists in parallel, one subagent each. Every specialist reads
 `specialists/_schema.md` first, then its own file, and returns findings in the
 schema's JSON — one object per line, nothing else.
 
-**Always on:** `coherence`, `correctness`, `spec-drift`, `silent-failure`,
-`maintainability`, `testing`.
+**Dispatch every lens whose file exists.** All of them, every review. Do not decide
+which apply — you would be reading their triggers to guess at what they will conclude
+from reading their own.
 
-**Dispatch only specialists whose file exists.** Check before dispatching; a missing
-file is a skip, not an error, and the summary must name what was skipped. Coverage you
-do not have is coverage you say you do not have.
+Each lens reads its own `**Runs when**` clause against the diff and does one of two
+things: reviews, or returns a `kind: "not-dispatched"` object naming why it does not
+apply. Both are answers. Neither is silence.
 
-**Conditional.** Each lens states its own trigger on line 5 of its file, as
-`**Runs when** …`. That clause is the authority. `SKILL.md` does not restate it — a
-trigger written in two places drifts, and this table did: eleven of twelve rows had
-already diverged from the file they described.
+That is the whole dispatch rule. There is no table here to drift from the files — the
+trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
 
-Read them all in one call and decide from what you read:
+**Every `not-dispatched` reason goes in the summary.** "Not dispatched: `money`,
+`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have
+is coverage you say you do not have.
 
-```bash
-grep -H '^\*\*Runs when\*\*' specialists/*.md
-```
-
-| Lens | |
-|---|---|
-| `security` `tenancy` `money` `idempotency` | `resource-limits` `performance` `api-contract` `data-migration` |
-| `infra-deploy` `llm-pipeline` `observability` | `red-team` |
-
-**Stage 2 decides, never the lens.** A dispatched specialist reviews; it does not get
-to conclude it should not have been dispatched. A self-skip is silent, and silence
-reads as coverage.
-
-**Name every skip and why**, in the summary. "Skipped: `money`, `tenancy` — no billing
-or per-tenant query in the diff" is the honest form. Coverage you do not have is
-coverage you say you do not have.
+A missing file is a different thing: it is a skip, not an error, and it is also named.
 
 Give each specialist **the absolute path of its working directory**, the diff command,
 the PR description, and its own checklist. Do not give it the other specialists'
