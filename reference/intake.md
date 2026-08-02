@@ -557,7 +557,8 @@ in Stage 5.
           "n": 1,
           "text": "the first numbered point, verbatim or to its first sentence",
           "status": "open",
-          "resolution": null
+          "resolution": null,
+          "delivery": null
         }
       ]
     }
@@ -603,6 +604,11 @@ distinguishes a blocking review from a bodiless one.
 claims is closed, and not before. A single-finding comment is one claim — the shape
 does not change, only the place the status sits.
 `resolution` carries the commit SHA, the evidence, or the reason.
+`delivery` is `null` until a reply or resolve for that claim errors, then `"failed"` with
+the URL. It is separate from `status` because they answer different questions: `status` is
+what we decided, `delivery` is whether the author was told. `output.md` sets it and reads
+it — a claim can be correctly `rebutted` and never delivered, and only this field can say
+so.
 
 | Field | Written by | What it settles |
 |---|---|---|

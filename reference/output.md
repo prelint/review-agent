@@ -401,7 +401,7 @@ resolved on arrival, claim closed two commits later by this run.
 Push the fixes and stop. A clean PR does not need an announcement, and the record's
 worst comment was 10 KB reporting "0 blocking, 6 informational".
 
-**Two exceptions, and both mean "silence would be a lie".**
+**Three exceptions, and each of them means "silence would be a lie".**
 
 **A dead lens.** Stage 2 requires naming a lens that returned nothing, and silence would
 delete exactly that. A run reporting a clean review while an always-on lens died reports
