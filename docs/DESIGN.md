@@ -33,8 +33,11 @@ run-scoped ledger file. Nothing is written to the user's home directory.
 **Removing a mechanism costs the same paragraph as adding one: the alternative, and
 why it lost.** Nothing recorded these seven, and five open issues came out of them.
 
-The five failures above were removed on purpose. These were removed by omission —
-gstack had them working, the rewrite did not carry them, and no file said so.
+The five failures above were removed on purpose. All seven below were removed by
+omission — gstack had them working, the rewrite did not carry them, and no file said
+so. Two deliberate decisions sit behind four of the seven, and both were right about
+the thing they were aimed at and wrong about what they took with them; they are the
+two paragraphs under the table, not extra rows.
 
 Citations are anchor-first, per `specialists/_schema.md`: the quoted string is the
 address and the number beside it is a hint. gstack is not vendored here and
@@ -58,20 +61,20 @@ command is platform detection — reached when the remote matches neither `githu
 nor `gitlab`, and failing it selects git-native commands rather than stopping. That is
 a condition this repo invented and did not wire, not a mechanism it inherited and lost.
 
-Two removals were deliberate and got the wrong scope.
+The two decisions, and the rows each one cost.
 
-**`~/.gstack/` state.** Banned above for good reasons: 165 KB per invocation, 46% of
-it harness preamble. That argument is about the *location*. It was applied to the
-*function*, and remembering what a previous run decided now has no home.
-`reference/calibration.md` reaches the same conclusion from scratch and names the two
-places that qualify — the repo and GitHub. Neither is built.
+**`~/.gstack/` state** — rows six and seven. Banned above for good reasons: 165 KB
+per invocation, 46% of it harness preamble. That argument is about the *location*. It
+was applied to the *function*, and remembering what a previous run decided now has no
+home. `reference/calibration.md` reaches the same conclusion from scratch and names
+the two places that qualify — the repo and GitHub. Neither is built.
 
-**Skip silently.** gstack treats reviewer triage as additive: if the fetch fails, skip
-and say nothing (`greptile-triage.md` `Skip Greptile triage silently` :16).
-Inverting that was right, because silence reads as coverage you did not provide. The
-inversion reached dispatch and never
-reached the return, so `specialists/_schema.md` now says both "never return nothing"
-and "output nothing at all if you found nothing".
+**Skip silently** — rows one and two. gstack treats reviewer triage as additive: if
+the fetch fails, skip and say nothing (`greptile-triage.md` `Skip Greptile triage
+silently` :16). Inverting that was right, because silence reads as coverage you did
+not provide. The inversion reached dispatch and never reached the return, so
+`specialists/_schema.md` now says both "never return nothing" and "output nothing at
+all if you found nothing".
 
 One more from outside gstack. mattpocock's `code-review` pins its diff to a fixed
 point the caller supplies and refuses to run without one
