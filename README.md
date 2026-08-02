@@ -12,8 +12,9 @@ Needs `git`, `gh`, `python3`. Nothing else.
 3. **Verifies twice.** A finding must quote its evidence, then pass a scorer that
    didn't find it.
 4. **Fixes what it accepts.** One finding, one commit, immediately.
-5. **Proves it's done.** Every comment ends up fixed, rebutted, or deferred. Then it
-   replies, resolves the thread, and posts — or stays quiet if nothing blocks.
+5. **Proves it's done.** Every comment ends up fixed, rebutted, deferred,
+   informational, or flagged unresolvable. Then it replies, resolves the thread, and
+   posts — or stays quiet if nothing blocks and nothing is unresolvable.
 
 Stage detail: [`SKILL.md`](SKILL.md), then [`reference/`](reference/).
 
