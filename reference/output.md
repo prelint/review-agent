@@ -77,8 +77,9 @@ A missing thread ID is not permission to skip the fix. An item with no commit is
 `open`, or `deferred` with a reason; it is never `unresolvable`. The status describes
 a reporting limitation, not a lighter bar.
 
-Then **say so in the summary**: `N item(s) fixed but not resolvable — thread ID
-missing.` Never let it read as complete. Never invent a thread ID.
+Then **say so in the summary**, in the line section 7 owns — it names which of the causes
+applies, and a copy here would go on saying "thread ID missing" after a 403. Never let it
+read as complete. Never invent a thread ID.
 
 Verify `fixed` claims against `git log`, not against your own memory of having made
 the edit. The commit must exist.
@@ -317,31 +318,44 @@ is not resolving; resolving is the claim that the work is done.
 
 ### When the reply or the resolve fails
 
-**Check the exit code. A call that errored is not a call that happened.** Both of these
-fail on real PRs: the reply POST 403s on a token without write access and 404s when the
-PR was closed underneath the run, and `resolveReviewThread` errors when the thread was
-deleted or the token cannot resolve.
+**Check the exit code.** Then read it, because the three failures need three different
+answers and treating them alike gets each one wrong.
 
-The rule for both is the same, and it has two halves:
+**403 — the token cannot write. Stop the posting pass.** Report "no write access" once
+and exit non-zero. Do not mark N claims `unresolvable`: that status tells a human to close
+threads by hand, and no human can act on a permission this run never had. It is also
+unclosable by definition — the summary that would report those N claims is a write too,
+and it 403s as well, so the fleet would repeat the whole review every hour against a
+token that can never finish it. Section 5 already treats the same error on the commit
+status as expected rather than a failure.
 
-- **Never abort.** The fixes are committed and pushed. A run that dies here throws away
-  a completed review because it could not announce it, which is strictly worse than
+**404 — the PR moved. Re-run section 3's eligibility check.** If it is closed or merged,
+stop the posting pass and say so. A maintainer merging at thread 2 of 12 otherwise costs
+ten more failed writes and a summary telling them to hand-close ten threads on a merged
+PR, which is the noise section 3 exists to stop.
+
+**Anything else — one thread's problem. Carry on with the others.** A deleted thread, a
+transient 5xx, a secondary rate limit.
+
+For that third case only:
+
+- **Never abort.** The fixes are committed and pushed. A run that dies here throws away a
+  completed review because it could not announce it, which is strictly worse than
   announcing it badly.
-- **Never let it pass as done.** Report it, and carry on with the other threads.
-
-**A `fixed` claim whose reply or resolve failed becomes `unresolvable`.** That status
-already means "fixed, and we cannot close the loop on GitHub", so it now has two causes —
-an inline item with a null `thread_id`, and a call that errored — and both land in the
-same place: section 7 posts the count and the URLs even on an otherwise silent run.
-
-**A `rebutted`, `deferred` or `informational` claim keeps its status.** `unresolvable`
-requires a commit SHA, and section 2 is explicit that a claim without one is never
-`unresolvable`; downgrading here would contradict it. Those claims are already correctly
-decided — what failed is telling the author. Report the failed reply in the session
-output and in section 7's line, with the same URLs, so it still cannot pass as delivered.
-
-Say which cause in the session output either way: a 403 on every thread is a token
-problem, a 404 on one is a deleted comment.
+- **Check whether the write actually landed before you report it as failed.** A reply POST
+  is not idempotent, and "created, then the response was lost" is a real 502. Re-fetch that
+  thread and look for our marker as the last line of a `SELF` comment. Present means the
+  reply landed and only the resolve is outstanding. Only a confirmed-absent reply is a
+  failed reply — otherwise the run announces a thread to close by hand that already
+  carries its answer, and next run's marker says the claim was closed all along.
+- **A `fixed` claim whose reply or resolve is confirmed missing becomes `unresolvable`.**
+  That status already means "fixed, and we cannot close the loop on GitHub", so it now has
+  two causes — an inline item with a null `thread_id`, and a call that failed — and both
+  land in section 7's line even on an otherwise silent run.
+- **A `rebutted`, `deferred` or `informational` claim keeps its status.** `unresolvable`
+  requires a commit SHA and section 2 bars it without one. Those claims are correctly
+  decided; what failed is telling the author. Report that separately, with the same URLs,
+  so it cannot pass as delivered.
 
 If the summary comment itself cannot be posted, say so in the session output and exit
 non-zero. There is nowhere left to write it down, and a review nobody can see must not
@@ -379,8 +393,13 @@ that status, post — even when nothing blocks and everything else is clean. One
 enough:
 
 ```
-N item(s) fixed but not resolvable — <thread ID missing | reply failed | resolve failed>: <urls>. Close them by hand.
+N item(s) fixed but not resolvable — thread ID missing: <urls>. Close them by hand.
+N item(s) fixed but not resolvable — reply failed: <urls>. Close them by hand.
 ```
+
+**One line per cause, never one line for all of them.** The remediation differs — a
+missing thread ID is information that is gone, a 403 is a token to change — and a single
+label over a mixed set sends the maintainer to check the wrong thing.
 
 Silence here would be a lie of exactly the kind the ledger exists to prevent: the
 work is done, the PR still looks unaddressed, and nothing says why.
@@ -446,11 +465,13 @@ bite hardest here:
 Post nothing when **all** of these hold:
 
 - No claim is `unresolvable`.
+- No lens returned an empty response.
 - Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
   and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
 
-The first condition is a gate, not one option among three. An `unresolvable` item
-posts regardless of what the other two say.
+The first two are gates, not options among four. An `unresolvable` item or a dead lens
+posts regardless of what the others say — both are cases where silence states something
+untrue.
 
 Say what you did in the session output instead. The PR is not a log.

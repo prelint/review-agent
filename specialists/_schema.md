@@ -114,13 +114,19 @@ Say so. One object, and it is the whole response:
 {"kind":"clean","specialist":"testing","checked":"the three changed branches in prepare.py against the existing suite"}
 ```
 
+**`checked` names what you examined**, in the terms someone could go and re-read: files,
+symbols, the specific risk you went looking for. "Nothing found" and "reviewed the diff"
+are not values — they restate the `kind` and put back the ambiguity the object exists to
+remove. A human decides from this field whether to trust the coverage claim.
+
 **Never return nothing.** An empty response is indistinguishable from a crash, and it
 reads as coverage you did not provide. This is not hypothetical: the `coherence` lens
 died mid-response on this repo's PR #31 and returned an empty string, which under the old
 rule was a legal way of saying "reviewed, nothing found" — from the one always-on lens
 that owns the defects no other lens sees.
 
-Four kinds, and every dispatch ends in exactly one:
+Three terminal answers — every dispatch ends in exactly one — plus `cleared`, which
+accompanies findings rather than replacing them:
 
 | Kind | Means |
 |---|---|

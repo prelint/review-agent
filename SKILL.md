@@ -105,18 +105,24 @@ which apply — you would be reading their triggers to guess at what they will c
 from reading their own.
 
 Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
-`**Runs when**` clause it tests against the diff — and returns one of three answers:
-findings, a `kind: "clean"` object if it reviewed and found nothing, or a
-`kind: "not-dispatched"` object naming what it looked for and did not find. All three
-are answers. **None of them is silence.**
+`**Runs when**` clause it tests against the diff — and answers in one of the kinds
+`specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
 
-**An empty response is a dead lens, not a clean one.** Name it in the session output
-always, and in the summary too whenever one is posted — a lens that died is
-coverage you did not get, and reporting a clean review without saying so is the same lie
-as reporting a clean review that never ran. Do not re-dispatch: a lens that returns
-nothing twice costs twice and answers once, and the run has already learned what it
-needed to say. This happened on PR #31 — `coherence` died mid-response and returned an
-empty string, which the specialist contract then accepted as "found nothing".
+**A lens answered only if its response parses**: every line is JSON, and the last one is
+a terminal kind. Anything else is a dead lens — empty, truncated mid-line, or prose.
+Keying this on emptiness alone would miss the commoner shape, a subagent killed at its
+output cap after emitting two findings of five: the response is non-empty, so it passes
+as complete, and the three that never arrived are invisible.
+
+**Name a dead lens** in the session output always, and in the summary too whenever one is
+posted. A lens that died is coverage you did not get, and reporting a clean review
+without saying so is the same lie as reporting a clean review that never ran.
+
+**It does not block, and it does not get re-dispatched.** Missing coverage is not a found
+defect, so gating a merge on one flaky subagent would cost more than it catches; and a
+lens that returns nothing twice costs twice and answers once. Name it and move. This
+happened on PR #31 — `coherence` died mid-response and returned an empty string, which
+the specialist contract then accepted as "found nothing".
 
 That is the whole dispatch rule. There is no table here to drift from the files — the
 trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
@@ -232,10 +238,8 @@ Read `reference/output.md`. In order:
    them or say explicitly that you are deferring them.
 2. **Reconcile the ledger, claim by claim.** Every claim must be `fixed` (with a commit
    SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
-   `informational` (it asked for nothing), or `unresolvable` (fixed with a commit SHA,
-   but GitHub will not close the loop — an inline item whose thread ID is null, or a
-   reply or resolve that errored; never a top-level comment or a review body merely for
-   having no thread). An item is closed when all of its claims are; one claim
+   `informational` (it asked for nothing), or `unresolvable` — which `reference/output.md`
+   defines, along with the two things that cause it. An item is closed when all of its claims are; one claim
    still `open` means Stage 5 is not done. **Then reconcile `findings` the same way** —
    all five endings settle here, `posted` and `dropped` included, because the commit
    status in step 5 counts anything still `open`. Step 7 posts what is marked `posted`.
