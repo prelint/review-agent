@@ -12,6 +12,17 @@ attribution requirement in one place.
 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT | Addy Osmani (2025) | Severity prefixes, structural remedies, "one structural problem and ten nits means the structural problem is the review", and the likelihood axis (issue #436 / PR #441) |
 | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | Matt Pocock (2026) | Two-axis Standards/Spec separation with no cross-axis reranking, word caps in the subagent brief, the Necessity axis (issue #713) |
 | [garrytan/gstack](https://github.com/garrytan/gstack) | MIT | Garry Tan (2026) | The quote-or-drop verification gate, the specialist taxonomies, the `red-team` lens |
+| [anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review) | MIT | Anthropic | The hard-exclusion list in `reference/exclusions.md`, items 1–14 |
+
+### On the exclusion list
+
+`reference/exclusions.md` items 1–14 come from the false-positive filter in
+`claudecode/claude_api_client.py`, in the same order. Items 1, 3 and 4 are narrowed
+here to the opposite of their original intent: that list serves a lens that only hunts
+exploitable vulnerabilities, where resource exhaustion is out of scope by definition.
+On a metered multi-tenant service a missing bound degrades other tenants and bills the
+customer, so the defect class comes back and `resource-limits` owns it. Only the
+speculative framing stays excluded.
 
 ## Apache-2.0 obligations
 

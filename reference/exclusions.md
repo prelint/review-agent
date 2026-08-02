@@ -2,8 +2,9 @@
 
 A blocklist applied after scoring. Anything matching drops regardless of confidence.
 
-The first fifteen started from a security-only exclusion list. The rest come from what
-actually wasted time in the logs.
+Items 1–14 come from the false-positive filter in
+[anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review)
+(MIT), in the same order. The rest come from what actually wasted time in the logs.
 
 **Items 1, 3 and 4 are narrowed.** They suit a lens whose only job is finding
 exploitable vulnerabilities, where resource exhaustion is out of scope by definition

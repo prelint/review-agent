@@ -105,7 +105,7 @@ are in [`NOTICE.md`](NOTICE.md) — all MIT or Apache-2.0.
 
 - Anthropic official `code-review` plugin — the 0–100 rubric passed verbatim to a
   separate scorer, the pre-post eligibility re-check, the false-positive catalog.
-- A security-only exclusion list — the starting point for `reference/exclusions.md`,
+- [`claude-code-security-review`](https://github.com/anthropics/claude-code-security-review) — items 1–14 of `reference/exclusions.md`,
   with three items narrowed. Its DoS / rate-limiting / resource-exhaustion exclusions
   suit a lens that only hunts exploitable vulnerabilities; on a metered multi-tenant
   service a missing bound degrades other tenants and bills the customer, so the defect

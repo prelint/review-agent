@@ -240,10 +240,11 @@ oversight.
 ## Resource limits are in scope, and the exclusions were wrong
 
 Three of the exclusions — denial of service, rate limiting, memory and CPU exhaustion
-— were carried over from a security-only exclusion list without checking whether they
-transfer. They do not.
+— were carried over from
+[claude-code-security-review](https://github.com/anthropics/claude-code-security-review)
+without checking whether they transfer. They do not.
 
-That kind of list is written for a lens whose only job is finding exploitable
+That list serves a lens whose only job is finding exploitable
 vulnerabilities. Resource exhaustion is out of scope there by definition, and it
 generates enormous false-positive volume because almost any loop can be framed as a
 DoS vector. Both true, and neither survives the move to a general review of a metered
