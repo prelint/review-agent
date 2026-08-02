@@ -30,7 +30,7 @@ Every claim on every ledger item must be one of:
 | `rebutted` | the evidence that refutes it, quoted |
 | `deferred` | a reason **and** an issue link — always, no exceptions |
 | `informational` | nothing — it asked for nothing |
-| `unresolvable` | **a commit SHA that exists in `git log`**, plus an `inline` item whose `thread_id` is `null`, or a reply or resolve that errored |
+| `unresolvable` | **a commit SHA that exists in `git log`**, plus one of the causes below |
 
 `deferred` needs a destination. There are two honest endings for anything you accept
 and do not fix: fix it now, or file it where someone will see it. "Noted it" is not a
@@ -60,18 +60,19 @@ the whole comment is handled.
 deferral. Do not proceed with an open item and a summary that implies completeness.
 
 `unresolvable` is `fixed` that cannot close its thread. It carries **every requirement
-`fixed` carries** — a commit SHA verified against `git log` — plus one more: `surface`
-is `inline` and `thread_id` is `null`, because pagination dropped the thread or its first
-comment was deleted.
+`fixed` carries** — a commit SHA verified against `git log` — plus exactly one of two
+causes. **This is where they are defined; everywhere else refers here**, because they have
+been restated in three places and a third cause would have had to find all three.
+
+1. **`surface` is `inline` and `thread_id` is `null`** — pagination dropped the thread, or
+   its first comment was deleted.
+2. **A reply or resolve that errored**, per section 6. Any surface can hit this one.
 
 **A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment and
 a review body have no thread, so null on either is the right answer rather than a failure,
 and they close as `fixed` or `informational` like anything else. Reading null as a failure
 on every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
 about threads that never existed.
-
-The other cause is section 6's: a reply or a resolve that returned an error. Any surface
-can hit that one.
 
 A missing thread ID is not permission to skip the fix. An item with no commit is
 `open`, or `deferred` with a reason; it is never `unresolvable`. The status describes
@@ -385,8 +386,8 @@ For that last case only:
   landed and only the resolve is outstanding; anything else is a confirmed-absent reply.
 - **A `fixed` claim whose reply or resolve is confirmed missing becomes `unresolvable`.**
   That status already means "fixed, and we cannot close the loop on GitHub", so it now has
-  two causes — an inline item with a null `thread_id`, and a call that failed — and both
-  land in section 7's line even on an otherwise silent run.
+  section 2's second cause, and it lands in section 7's line even on an otherwise silent
+  run.
 - **A `rebutted`, `deferred` or `informational` claim keeps its status.** `unresolvable`
   requires a commit SHA and section 2 bars it without one. Those claims are correctly
   decided; what failed is telling the author.
