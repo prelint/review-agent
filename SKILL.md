@@ -248,8 +248,9 @@ Read `reference/output.md`. In order:
 - At most **5 non-blocking findings** posted. More than that, give a count.
 - Severity prefix on every finding: `Blocker:` / `Required:` / `Nit:` / `FYI:`.
   Unlabelled feedback reads as mandatory and wastes the author's time.
-- Every finding carries `<!-- review-agent: category=<c> fingerprint=<f> score=<n> -->`
-  so it can be found again. It does not render.
+- Every finding carries an invisible marker so the next run can find it again, and the
+  summary carries one per item without a thread. `reference/output.md` owns the format —
+  it writes them, and a second copy here would drift from it.
 
 ### Writing
 

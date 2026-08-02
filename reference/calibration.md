@@ -72,12 +72,15 @@ A finding posted today must be identifiable months later by a process that was n
 running when it was posted. One invisible marker does it:
 
 ```html
-<!-- review-agent: category=tenancy fingerprint=backend/apps/billing/services.py:charge_org:tenancy score=88 -->
+<!-- review-agent: {"fingerprint":"backend/apps/billing/services.py:charge_org:tenancy","category":"tenancy","score":88,"severity":"REQUIRED","status":"posted"} -->
 ```
 
 HTML comments do not render on GitHub. Without this, category is unrecoverable from a
 posted comment and per-category rates cannot be computed at all. This ships first or
 nothing else works.
+
+`output.md` owns the format and writes it; the fields this file needs are `category`,
+`fingerprint` and `score`, and it must tolerate the others being added.
 
 ## The calibrate pass
 
