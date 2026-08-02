@@ -67,9 +67,16 @@ discards them is not a rollback.
 
 **Three things still take `ACCESS EXCLUSIVE` on Aurora Postgres 16.** A type change
 outside the safe conversion set, `SET NOT NULL` without a validated `NOT VALID` CHECK
-first, and any index or unique constraint built without `CONCURRENTLY`. A failed
-concurrent build leaves an `INVALID` index and the retry fails on "relation already
-exists", so the migration says how to recover or it is a stuck deploy.
+first, and a unique constraint added as `ALTER TABLE ... ADD CONSTRAINT`. Each of those
+blocks readers and writers for its duration.
+
+**A plain `CREATE INDEX` takes `SHARE`.** Not `ACCESS EXCLUSIVE`: it locks out writes
+for the whole build and does not block reads at all. Still a finding on a table you can
+size — name the write path that stalls — but claiming it blocks every reader is
+refutable from the manual in one step, which is the false-positive class this file
+exists to suppress. A failed `CONCURRENTLY` build leaves an `INVALID` index and the
+retry fails on "relation already exists", so the migration says how to recover or it is
+a stuck deploy.
 
 ## Not a finding
 
