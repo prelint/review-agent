@@ -62,6 +62,16 @@ production code path.
 
 ---
 
+## `security` emits on your behalf
+
+A test key reachable from a production path is a `money` finding, but a diff touching
+auth without touching billing dispatches `security` and not you. `security.md` handles
+that case directly rather than routing into a lens that is `not-dispatched`.
+
+The coupling is named in both files so a rename or a re-route breaks visibly. If you
+change what `money` owns here, read `security.md`'s "Not a finding" entry on
+placeholder credentials.
+
 ## Not a finding
 
 - Provider-side behaviour you cannot see from this repo, unless the diff assumes
