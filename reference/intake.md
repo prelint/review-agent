@@ -260,7 +260,20 @@ For each item, before any trust decision:
    and `COMMENTED` fall through to the next question.
 4. **Does it ask for anything?** Some comments explain a decision rather than request
    a change. Record as `informational` and reply only if a question was asked.
-5. **Trust tier** — see below.
+5. **Split it into claims.** A comment is a container, not a finding. A decision review
+   routinely carries ten or more numbered points, each with its own verdict — one on
+   this repo carried fourteen. Split on the structure the author used: numbered
+   headings, `<details><summary>` blocks, `[!WARNING]` / `[!CAUTION]` callouts, or list
+   entries that each cite their own `file:line`. **Each claim becomes its own ledger
+   entry with its own status.**
+
+   Collapsing fourteen points into one item with one status loses thirteen of them the
+   moment you close the first — and the ledger then reads as complete. That is the
+   exact failure the ledger exists to prevent, so it is worth the extra parse.
+
+   A comment carrying one finding is one claim. The shape does not change; only the
+   place the status sits.
+6. **Trust tier** — see below.
 
 ## Trust tiers
 
