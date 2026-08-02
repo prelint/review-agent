@@ -89,7 +89,7 @@ JSON, one object per line, nothing else. No prose before or after.
 | `failure` | yes | Concrete: inputs or interleaving → wrong outcome. "Could be unsafe" is not a failure scenario. |
 | `evidence` | yes | Verbatim source. This is the quote gate. |
 | `fix` | yes | The specific change. "Consider reviewing this" is not a fix. |
-| `fingerprint` | yes | `path:line:category` |
+| `fingerprint` | yes | `path:anchor:category` — see below |
 | `test_stub` | no | A failing test that would catch it, if you can write one cheaply |
 
 ### Not dispatched
@@ -154,6 +154,27 @@ established the finding.
 inputs. To call something `remote` you must be able to quote what prevents it — a
 feeling is not an invariant. If you cannot check, the band is `unverified`, **not**
 `remote`. Guessing low and guessing high are the same error.
+
+## Cite anchors, not bare line numbers
+
+A line number rots the moment code above it shifts. It is a snapshot, not an address.
+
+Every citation carries a **greppable anchor** — a function, class, constant, config key,
+or a literal string that `grep` finds in that file — and the line number beside it, not
+instead of it:
+
+```
+services.py `charge_org()` :142        not  services.py:142
+intake.md `substance_hash` :210        not  intake.md:210
+```
+
+The `fingerprint` is `path:anchor:category`, never `path:line:category`. It is the key
+that dedupes findings within a run and matches them across runs, so a key that moves
+when unrelated code shifts above it silently breaks both.
+
+Two places this has already bitten this repo: an edit aimed at a line number that had
+shifted matched nothing and was reported as applied; and findings posted on a PR are
+read after further commits land, by which time every bare number in them is wrong.
 
 ## Caps
 

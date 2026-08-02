@@ -166,6 +166,15 @@ Commit immediately. Do not batch. Do not defer to a later "ship" step. An interr
 run must leave a clean tree, and `git log` must be a complete answer to "did you
 address this?".
 
+**Fix every instance the finding reaches.** Correcting a pattern in one file and
+leaving its copies is not a smaller fix, it is a half-migration — and the un-migrated
+sites drift from the new shape, which is the recurring source of the bugs the next
+review then finds. Before you commit, grep for what you just changed: the old value,
+the old signature, the old wording. One grep per fix.
+
+This is the same defect `coherence` reports on other people's diffs. It applies to
+yours. A finding is not closed while a copy of it survives somewhere the diff reaches.
+
 Do not push until Stage 5 has verified the ledger.
 
 **When you disagree** with a claim, do not fix it. Record it as `status: "rebutted"`
