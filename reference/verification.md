@@ -75,6 +75,14 @@ not, and that is the entire mechanism.
 
 **Below 80 dies.** No exceptions, no "but it's cheap to mention".
 
+**The threshold follows the `category` field, never the lens that emitted it.** A lens
+may emit on another's behalf — `security` emits the production-reachable test key as
+`category: "money"` when `money` is not dispatched — and once per-category thresholds
+exist, that finding is scored against `money`'s number. The category is the claim about
+what kind of defect this is; the emitter is an implementation detail of who noticed it.
+Scoring by emitter would give one defect two different bars depending on which lens saw
+it first, which is the whole reason the handoff stamps a category at all.
+
 **The rubric must stay continuous for that number to mean anything.** A five-value
 rubric — 0/25/50/75/100 — under a threshold of 80 admits only 100, silently killing
 every "highly confident, verified, directly affects functionality" finding at 75.
