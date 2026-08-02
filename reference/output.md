@@ -339,12 +339,28 @@ Otherwise, one top-level comment. Hard caps:
   fields off every finding, and a rebuilt finding missing them counts as neither open nor
   closed. Without the marker, category is unrecoverable from a posted comment and
   calibration is impossible.
+- **A status with a destination carries it.** `"status":"deferred","issue":42` and
+  `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
+  `rebutted` need nothing more: the reason is the visible text beside the marker. A
+  status restored without its destination is a status nothing can act on — a deferral
+  whose issue is unrecoverable reads as handled and points nowhere.
 
 ### The summary is one comment per PR, edited in place
 
 Post it once and **edit that same comment on later runs**. It is the carrier for
 everything without a thread: `top` items, `review` items, the PR description, and every
-finding. Each gets one marker, below the visible text.
+finding whose ending `git` cannot show. Each gets one marker, in the trailer.
+
+**A `fixed` finding is recovered from `git log`, not from a marker.** Stage 4 writes
+`Finding: <specialist>/<fingerprint>` into the commit that fixes it, so
+`git log --fixed-strings --grep="<fingerprint>"` on the current branch answers both questions
+at once: whether we fixed it, and whether the fix is still here. A force-push or a dropped
+rebase takes the commit and the grep result together, and the finding re-opens.
+
+That is the ancestry check the claim side does by hand, for free and with no SHA to keep
+in sync — which is why the marker has no resolution field for `fixed`. Putting one there
+would be a second copy of something `git log` already holds, and the copy is the half that
+goes stale.
 
 An inline comment has a thread to reply in. The other three surfaces have none, so a
 second top-level comment per run is the only alternative, and that is the noise the

@@ -308,15 +308,25 @@ every item takes the "No previous hash → New item → Open" row above, the
 re-verify-existing-fix path is unreachable, and `substance_hash` is decoration — which
 is what shipped: the field was added to the schema and nothing ever read a previous one.
 
-**Re-verify every carried `fixed` against `git`.** `git merge-base --is-ancestor <sha>
-HEAD` — a commit no longer reachable from the head re-opens the claim. A force-push or a
-dropped rebase makes a carried `fixed` a lie, and carrying it forward would make that lie
-permanent, since the re-verify path above only fires when the comment text moves.
+**Re-verify every carried `fixed` claim against `git`.** A reply marker carries the SHA,
+so check it: `git merge-base --is-ancestor <sha> HEAD` — a commit no longer reachable from
+the head re-opens the claim. A force-push or a dropped rebase makes a carried `fixed` a
+lie, and carrying it forward would make that lie permanent, since the re-verify path above
+only fires when the comment text moves. Findings get the same guarantee from the `git log`
+lookup below rather than from a stored SHA.
 
 **The load fills `findings`, not only `items`.** Every finding restored from a summary
-marker enters `findings` at the status its marker carries. Stage 3 then dedupes against
-it — that is the array `verification.md`'s re-post guard reads, and Stage 1 leaving it
-empty is what made that guard dead on arrival.
+marker enters `findings` at the status its marker carries, with the destination that
+status carries — a `deferred` finding's issue, a `dropped` one's cause. Stage 3 then
+dedupes against it: that is the array `verification.md`'s re-post guard reads, and Stage 1
+leaving it empty is what made that guard dead on arrival.
+
+**A `fixed` finding comes from `git log`, not from a marker.** Stage 4 writes
+`Finding: <specialist>/<fingerprint>` into the commit, so
+`git log --fixed-strings --grep="<fingerprint>"` on the current branch says both whether we
+fixed it and whether the fix survived. A commit that left the branch takes its grep result
+with it and the finding re-opens — the same guarantee the ancestry check below gives a
+carried claim, except nothing has to store a SHA for it to hold.
 
 ### What it records, and when that is a bug
 
