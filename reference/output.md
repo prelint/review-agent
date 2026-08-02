@@ -223,9 +223,18 @@ repository, and a required check that nothing reliably posts blocks every merge.
 Inline findings get inline replies **on their own thread**, never as a top-level
 comment:
 
+**Never interpolate a body into a shell command.** Build the JSON in `python3` and pipe
+it in. Replies quote code, so they carry backticks, and `-f body="$REPLY"` hands those to
+the shell: this file's own review posted three replies whose every quoted term had been
+deleted by command substitution, marker intact and sentences gutted.
+
 ```bash
-gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" -f body="$REPLY"
+python3 -c 'import json,sys; print(json.dumps({"body": sys.stdin.read()}))' < reply.md \
+  | gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" --input -
 ```
+
+To update the reply already on a thread, same payload, `--method PATCH` against
+`repos/$REPO/pulls/comments/$REPLY_ID`. The summary comment is edited the same way.
 
 Reply templates — keep them this short:
 
