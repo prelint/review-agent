@@ -344,8 +344,14 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
       "body_hash": "sha256:...",
       "substance_hash": "sha256:...",
       "outdated": false,
-      "status": "open",
-      "resolution": null
+      "claims": [
+        {
+          "n": 1,
+          "text": "the first numbered point, verbatim or to its first sentence",
+          "status": "open",
+          "resolution": null
+        }
+      ]
     }
   ]
 }
@@ -358,8 +364,10 @@ it. Everything else here is Stage 1's.
 `state` is the verdict on a `review` item — `APPROVED`, `CHANGES_REQUESTED`,
 `COMMENTED` — and `null` on every other surface. Carry it: it is the only field that
 distinguishes a blocking review from a bodiless one.
-`status` is one of `open`, `fixed`, `rebutted`, `deferred`, `informational`,
-`unresolvable`.
+**Status lives on the claim, never on the item.** One of `open`, `fixed`, `rebutted`,
+`deferred`, `informational`, `unresolvable`. An item is closed when every one of its
+claims is closed, and not before. A single-finding comment is one claim — the shape
+does not change, only the place the status sits.
 `resolution` carries the commit SHA, the evidence, or the reason.
 
 Commit the ledger directory to `.gitignore` — it is run state, not source.

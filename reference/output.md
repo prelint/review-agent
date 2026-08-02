@@ -32,7 +32,11 @@ Every ledger item must be one of:
 | `informational` | nothing — it asked for nothing |
 | `unresolvable` | **a commit SHA that exists in `git log`**, plus a `thread_id` of `null` from intake |
 
-**An item still `open` means this stage is not done.** Go back to Stage 4 or record a
+Reconcile **claims**, not items. An item with nine closed claims and one open is an
+open item, and its comment gets one reply covering all ten — never one reply implying
+the whole comment is handled.
+
+**A claim still `open` means this stage is not done.** Go back to Stage 4 or record a
 deferral. Do not proceed with an open item and a summary that implies completeness.
 
 `unresolvable` is `fixed` that cannot close its thread. It carries **every requirement
