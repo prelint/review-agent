@@ -120,9 +120,9 @@ has not finished thinking.
 
 ---
 
-## Stage 3: Gate — two filters in series
+## Stage 3: Gate — three filters in series
 
-Read `reference/verification.md`. Both filters run; neither substitutes for the other.
+Read `reference/verification.md`. All three run; none substitutes for another.
 
 **Filter 1 — quote or drop.** A finding ships only if it quotes the verbatim
 `file:line` that motivates it. "Field X doesn't exist on Y" must quote Y's class
@@ -138,6 +138,15 @@ pattern is dropped regardless of score.
 
 Dedupe by `fingerprint` across specialists. When two lenses find the same thing, keep
 the one with the better evidence and record both categories.
+
+**Filter 3 — likelihood.** Score says whether the claim is true; likelihood says
+whether it ever fires. Every finding arrives with a `likelihood` band and a named
+`condition`. `remote` downgrades one step — `Blocker:`→`Required:`,
+`Required:`→`Nit:` — keeping the condition in the text. `unverified` does not
+downgrade: label it and say what you would need to check it. `Blocker:` requires
+`plausible` or better. **This filter downgrades and never drops** — the author may
+know the condition is reachable for reasons the diff does not show. A downgrade with
+no stated condition is a review bug; send it back.
 
 ---
 

@@ -1,9 +1,10 @@
 # Stage 3: The gate
 
-Two filters in series. Neither substitutes for the other.
+Three filters in series. None substitutes for another.
 
 Filter 1 kills findings that are not real. Filter 2 kills findings that are real and
-not worth the author's time. A single filter does one or the other.
+not worth the author's time. Filter 3 downgrades findings that are real, worth
+raising, and unlikely to fire — it never drops. No one of them does another's job.
 
 ---
 
