@@ -67,7 +67,7 @@ evidence decides, not the login.
 
 ## Status
 
-Ran end to end once, on its own PR #10. Found seven things, fixed seven, one commit
+Ran end to end once, on its own PR #10. Found eight things, fixed eight, one commit
 each. One was a blocker: three lenses would have silently skipped themselves.
 
 Stages 1–3 have run many times. Stage 4 has run once. A clean result means the lenses
