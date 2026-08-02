@@ -28,7 +28,7 @@ one that cannot be reversed once rows exist under the new schema.
 ... NOT NULL DEFAULT x` then `DROP DEFAULT`, so an INSERT from the old image — which
 omits the column — raises `NotNullViolation` for the whole rotation. The project rule
 is `null=True` on every new column (`.agent/rules/backend/coding-standards.md`,
-"Migrations"); Django 6's `db_default` is the other correct answer.
+"Migrations"); Django 5.0's `db_default` is the other correct answer.
 
 **Drops, renames and type changes break reads, not just writes.** Django selects an
 explicit column list, so once a column is gone every query against that model from the
