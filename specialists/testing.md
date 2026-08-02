@@ -9,12 +9,23 @@ mock-call assertions that pass whatever the code does, and a lens counting only 
 tests never opens one. `../reference/exclusions.md` #21 bans missing coverage as a
 standalone finding, so absence had no owner either.
 
-**One missing-test finding per review.** The binding constraint on this file. Say a
-behaviour is untested once, naming the behaviour, the input that reaches it, and the
-wrong outcome nobody would see. Spend it on a branch whose failure is silent and
-expensive — a permission denial, a tenant filter, a refund, a retry cap. A coverage
-percentage or a per-function sweep dies in Stage 3 and was the noise. Reviewing tests
-that **exist** carries no cap: a test that cannot fail is a defect like any other.
+**One missing-test finding reported in full; the rest as a count.** Name the
+behaviour, the input that reaches it, and the wrong outcome nobody would see — and
+spend that on the branch whose failure is silent and expensive: a permission denial, a
+tenant filter, a refund, a retry cap.
+
+Where the diff adds more than one such branch, add one line: `plus N untested
+branches: <one clause each>`. Do not drop them. A PR adding a billing path, a
+permission check and a retry cap has three real gaps, and reporting one while
+silently discarding two is a filter the author cannot see — the thing
+`verification.md` Filter 3 exists to prevent. This is the same overflow shape
+`output.md` already uses for non-blocking findings.
+
+A coverage percentage or a per-function sweep still dies in Stage 3, and was the
+noise. Reviewing tests that **exist** carries no cap: a test that cannot fail is a
+defect like any other.
+
+The number 1 is not calibrated — see `../reference/calibration.md`.
 
 **Severity:** `REQUIRED` for a test in this diff that cannot fail, and for an
 assertion loosened with no stated reason. `BLOCKER` only when the weakened guard
