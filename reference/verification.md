@@ -46,7 +46,9 @@ not, and that is the entire mechanism.
 ### Rubric — pass this text unchanged
 
 > Score this finding 0–100 for how confident you are that it is a real issue worth
-> raising on this pull request.
+> raising on this pull request. **Any integer is legal — the bands below are anchors,
+> not the only allowed answers.** Interpolate: a finding stronger than the 75 anchor
+> but short of certainty is an 85.
 >
 > - **0** — Not confident at all. A false positive that does not survive light
 >   scrutiny, or a pre-existing issue not introduced by this change.
@@ -63,11 +65,29 @@ not, and that is the entire mechanism.
 > If the finding cites a project convention, verify the convention file actually says
 > that. Do not take the finder's word for it.
 >
+> You have not been told any previous score for this finding, and must not ask for
+> one. Score it from the evidence alone.
+>
 > Return only: `{"score": N, "why": "<one sentence>"}`
 
 ### Threshold
 
 **Below 80 dies.** No exceptions, no "but it's cheap to mention".
+
+**The rubric must stay continuous for that number to mean anything.** A five-value
+rubric — 0/25/50/75/100 — under a threshold of 80 admits only 100, silently killing
+every "highly confident, verified, directly affects functionality" finding at 75.
+That is a live bug in the plugin this rubric came from
+([claude-plugins-official #1852](https://github.com/anthropics/claude-plugins-official/issues/1852))
+and it was inherited here verbatim. If you ever tighten the rubric back to fixed
+bands, move the threshold onto a band.
+
+**An unparseable or missing score counts as 100, not 0.** Fail toward keeping the
+finding. A scorer that errors out must not silently suppress what it was asked to
+judge.
+
+**The scorer is blind to any earlier score.** Shown a previous number, a second pass
+anchors to it and stops being independent, which is the whole mechanism.
 
 Per-category thresholds are the plan, not the present. Today every category uses 80.
 
