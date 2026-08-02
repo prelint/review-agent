@@ -342,7 +342,8 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
 }
 ```
 
-`status` is one of `open`, `fixed`, `rebutted`, `deferred`, `informational`.
+`status` is one of `open`, `fixed`, `rebutted`, `deferred`, `informational`,
+`unresolvable`.
 `resolution` carries the commit SHA, the evidence, or the reason.
 
 Commit the ledger directory to `.gitignore` — it is run state, not source.

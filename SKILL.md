@@ -7,12 +7,14 @@ description: Review a pull request end to end — read every reviewer's feedback
 
 Five stages. Each one's output is the next one's input. Do not skip forward.
 
-Dependencies: `git`, `gh`, `jq`, `python3`. Nothing else. Do not read files outside
-this directory and the repository under review.
+Dependencies: `git`, `gh`, `python3`. Nothing else. No standalone `jq` — every filter
+here runs through `gh --jq`, which is built in. Do not read files outside this
+directory and the repository under review.
 
-**Search with Grep and Glob, read with Read.** Shell out only for `git` and `gh`.
-The previous version made 14,249 Bash calls against 2 Grep calls and paid for it in
-context and in quoting bugs.
+**Search with Grep and Glob, read with Read.** Shell out only for `git`, `gh`, and
+`python3` where a reference file gives it explicitly — the content hashing and the
+thread join in `reference/intake.md` are the only two. The previous version made
+14,249 Bash calls against 2 Grep calls and paid for it in context and in quoting bugs.
 
 ---
 

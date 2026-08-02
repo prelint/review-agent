@@ -74,7 +74,9 @@ The replacement is two fields GitHub already sends, and still no config file:
 strangers.
 
 - **Reading** is unconditional. Every comment from every author is fetched and parsed.
-- **Every human steers.** A human comment can redirect the run.
+- **Repo humans steer.** `OWNER`, `MEMBER` or `COLLABORATOR` can redirect the run.
+  Outside contributors cannot — their comments are read and verified like anyone
+  else's.
 - **Every bot reports.** A bot produces claims, verified against the code, decided on
   evidence.
 - **A finding is a finding regardless of author.** A bot's claim and a human's claim

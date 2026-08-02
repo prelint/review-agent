@@ -28,9 +28,16 @@ Every ledger item must be one of:
 | `rebutted` | the evidence that refutes it, quoted |
 | `deferred` | a reason, and an issue link if it is real work |
 | `informational` | nothing — it asked for nothing |
+| `unresolvable` | a `thread_id` of `null` from intake. The fix may exist; the thread cannot be closed. |
 
 **An item still `open` means this stage is not done.** Go back to Stage 4 or record a
 deferral. Do not proceed with an open item and a summary that implies completeness.
+
+`unresolvable` is the one status that closes the ledger without closing the thread.
+It is reserved for an intake join failure — a `thread_id` of `null`, meaning
+pagination dropped the thread or its first comment was deleted. Fix the finding and
+commit as normal, then **say so in the summary**: `N item(s) fixed but not resolvable
+— thread ID missing.` Never let it read as complete. Never invent a thread ID.
 
 Verify `fixed` claims against `git log`, not against your own memory of having made
 the edit. The commit must exist.
@@ -76,7 +83,9 @@ The commit shows you heard it.
 
 ### Resolve threads
 
-Resolve a thread when, and only when, its fix commit exists:
+Resolve a thread when its fix commit exists **and** `thread_id` is not null. Skip the
+mutation entirely when it is null — calling it with an empty argument errors and the
+item is already accounted for as `unresolvable`.
 
 ```bash
 gh api graphql -f query='
