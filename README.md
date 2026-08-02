@@ -1,129 +1,88 @@
 # review-agent
 
-A pull-request review skill that reads every reviewer, verifies every finding twice,
-commits each fix on its own, and proves the loop is closed before it posts.
+Reviews a pull request, fixes what it finds, and proves it closed every open comment
+before it posts.
 
-Standalone. Requires `git`, `gh`, `python3` and nothing else — no plugin
-marketplace, no shared harness, no state in `$HOME`.
+Needs `git`, `gh`, `python3`. Nothing else.
 
-## Why
+## What it does
 
-Built from a forensic audit of two weeks of review-agent logs (18 Jul – 1 Aug 2026:
-2,600 session files, 454 review sessions across 53 PRs). Five measured failures drove
-every decision; they are documented with their evidence in
-[`docs/DESIGN.md`](docs/DESIGN.md).
+1. **Reads everything.** Every reviewer, bot or human. The PR description too.
+2. **Runs 18 lenses** in parallel — security, money, tenancy, migrations, and more.
+3. **Verifies twice.** A finding must quote its evidence, then pass a scorer that
+   didn't find it.
+4. **Fixes what it accepts.** One finding, one commit, immediately.
+5. **Proves it's done.** Every comment ends up fixed, rebutted, or deferred. Then it
+   replies, resolves the thread, and posts — or stays quiet if nothing blocks.
 
-The short version:
+Stage detail: [`SKILL.md`](SKILL.md), then [`reference/`](reference/).
 
-- The previous reviewer filtered comments to one bot at the API call. Copilot,
-  cubic-dev-ai, cursor, baz-reviewer and github-code-quality all commented on PRs in
-  that window and were never read.
-- It watermarked on `created_at` and fetched `updated_at` zero times — so a bot that
-  edits its summary comment in place could change its verdict invisibly.
-- It never read the PR description at all.
-- Its own rules forbade committing, so 11% of sessions left an uncommitted code edit.
-- Nothing capped output. Median posted comment 1,718 characters; worst was 10,289,
-  reporting zero blocking issues.
+## Why it exists
 
-## The five stages
+Two weeks of logs: 2,600 sessions, 454 reviews, 53 PRs. Five things kept going wrong.
 
-| Stage | Does | Reference |
-|---|---|---|
-| 0 | Bind the run, resolve the diff base, fail early | `SKILL.md` |
-| 1 | Read every reviewer and all four mutating surfaces; write the ledger | [`reference/intake.md`](reference/intake.md) |
-| 2 | Dispatch specialist lenses in parallel, 400 words each | [`specialists/`](specialists/) |
-| 3 | Quote-or-drop, then independent scoring at 0–100, then exclusions | [`reference/verification.md`](reference/verification.md) |
-| 4 | Fix accepted findings — one finding, one commit, immediately | `SKILL.md` |
-| 5 | Reconcile the ledger, resolve threads, post or stay silent | [`reference/output.md`](reference/output.md) |
+| Broken | Now |
+|---|---|
+| Read one bot's comments. Five other review bots were ignored. | Reads every author. |
+| Watermarked on `created_at`, so a bot editing its verdict in place was invisible. | Watermarks on edits. |
+| Never read the PR description. | Reads it, and checks the diff against it. |
+| Forbidden from committing, so 11% of runs left uncommitted edits. | Commits each fix as it makes it. |
+| No output cap. Worst comment was 10,289 characters with nothing blocking. | 2,000 characters, five findings, or silence. |
 
-Two ideas carry most of the weight.
+Evidence for each: [`docs/DESIGN.md`](docs/DESIGN.md).
 
-**The ledger.** Stage 1 writes one entry per open reviewer item. Stage 5 cannot finish
-while any entry is `open`. That is the mechanical answer to "did you address this?" —
-asked thirteen times in two weeks because nothing could answer it. The guarantee is
-scoped to a single sequential run; concurrent runs on one PR are best effort, and
-`docs/DESIGN.md` says exactly where the line is.
+## The two ideas that matter
 
-**Two filters, not one.** Quote-or-drop kills findings that are not real. Independent
-scoring — by an agent that did not find the issue — kills findings that are real and
-not worth the author's time. Either alone leaves half the noise.
+**The ledger.** Stage 1 lists every open reviewer comment. Stage 5 can't finish while
+one is still open. That is the mechanical answer to "did you address this?" — asked
+thirteen times in two weeks because nothing could answer it.
 
-## Specialists
+**Two filters, not one.** Quote-or-drop kills findings that aren't real. A separate
+scorer kills findings that are real and not worth your time. Either alone leaves half
+the noise.
 
-Written: [`tenancy`](specialists/tenancy.md), [`money`](specialists/money.md),
-[`idempotency`](specialists/idempotency.md),
-[`infra-deploy`](specialists/infra-deploy.md),
-[`spec-drift`](specialists/spec-drift.md),
-[`llm-pipeline`](specialists/llm-pipeline.md),
-[`observability`](specialists/observability.md),
-[`silent-failure`](specialists/silent-failure.md),
-[`resource-limits`](specialists/resource-limits.md),
-[`coherence`](specialists/coherence.md),
-[`red-team`](specialists/red-team.md),
-[`correctness`](specialists/correctness.md),
-[`security`](specialists/security.md),
-[`testing`](specialists/testing.md),
-[`performance`](specialists/performance.md),
-[`maintainability`](specialists/maintainability.md),
-[`api-contract`](specialists/api-contract.md),
-[`data-migration`](specialists/data-migration.md).
+## The lenses
 
-The first nine fill gaps that produced real bugs in the record and that no existing
-library covered. `docs/DESIGN.md` names the bug behind each one.
+Always on: `coherence` · `correctness` · `spec-drift` · `silent-failure` ·
+`maintainability` · `testing`
 
-`red-team` is the one lens with no checklist, and on the evidence it is the highest
-yield of the set — it caught an invariant counting the wrong thing, two forward-only
-fixes that left broken production data unmentioned, and a dedup key that collapsed a
-twelve-item alert wave into one message. None of those are findable from a bullet
-list. It runs on risk surface, never on diff size.
+On their ground: `security` · `tenancy` · `money` · `idempotency` · `resource-limits` ·
+`performance` · `api-contract` · `data-migration` · `infra-deploy` · `llm-pipeline` ·
+`observability` · `red-team`
+
+Two are worth calling out. **`coherence`** catches what a diff cannot show: a new rule
+contradicting an old one, a state nothing consumes, a rename done in three files out of
+four. **`red-team`** has no checklist — it caught an invariant counting the wrong thing
+and two fixes that left already-broken production data unmentioned.
+
+## Trust
+
+Repo members steer, everyone else reports. Split on `user.type` and
+`author_association`, both sent by GitHub. No config, no list to maintain.
+
+Reading is never gated. A bot's finding gets the same verification as a maintainer's —
+evidence decides, not the login.
 
 ## Status
 
-Done: design, `SKILL.md`, all four `reference/` files, the specialist contract, and
-the eighteen specialists above.
+Ran end to end once, on its own PR #10. Found seven things, fixed seven, one commit
+each. One was a blocker: three lenses would have silently skipped themselves.
 
-**Stage 4 is the thin part of the record.** Stages 1–3 have run on this repo's own
-PRs, dispatched read-and-report. Stage 4 — the autofix that commits each accepted
-finding alone and cites it in the message — first executed on the PR that added this
-section, once. A clean result means the lenses found nothing, not that the pipeline is
-proven. Treat it as a merge gate only after it has run on real PRs elsewhere;
-it is misleading to a human treating a green review as approval.
+Stages 1–3 have run many times. Stage 4 has run once. A clean result means the lenses
+found nothing, not that the pipeline is proven — don't use it as a merge gate yet.
 
-Also outstanding: a `REVIEW.md`-style per-repo override, and `comment-analyzer` /
-`type-design-analyzer` from Anthropic's `pr-review-toolkit`.
-
-Trust needs no configuration and no maintained list: repo members steer, everyone
-else reports. Split on `user.type` plus `author_association`, both sent by GitHub on
-every comment. See [`reference/intake.md`](reference/intake.md#trust-tiers).
+Not built: per-repo overrides, and calibration
+([`reference/calibration.md`](reference/calibration.md) says plainly what is missing).
 
 ## Contributing
 
-[`CONTRIBUTING.md`](CONTRIBUTING.md). The short version: an agent reads this on
-every run, so every word costs context. Cut the fat, keep the function.
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: an agent reads this on every run,
+so every word costs. Cut the fat, keep the function.
 
-## Sources
+Every PR here gets reviewed by this skill, including PRs that change it.
 
-Approaches evaluated and borrowed from, with what was taken. Licences and attribution
-are in [`NOTICE.md`](NOTICE.md) — all MIT or Apache-2.0.
+## Built on
 
-- Anthropic official `code-review` plugin — the 0–100 rubric passed verbatim to a
-  separate scorer, the pre-post eligibility re-check, the false-positive catalog.
-- [`claude-code-security-review`](https://github.com/anthropics/claude-code-security-review) — items 1–14 of `reference/exclusions.md`,
-  with three items narrowed. Its DoS / rate-limiting / resource-exhaustion exclusions
-  suit a lens that only hunts exploitable vulnerabilities; on a metered multi-tenant
-  service a missing bound degrades other tenants and bills the customer, so the defect
-  class comes back and `resource-limits` owns it. Only the speculative framing stays
-  excluded.
-- Anthropic [Code Review docs](https://code.claude.com/docs/en/code-review) —
-  severity markers, nit caps, `REVIEW.md` as a per-repo override, thread
-  auto-resolution on fix. Its 👍/👎 rating loop was considered and rejected: the
-  reviewers and authors here are mostly agents, and agents do not click reactions.
-- Superpowers `receiving-code-review` — source-agnostic feedback handling, verify
-  before implementing, clarify all before implementing any, reply in thread.
-- Matt Pocock `code-review` — Standards and Spec as axes that never rerank against
-  each other; word caps in the subagent brief.
-- Addy Osmani `code-review-and-quality` — severity prefixes, "one structural problem
-  and ten nits means the structural problem is the review".
-- Anthropic `pr-review-toolkit` — `silent-failure-hunter`, and two more to port.
-- gstack `/review` — the quote-or-drop verification gate, which is the single best
-  idea in it.
+MIT and Apache-2.0 work by others — the scoring rubric, the exclusion list, the
+verification gate, several lens taxonomies. Credited file by file in
+[`NOTICE.md`](NOTICE.md).
