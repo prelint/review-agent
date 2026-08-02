@@ -57,14 +57,15 @@ gh api --paginate "repos/$REPO/pulls/$PR/comments" --jq '.[] | {
   url: .html_url
 }' > .review-agent/comments-inline.jsonl
 
-# 4. Review bodies — the literal "changing review body".
+# 4. Reviews. Keep empty bodies: APPROVED and CHANGES_REQUESTED are verdicts
+#    that live in `state`, not in `body`.
 gh api --paginate "repos/$REPO/pulls/$PR/reviews" --jq '.[] | {
   id, surface: "review",
   author: .user.login, author_type: .user.type,
   association: .author_association,
   state, commit_id, body, submitted_at,
   url: .html_url
-} | select(.body != "")' > .review-agent/reviews.jsonl
+}' > .review-agent/reviews.jsonl
 ```
 
 `--paginate` on all three list endpoints. The API returns 30 oldest-first per page;
@@ -333,6 +334,7 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
       "line": 539,
       "thread_id": "PRRT_kwDO...",
       "body_hash": "sha256:...",
+      "substance_hash": "sha256:...",
       "outdated": false,
       "status": "open",
       "resolution": null
