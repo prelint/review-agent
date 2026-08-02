@@ -15,8 +15,10 @@ Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
 - New comments since Stage 1 → new ledger items. Process them, or record them
   `deferred` with a reason and say so in the summary. Silently ignoring them is how
   the loop stayed open.
-- Changed `body_hash` on any existing item → it re-opens, even if it was `fixed`.
-- Changed PR description hash → re-run `spec-drift` before continuing.
+- Changed `substance_hash` on any existing item → it re-opens, even if it was `fixed`.
+  A `body_hash` that moved alone is a typo or a reformat: store it and leave the item
+  closed. The full table is in `intake.md`.
+- Changed `pr_substance_hash` → re-run `spec-drift` before continuing.
 
 ## 2. Reconcile
 
