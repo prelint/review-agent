@@ -28,6 +28,50 @@ run-scoped ledger file. Nothing is written to the user's home directory.
 | Uncapped output | 226 posted comment bodies: median 1,718 chars, p90 4,180, max 10,289. The worst was 10 KB reporting *"0 blocking, 6 informational"*. | Hard caps in Stage 5, and nothing posts when nothing blocks. |
 | Everything through Bash | 14,249 Bash calls vs 2,113 Read and 2 Grep. 88 tool errors followed. | Stage 2 requires the native search tools; `gh` and `git` are the only sanctioned shell. |
 
+## What the rewrite dropped
+
+**Removing a mechanism costs the same paragraph as adding one: the alternative, and
+why it lost.** Nothing recorded these eight, and five open issues came out of them.
+
+The five failures above were removed on purpose. These were removed by omission —
+gstack had them working, the rewrite did not carry them, and no file said so.
+
+| gstack has | Where | Here now |
+|---|---|---|
+| `NO FINDINGS` as an explicit clean result, and a consumer that reads it | `review/specialists/*.md:7`, `review/SKILL.md:1409` | Silence, which is the same bytes as a crashed lens ([#13]) |
+| A dead or timed-out specialist logs and the run continues on partial results | `review/SKILL.md:1399` | No rule ([#13]) |
+| A failed reply POST warns and continues | `greptile-triage.md:92` | No rule, in the one stage forbidden from reporting false success ([#18]) |
+| A malformed state file skips its bad lines and continues | `greptile-triage.md:57` | No rule ([#18]) |
+| `gh auth status` gates the run | `review/SKILL.md:814` | A stated refusal condition nothing checks ([#26]) |
+| The PR comes from the current branch, never an argument | `greptile-triage.md:13` | A PR number, diffed against local `HEAD`, with nothing comparing the two ([#14]) |
+| Prior decisions read back off GitHub by matching markers in our own replies | `greptile-triage.md:156` | Our own comments are skipped ([#11]) |
+| Outcomes append to a per-project and a global history file | `greptile-triage.md:182` | Nothing ([#11]) |
+
+Two were deliberate and got the wrong scope.
+
+**`~/.gstack/` state.** Banned above for good reasons: 165 KB per invocation, 46% of
+it harness preamble. That argument is about the *location*. It was applied to the
+*function*, and remembering what a previous run decided now has no home.
+`reference/calibration.md` reaches the same conclusion from scratch and names the two
+places that qualify — the repo and GitHub. Neither is built.
+
+**Skip silently.** gstack treats reviewer triage as additive: if the fetch fails, skip
+and say nothing (`greptile-triage.md:16`). Inverting that was right, because silence
+reads as coverage you did not provide. The inversion reached dispatch and never
+reached the return, so `specialists/_schema.md` now says both "never return nothing"
+and "output nothing at all if you found nothing".
+
+One more from outside gstack. mattpocock's `code-review` pins its diff to a fixed
+point the caller supplies and refuses to run without one
+(`skills/engineering/code-review/SKILL.md:19`). Both ancestors bind the diff to
+something the caller named. This skill binds it to whatever is checked out.
+
+[#11]: https://github.com/prelint/review-agent/issues/11
+[#13]: https://github.com/prelint/review-agent/issues/13
+[#14]: https://github.com/prelint/review-agent/issues/14
+[#18]: https://github.com/prelint/review-agent/issues/18
+[#26]: https://github.com/prelint/review-agent/issues/26
+
 ## Reading the changing review body
 
 Both the old paths watermark on `created_at`. Across all 454 sessions, `updated_at`
