@@ -82,9 +82,11 @@ list. It runs on risk surface, never on diff size.
 Done: design, `SKILL.md`, all four `reference/` files, the specialist contract, and
 the eighteen specialists above.
 
-**It has still never been run end to end.** Every review so far has been by hand or by
-an external bot. A clean result means the lenses found nothing, not that the pipeline
-works. Treat it as a merge gate only after it has run on real PRs;
+**Stage 4 is the thin part of the record.** Stages 1–3 have run on this repo's own
+PRs, dispatched read-and-report. Stage 4 — the autofix that commits each accepted
+finding alone and cites it in the message — first executed on the PR that added this
+section, once. A clean result means the lenses found nothing, not that the pipeline is
+proven. Treat it as a merge gate only after it has run on real PRs elsewhere;
 it is misleading to a human treating a green review as approval.
 
 Also outstanding: a `REVIEW.md`-style per-repo override, and `comment-analyzer` /
