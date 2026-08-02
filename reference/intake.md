@@ -74,8 +74,8 @@ PR.
 `--paginate` emits one JSON array per page, so `--jq '.[] | ...'` streams objects
 across every page and the output is JSONL. **Do not add `--slurp`** — `gh` rejects
 `--slurp` together with `--jq` outright (`the --slurp option is not supported with
---jq or --template`). If you need a single array, pipe to a separate `jq` process
-instead of using `--jq`.
+--jq or --template`). If you need a single array, build it in `python3` from the
+JSONL; standalone `jq` is not a dependency here.
 
 ### Thread state, for resolving later
 
@@ -160,9 +160,8 @@ On a PR with no inline comments the check passes vacuously, which is correct.
 ### Reading these files back
 
 `--paginate` with `--jq` writes JSONL: one object per line, not a JSON array. Read it
-line by line, or with `jq -s` / `jq --slurp` as a **separate process**. Plain
-`jq '.' file.jsonl` rejects concatenated objects, and `--slurp` cannot be combined
-with `--jq` on the `gh` call itself.
+line by line in `python3` — `[json.loads(l) for l in open(path)]`. Standalone `jq` is
+not a dependency, and it would reject the concatenated objects anyway without `-s`.
 
 ---
 
