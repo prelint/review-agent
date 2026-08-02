@@ -55,7 +55,7 @@ the edit. The commit must exist.
 Before writing anything public:
 
 ```bash
-gh pr view "$PR" --json state,merged,baseRefName,isDraft
+gh pr view "$PR" --json state,mergedAt,baseRefName,isDraft
 ```
 
 Stop if closed, merged, or the base branch changed. Posting a review into a merged PR
