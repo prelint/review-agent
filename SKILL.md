@@ -82,7 +82,7 @@ Dispatch specialists in parallel, one subagent each. Every specialist reads
 `specialists/_schema.md` first, then its own file, and returns findings in the
 schema's JSON — one object per line, nothing else.
 
-**Always on:** `spec-drift`, `silent-failure`.
+**Always on:** `coherence`, `spec-drift`, `silent-failure`.
 
 **Dispatch only specialists whose file exists.** Check before dispatching; a missing
 file is a skip, not an error, and the summary must name what was skipped. Coverage you

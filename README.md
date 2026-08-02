@@ -58,6 +58,7 @@ Written: [`tenancy`](specialists/tenancy.md), [`money`](specialists/money.md),
 [`observability`](specialists/observability.md),
 [`silent-failure`](specialists/silent-failure.md),
 [`resource-limits`](specialists/resource-limits.md),
+[`coherence`](specialists/coherence.md),
 [`red-team`](specialists/red-team.md).
 
 The first nine fill gaps that produced real bugs in the record and that no existing
@@ -72,7 +73,7 @@ list. It runs on risk surface, never on diff size.
 ## Status
 
 Done: design, `SKILL.md`, all four `reference/` files, the specialist contract, and
-the ten specialists above.
+the eleven specialists above.
 
 **Not yet written** — `SKILL.md` dispatches these and the files do not exist:
 `correctness`, `security`, `testing`, `performance`, `maintainability`,

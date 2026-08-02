@@ -177,7 +177,8 @@ holes, and every hole below corresponds to a bug that actually shipped.
 | `spec-drift` | The description↔diff mismatch class above, and the product's own thesis: reviewers check whether code is technically correct, not whether it does the right thing. |
 | `llm-pipeline` | They ship prompt packages and run models in production. Prompt/consumer drift, a Lambda vendoring prompts by value, token budget ceilings, provider fallback. |
 | `observability` | "A silent fleet freeze with no signal anywhere." Does a new failure path emit anything? |
-| `silent-failure` | Swallowed exceptions, bare `except`, `|| true`. Ported from Anthropic's `pr-review-toolkit`, which is the only library that had a lens for it. |
+| `silent-failure` | Swallowed exceptions, bare `except`, `|| true`. Ported from `pr-review-toolkit`, the only library with a lens for it. |
+| `coherence` | The change is right and what it meets is right and together they are wrong. Found the hard way — see below. |
 | `resource-limits` | Missing bounds — rate limits, page caps, concurrency, timeouts, lock scope. `money` owned the financial consequence of unbounded work; nothing owned the operational one, where one tenant saturating a pool or a queue degrades every other. |
 
 Two more from `pr-review-toolkit` are worth porting later and are not urgent:
@@ -306,6 +307,34 @@ every file in their parser. One `-c` flag.
 Not adopted: the routing issues on `agent-skills` (#172, #173) are about two surfaces
 competing for one intent, which a single skill does not have; the
 `silent-failure-hunter` YAML bug (#4726) is in frontmatter our specialists lack.
+
+## Coherence earns its own lens
+
+Three consecutive findings on this repo's own PR shared one shape, each created by the
+fix for the last:
+
+1. A thread-join fix produced `thread_id = null` on failure. Nothing consumed the null.
+2. The null case gained an `unresolvable` status. The silence rule four commits back
+   counted it as closed and suppressed the warning the status requires.
+
+An external reviewer caught both. Nothing in this skill would have, and the first
+attempt at a fix made the ownership problem worse rather than better: the defect
+classes went into `specialists/_schema.md`, the shared contract every lens reads.
+
+That is the diffusion failure this repo already diagnosed in gstack. A rule every lens
+is supposed to apply is a rule no lens owns, which is exactly why `money`, `tenancy`
+and `idempotency` became specialists instead of bullets. The same argument applies
+here and was missed the first time.
+
+So `coherence` is a lens, always-on, and it owns four shapes: contradicted rules,
+orphaned producers, orphaned consumers, and incomplete sweeps or missed call sites.
+All four share one mechanic — the other half is outside the diff, so no diff-only
+reader sees the pair. Its evidence bar reflects that: two citations, always. A single
+citation is half a finding.
+
+`_schema.md` keeps only the budget rule that genuinely applies to every lens — one
+focused grep per named risk, never a general crawl. `red-team` lists the four shapes
+under "not a finding" so it stops competing for them.
 
 ## Calibration
 

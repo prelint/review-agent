@@ -27,28 +27,13 @@ function.
 
 ## A diff cannot show an absence
 
-Two defect classes are invisible to diff-only reading, because what is wrong is what
-is *not* in the hunk:
+What is wrong is sometimes what is *not* in the hunk — a rule it contradicts, a state
+nothing consumes, a sweep left half done. **`coherence` owns that**, and it is
+always-on. Do not duplicate its work.
 
-- **Incomplete sweeps.** A string, label, icon, colour, constant or enum value changed
-  in three places out of four. Every hunk in the diff is correct; the product is
-  wrong.
-- **Missed call sites.** A signature change, a new required argument, or a new case in
-  something implemented per-surface, where a sibling was missed. If the siblings no
-  longer share a builder there is no compile error and no failing test.
-- **Contradicted rules.** A new rule, status, default, or guard that something already
-  in the file — or in a sibling file — decides differently. The new hunk reads
-  correctly; the pair is incoherent, and the older half is not in the diff so nobody
-  sees them together.
-
-Spotting any of the three requires already suspecting it, so they are named here
-rather than left to instinct.
-
-**One focused grep per named risk. Never a general crawl.** When the diff changes a
-literal or a signature, grep for the *old* value or the *old* arity once and check the
-hits. When it adds a rule or a status, grep for the thing that rule governs and read
-what already decides it. That is the whole budget — do not go reading the codebase to
-feel thorough.
+You still own one piece of it: if your own lens needs to check something outside the
+diff, **one focused grep per named risk, never a general crawl.** Name the risk before
+you search. If you cannot, you are browsing.
 
 ## Verify before you claim
 
