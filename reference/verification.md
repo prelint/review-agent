@@ -185,6 +185,15 @@ bare line number, because the key has to survive code moving above it. See
   blocker that was posted and not fixed is still blocking, and the marker it matched is a
   public comment anyone can write. Silencing a blocker on a fingerprint match would let a
   PR author retire review of their own code by pasting one line.
+- Same fingerprint as a finding **we already fixed** → do not post it again. A `fixed`
+  finding carries no marker, so the previous-run load cannot restore it and the bullet
+  above never fires. **This step owns the lookup**, because it is the first point at which
+  a fingerprint exists to look up — Stage 1 has none. Read the `Finding:` trailers off the
+  branch by the command in `output.md` and compare the value whole; an exact match
+  restores the finding as `fixed`, and anything else leaves it open. A commit that left
+  the branch takes its trailer with it, which is the ancestry check for free.
+  **A `BLOCKER` is not suppressed this way either**, for a sharper version of the reason
+  above: the trailer is a commit message, and on a PR the author writes those.
 
 Every suppression above is a real ending, so record it: the finding is `dropped`, with
 the ledger item or the fingerprint it merged into. A suppressed finding with no status
