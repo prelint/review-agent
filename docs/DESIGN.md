@@ -240,7 +240,7 @@ hallucinated findings.
 
 **Independent scoring** (from Anthropic's official plugin): a *different* agent, one
 that did not find the issue, scores it 0–100 against a rubric passed verbatim, and
-anything under 80 dies. The finder is invested in its own finding; the scorer is not.
+anything under 70 dies. The finder is invested in its own finding; the scorer is not.
 This kills real-but-worthless findings.
 
 A single filter does one or the other. Both, in series, do both.

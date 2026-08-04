@@ -91,7 +91,15 @@ not, and that is the entire mechanism.
 
 ### Threshold
 
-**Below 80 dies.** No exceptions, no "but it's cheap to mention".
+**Below 70 dies.** No exceptions, no "but it's cheap to mention".
+
+**70, because the scale tops out near 88.** Across 38 scored findings the highest score
+any scorer returned was 88; no finding reached 90, and none reached the rubric's 100
+anchor. An 80 gate against an 88 ceiling passes only the top tenth of the range the
+scorer actually uses, which is a far narrower bar than "80 out of 100" reads as. The old
+threshold also sat two full steps above the floor `calibration.md` sets for its own
+movement rules, on no evidence. Raising it again is one calibration step and needs the
+hand sample in `calibration.md`, not a judgement call mid-review.
 
 **The threshold follows the `category` field, never the lens that emitted it.** A lens
 may emit on another's behalf — `security` emits the production-reachable test key as
@@ -102,8 +110,9 @@ Scoring by emitter would give one defect two different bars depending on which l
 it first, which is the whole reason the handoff stamps a category at all.
 
 **The rubric must stay continuous for that number to mean anything.** A five-value
-rubric — 0/25/50/75/100 — under a threshold of 80 admits only 100, silently killing
-every "highly confident, verified, directly affects functionality" finding at 75.
+rubric — 0/25/50/75/100 — admits only 100 under any threshold above 75, silently killing
+every "highly confident, verified, directly affects functionality" finding at 75. The
+threshold this was inherited at, 80, sat just above that band.
 That is a live bug in the plugin this rubric came from
 ([claude-plugins-official #1852](https://github.com/anthropics/claude-plugins-official/issues/1852))
 and it was inherited here verbatim. If you ever tighten the rubric back to fixed
@@ -116,7 +125,7 @@ judge.
 **Watch for a dead scorer.** The failure mode is silent: a scorer that errors on every
 call returns unparseable output, every finding counts as 100, and the review looks
 unusually decisive. Three signatures, all cheap to check before posting — every finding
-in a review scoring exactly 100, no finding ever landing between 80 and 99, or the gate
+in a review scoring exactly 100, no finding ever landing between 70 and 88, or the gate
 killing nothing at all across a whole run. Say so in the summary when you see any of
 them. A gate that has stopped filtering reads exactly like a gate that found nothing to
 filter.
@@ -132,7 +141,7 @@ evidence that the scorer answered, never evidence that it judged.
 **The scorer is blind to any earlier score.** Shown a previous number, a second pass
 anchors to it and stops being independent, which is the whole mechanism.
 
-Per-category thresholds are the plan, not the present. Today every category uses 80.
+Per-category thresholds are the plan, not the present. Today every category uses 70.
 
 The mechanism — what signal, where it is stored, and why it cannot live in the agent —
 is in `calibration.md`, along with an honest note that none of it is implemented. Do

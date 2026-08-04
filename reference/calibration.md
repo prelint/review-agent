@@ -1,7 +1,7 @@
 # Calibration
 
 **Status: not implemented.** This file describes the mechanism. Nothing in Stages 1–5
-reads or writes a threshold today; `verification.md` uses a flat 80 for every
+reads or writes a threshold today; `verification.md` uses a flat 70 for every
 category. Written down because an earlier draft claimed a feedback loop existed and it
 did not.
 
@@ -100,7 +100,7 @@ change the rules it is judged by, and a per-run loop would tune on one sample.
 ```json
 {
   "_comment": "Written by `calibrate`. Read by Stage 3. Commit this.",
-  "default": 80,
+  "default": 70,
   "categories": {
     "tenancy":    {"threshold": 75, "useful_rate": 0.92, "n": 24, "sampled": "2026-08-02"},
     "spec-drift": {"threshold": 90, "useful_rate": 0.38, "n": 39, "sampled": "2026-08-02"}
@@ -141,7 +141,7 @@ evidence.
 | Number | Where | Basis |
 |---|---|---|
 | 1 missing-test finding reported in full | `specialists/testing.md` | None. Chosen to stop coverage sweeps. Raised twice in review as arbitrary — a diff with three untested branches has three gaps. Now overflows to a count rather than dropping, so the cap bounds volume without losing information. Whether the right number is 1 or 2 is answerable from the logs. |
-| 80 score threshold | `reference/verification.md` | None. Conservative in the direction trust erodes. Chosen under a five-band rubric where the practical floor was 100; nobody has measured whether the continuous scale now sits nearer "highly confident" or nearer "only certainty passes". Revisit once the lenses have produced a sample. |
+| 70 score threshold | `reference/verification.md` | Measured, once. Was 80, chosen with no basis under a five-band rubric where the practical floor was 100. A 38-finding sample put the scorers' observed ceiling at 88, so 80 passed only the top tenth of the range actually used. Moved to 70, the floor this file's own movement rules set. One sample is not a calibration pass: no hand sample has been taken, and no per-category rate exists. |
 | 40 / 60 useful-rate bands | this file | Industry write-ups, not measured here, not measured on agent-authored PRs. |
 | 2,000 character summary cap | `reference/output.md` | Measured — the old median posted comment was 1,718 and the worst was 10,289. The only number here with a source. |
 | 5 non-blocking findings | `reference/output.md` | None. |
