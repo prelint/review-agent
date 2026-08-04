@@ -4,6 +4,7 @@
 set -euo pipefail
 
 REPO="https://github.com/prelint/review-agent.git"
+BRANCH="main"
 SKILL_DIR="${HOME}/.claude/skills/review-agent"
 SETTINGS="${HOME}/.claude/settings.json"
 RULE='Read(~/.claude/skills/review-agent/**)'
@@ -15,9 +16,27 @@ for dep in git python3; do
   }
 done
 
+# Compare remotes as https://host/owner/repo, so ssh and .git forms match.
+canonical_url() {
+  printf '%s' "$1" | sed -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
+}
+
 if [ -d "${SKILL_DIR}/.git" ]; then
+  origin="$(git -C "${SKILL_DIR}" remote get-url origin 2>/dev/null || true)"
+  if [ "$(canonical_url "${origin}")" != "$(canonical_url "${REPO}")" ]; then
+    echo "review-agent: ${SKILL_DIR} tracks ${origin:-no origin remote}, not ${REPO}." >&2
+    echo "review-agent: refusing to update someone else's checkout. Update it yourself," >&2
+    echo "review-agent: or move it aside and re-run." >&2
+    exit 1
+  fi
+  branch="$(git -C "${SKILL_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [ "${branch}" != "${BRANCH}" ]; then
+    echo "review-agent: ${SKILL_DIR} is on '${branch}', not '${BRANCH}'." >&2
+    echo "review-agent: refusing to update a branch you are working on." >&2
+    exit 1
+  fi
   echo "review-agent: updating ${SKILL_DIR}"
-  git -C "${SKILL_DIR}" pull --ff-only
+  git -C "${SKILL_DIR}" pull --ff-only origin "${BRANCH}"
 elif [ -e "${SKILL_DIR}" ]; then
   echo "review-agent: ${SKILL_DIR} exists and is not a git checkout." >&2
   echo "review-agent: move it aside and re-run." >&2
@@ -36,7 +55,14 @@ import stat
 import sys
 import time
 
-settings_path, rule = sys.argv[1], sys.argv[2]
+link_path, rule = sys.argv[1], sys.argv[2]
+
+# Write through a symlink to whatever it points at. Dotfile managers symlink
+# settings.json, and replacing the link with a regular file detaches it.
+settings_path = os.path.realpath(link_path)
+if settings_path != link_path:
+    print(f"review-agent: {link_path} points at {settings_path}, writing there")
+
 existing = os.path.exists(settings_path)
 
 if existing:

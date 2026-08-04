@@ -16,7 +16,11 @@ Clones into `~/.claude/skills/review-agent` and adds one rule to
 files without prompting for each one. Re-run it to update.
 
 It backs up `settings.json` before writing, keeps its file mode, and refuses to touch it
-if it is not valid JSON.
+if it is not valid JSON. If it is a symlink, the write follows it rather than replacing
+it, so a dotfiles repo stays intact.
+
+Updating only ever fast-forwards `main` from this remote. A checkout on another branch
+or another remote is left alone.
 
 To read the script before running it, clone first:
 
