@@ -37,6 +37,10 @@ and do not fix: fix it now, or file it where someone will see it. "Noted it" is 
 third ending — a silent deferral costs the fix entirely, and an issue costs one
 paragraph.
 
+**An accepted fix that you attempted and could not complete is `deferred`.** The linked
+issue records what you tried and why it failed. It is not `rebutted`, because the claim is
+still true, and not `unresolvable`, which requires a fix commit that already exists.
+
 **Too minor to file is too minor to defer.** A real finding that does not warrant an
 issue is not stuck between the two endings — it takes the first one at a lower
 severity: post it as `Nit:` or `FYI:` in the summary, under section 7's cap, and close
@@ -104,9 +108,9 @@ Three causes, all legitimate:
 
 - **The cap.** Section 7's "plus N similar" line is the count; a `dropped` finding
   missing from it has vanished.
-- **Silence.** Section 7 posts nothing when nothing blocks and every item is closed, so
-  an unfixed `Required:` is dropped by it too — not only nits. Silence is a decision not
-  to spend the author's attention, never a decision to forget.
+- **Silence.** The final checklist permits silence only when the remaining findings are
+  `NIT`/`FYI` and no ledger item needed a reply. Those low-severity findings are dropped,
+  not forgotten.
 - **Dedupe.** `verification.md` suppresses a finding matching a reviewer's ledger item or
   one we posted on an earlier run. Record which it merged into.
 
@@ -137,7 +141,7 @@ merged PR is pure noise and it happened in the record.
 ## 4. Refuse to report success
 
 The gate is the agent's own refusal, not a repository setting. **Do not report a clean
-result while a ledger item is open or a `Blocker:` is still unfixed.** A blocker that
+result while a ledger item is open or a `BLOCKER` is still unfixed.** A blocker that
 survived Stage 3 and was fixed in Stage 4 is not outstanding — what blocks is what is
 unfixed now, not what the gate saw. Say what is outstanding, in the session output and
 in the summary comment, and exit non-zero if the host gives you an exit code.
@@ -179,8 +183,13 @@ print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in clo
   || LEDGER_UNREADABLE=1
 
 BLOCKERS=$(python3 -c 'import json,sys
-print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
-          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER") \
+led = json.load(open(sys.argv[1]))
+print(sum(1 for i in led["items"] for c in i["claims"]
+          if c.get("severity") == "BLOCKER"
+          and c.get("status") not in {"fixed", "rebutted", "unresolvable"})
+    + sum(1 for f in led.get("findings", [])
+          if f.get("severity") == "BLOCKER"
+          and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER") \
   || LEDGER_UNREADABLE=1
 
 if [ -n "$LEDGER_UNREADABLE" ]; then
@@ -203,9 +212,9 @@ has the same defect plus one more: the commit it names is not on the remote yet.
 whose status is not one of the five section 2 accepts — **claims, because that is where
 status lives**; an item carries none, and `i["status"]` raises `KeyError` on every
 ledger `intake.md` describes — plus every finding of ours still open. `$BLOCKERS` is
-derived from that same array: `BLOCKER` findings that are neither `fixed` nor
-`rebutted`. Nothing decrements it, so it cannot disagree with the statuses it is
-computed from.
+derived from both arrays: reviewer claims and findings carrying `BLOCKER`, with their
+schema-defined fixed endings excluded. Nothing decrements it, so it cannot disagree with
+the statuses it is computed from.
 
 `closed_finding` is `intake.md`'s five endings, spelled out because bash cannot read a
 table. Add a sixth status there and not here and every finding carrying it counts as
@@ -220,8 +229,8 @@ reading and the one that keeps the status truthful.
 
 Compute both after Stage 4, never before — the count that survived the gate is not the
 count still open, and posting the first one reds a head where every blocker is already
-fixed. Section 7's silence rule is a separate question and keeps its Stage 3 wording: a
-blocker found and fixed still gets said out loud. An unassigned counter makes
+fixed. Section 7's silence checklist is a separate question: a blocker found and fixed
+still gets said out loud. An unassigned counter makes
 `[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a clean
 head — the exact defect this section exists to prevent.
 
@@ -427,11 +436,12 @@ resolved on arrival, claim closed two commits later by this run.
 
 ## 7. The summary — or silence
 
-**If nothing blocking survived Stage 3 and every ledger item is closed, post nothing.**
-Push the fixes and stop. A clean PR does not need an announcement, and the record's
-worst comment was 10 KB reporting "0 blocking, 6 informational".
+**Decide once, with the silence checklist at the end of this file.** Do not derive a
+second decision from blocker and ledger counts here. The rest of this section defines
+what a required summary contains; a clean PR still does not need an announcement.
 
-**Four exceptions, and each of them means "silence would be a lie".**
+**Four delivery and coverage failures require their own summary line.** In each case,
+silence would be a lie.
 
 **An unreadable ledger.** Section 5 skips the status when it cannot read the ledger, and
 sections 6 and 7 then run with nothing to announce — so the PR ends up carrying no
@@ -471,9 +481,9 @@ a single label over a mixed set sends the maintainer to check the wrong thing. T
 line is not "fixed but not resolvable": the claims on it may be rebuttals or deferrals,
 and calling those fixed would be worse than saying nothing.
 
-**A third exception: any claim carrying `delivery: "failed"`.** Same reason as the other
-two. The decision is sound and the author never heard it, so silence would report a
-conversation that did not happen.
+**A failed delivery.** Any claim carrying `delivery: "failed"` needs the line for its
+failure cause. The decision is sound and the author never heard it, so silence would
+report a conversation that did not happen.
 
 Silence here would be a lie of exactly the kind the ledger exists to prevent: the
 work is done, the PR still looks unaddressed, and nothing says why.
@@ -557,20 +567,21 @@ bite hardest here:
 - **One structural problem and ten nits means the structural problem *is* the review.**
   Post it alone.
 
-## Refusing to post
+## The silence checklist
 
 Post nothing when **all** of these hold:
 
+- No reviewer claim or finding remains `BLOCKER` under section 5's derived count.
 - No claim is `unresolvable`.
 - No claim carries a `delivery` failure.
 - No lens was classified as dead.
 - The ledger parsed.
-- Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
+- Everything found is in `exclusions.md`, **or** the only findings are `NIT`/`FYI`
   and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
 
-The first three are gates, not options among five. An `unresolvable` item, an undelivered
-claim or a dead lens posts regardless of what the others say — each is a case where
-silence states something untrue.
+Every condition is required. An unfixed blocker, an `unresolvable` item, an undelivered
+claim, a dead lens or an unreadable ledger posts regardless of what the others say — each
+is a case where silence states something untrue.
 
 Say what you did in the session output instead. The PR is not a log.
