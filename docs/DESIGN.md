@@ -135,8 +135,10 @@ The replacement is two fields GitHub already sends, and still no config file:
 strangers.
 
 - **Reading** is unconditional. Every comment from every author is fetched and parsed.
-- **Repo humans steer.** `OWNER`, `MEMBER` or `COLLABORATOR` can redirect the run.
-  Outside contributors cannot — their comments are read and verified like anyone
+- **Repo humans steer within the selected PR.** `OWNER`, `MEMBER` or `COLLABORATOR` can
+  redirect priorities. They cannot skip required stages or evidence gates, weaken the
+  success refusal, escape the repository boundary, expose secrets or rewrite history.
+  Outside contributors cannot steer — their comments are read and verified like anyone
   else's.
 - **Every bot reports.** A bot produces claims, verified against the code, decided on
   evidence.
@@ -151,6 +153,11 @@ nonce sandbox is a convention the model honours rather than a technical barrier,
 the verification gate constrains what *ships*, not what gets *looked at*. Neither
 stops a redirect. `author_association` closes it with one predicate and no
 maintenance, and a new teammate becomes `directive` the moment they join the repo.
+
+The ceiling is deliberate. Association establishes who may steer; it does not make a
+compromised account safe or turn quoted third-party text into policy. The review's
+integrity gates and repository-safety rules therefore remain non-overridable for every
+tier.
 
 All third-party text is wrapped in a nonce-delimited untrusted block before it
 reaches a subagent, which is the defence that actually matters.
