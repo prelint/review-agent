@@ -93,18 +93,9 @@ not, and that is the entire mechanism.
 >
 > Return only: `{"score": N, "why": "<one sentence>"}`
 
-**Rarity used to be in the rubric, and it double-counted.** The 50 anchor said "or rare
-in practice" and the 75 anchor said "very likely to be hit in practice", so a scorer
-docked a verified finding for being hard to reach. Filter 3 then docked it again — and
-Filter 3 downgrades where the score kills, so the finding died before the filter that
-was supposed to handle it ever ran.
-
-Measured over 38 scored findings: nine landed at 68-78, verified true and docked for
-rarity, all dead. Two were rescued by hand because the reviewing agent disagreed with
-its own gate — a removed `--clean` flag that argparse silently abbreviated into
-`--clean-only`, wiping a developer's data and exiting 0, and an alarm detector that
-could not report its own death. Both are exactly what Filter 3's `remote` band exists
-to downgrade rather than drop.
+**Frequency is not scored here.** Filter 3 owns it, and Filter 3 downgrades where a
+score kills — so docking a verified finding for rarity kills it before the filter built
+to handle it runs. `docs/DESIGN.md` records what this replaced.
 
 ### Threshold
 
