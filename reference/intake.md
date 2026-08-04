@@ -415,12 +415,26 @@ Legacy markers are read where they sit, not in a trailer, because the old format
 beside each finding. Rule 1 still applies: a legacy marker on someone else's comment is
 inert.
 
-**Split it on the keys, never on whitespace.** There are three — `category=`,
-`fingerprint=`, `score=` — and a value runs to the next one or to the end. The anchor
-inside a fingerprint contains spaces on real markers: `fingerprint=docs/DESIGN.md:gh auth
-status:correctness` is on PR #30 of this repo. A parser that reads values as
-whitespace-delimited tokens matches nothing on that line, so the marker is neither read
-nor recorded as unparsed, and the run cold-starts believing it found no history.
+**Split it by value shape, never on whitespace and never on the first key match.** The
+three keys appear in one order on every marker in the record — `category=`,
+`fingerprint=`, `score=` — and only the middle value can contain a space. So `category`
+runs to the first space, because a lens name never contains one; `score` is the **last**
+` score=` on the line, digits to the end; and `fingerprint` is everything between them,
+spaces included.
+
+Both halves of that are load-bearing. A whitespace-delimited parser matches nothing on
+`fingerprint=docs/DESIGN.md:gh auth status:correctness`, which is on PR #30 of this repo,
+so the marker is neither read nor recorded as unparsed and the run cold-starts believing
+it found no history. A parser that instead ends the fingerprint at the *first* ` score=`
+corrupts any anchor containing that text, and quietly — it yields two well-formed values
+that are both wrong, which no later check catches.
+
+**There is nothing to escape here.** These markers are already written, in comments this
+skill will not rewrite, so the format is frozen and the parser absorbs the ambiguity
+rather than the writer preventing it. That is the whole difference from the JSON marker
+above, which is written fresh each run and carries only constrained values. A legacy line
+where all three shapes do not match belongs in `unparsed`, which stops the run — never in
+silence.
 
 Prefer `$LEDGER` where it exists and disagrees; it carries fields no marker does.
 
