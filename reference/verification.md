@@ -2,18 +2,22 @@
 
 Three filters in series. None substitutes for another.
 
-Filter 1 kills findings that are not real. Filter 2 kills findings that are real and
-not worth the author's time. Filter 3 downgrades findings that are real, worth
-raising, and unlikely to fire — it never drops. No one of them does another's job.
+Filter 1 kills findings that are not real. Corroboration then records when independent
+lenses found the same defect. Filter 2 kills findings that are real and not worth the
+author's time unless that independent convergence carries them through. Filter 3
+downgrades findings that are real, worth raising, and unlikely to fire — it never drops.
+No one of them does another's job.
 
 ---
 
 ## First: an object with a `kind` is not a finding
 
 Split on the **presence** of that field, never on a list of its values. Anything carrying
-a `kind` reports coverage rather than a defect: pass it through untouched, never to a
-scorer, never into the ledger's `findings` array. `specialists/_schema.md` owns the list,
-and an enumeration here would drift from it — it already had, omitting `end`, which every
+a `kind` is protocol or coverage rather than a defect: never send it to a scorer and
+never put it in the ledger's `findings` array. Stage 2 consumes a valid `end` terminator;
+it writes `clean`, `cleared`, and `not-dispatched` objects to the ledger's run-local
+`coverage` array. `specialists/_schema.md` owns the list, and an enumeration used for
+validation here would drift from it — it already had, omitting `end`, which every
 findings response now carries.
 
 **A `kind` that is not one of `_schema.md`'s is a dead lens, not a pass-through.** Stage 2
@@ -24,7 +28,8 @@ behind a stray field.
 Every lens that finds nothing now emits one, so a run can hand this stage eighteen of
 them. Sent to Filter 1 they have no `file:line` to quote; sent to Filter 2 an unparseable
 score counts as 100 by the rule below and they survive, land in `findings` at `open`, and
-red a clean head.
+red a clean head. Recording them in `coverage` preserves what was checked without making
+an absence of defects behave like a defect.
 
 ## Filter 1 — quote or drop
 
@@ -55,12 +60,68 @@ body and stopped.
 
 ---
 
+## Corroborate and dedupe — before Filter 2
+
+`fingerprint` remains `path:anchor:category` because old summary markers, calibration,
+and fix commits already carry that shape. It is not the dedupe key. Derive a
+category-free `site_key` as `path:anchor` from every current finding and use `site_key`
+for both within-run and across-run matching. For a carried marker that predates
+`site_key`, derive it from the marker's `fingerprint` by removing the final
+`:<category>` **only when that exact known category is the suffix**. Anchors can contain
+spaces and colons; splitting on every colon corrupts real keys.
+
+Before grouping, verify that each finding's `specialist` equals the lens Stage 2
+dispatched. A finding cannot manufacture a second independent source by naming another
+lens.
+
+Group current-run Filter 1 survivors by `site_key`, then partition each site by
+compatible fix:
+
+- One distinct specialist in a fix group → keep its best-evidenced version. Set
+  `categories` to its category and `corroborated_by` to that specialist; this is not
+  corroboration.
+- Two or more **distinct specialists** in a fix group → keep
+  the best-evidenced version, record the sorted unique `categories` and
+  `corroborated_by`, and mark it corroborated. Different checklists are independent
+  evidence even when the model family is shared.
+
+Incompatible fix groups at the same site remain separate. Proximity is not agreement;
+each retains only the specialists that support that proposed fix.
+
+When two findings describe one source span with different but nearby anchors, normalize
+both to the narrowest greppable anchor that their quoted evidence shares before deriving
+`site_key`. Never merge on path alone or on a line number; both turn unrelated defects
+in a large file into false corroboration.
+
+Corroboration is evidence, not a score rewrite. Filter 2 still runs so the raw score and
+its disagreement remain available for calibration. A finding supported by at least two
+distinct specialists with compatible fixes survives Filter 2 even when its raw score is
+below 70. Record `gate_reason: "corroboration"`; ordinary threshold survivors record
+`gate_reason: "score"`. The quote gate still ran first and exclusions still win later,
+so two lenses cannot corroborate an unevidenced or expressly excluded claim into output.
+
+Then dedupe against durable history using `site_key`, not `fingerprint`. A matching site
+is a candidate, not proof: verify from the claim or visible summary text that it is the
+same defect with a compatible remedy before suppressing it.
+
+- Same defect as a reviewer's existing ledger claim → **do not post it again.** Link the
+  ledger item and handle it there.
+- Same defect as a finding we posted on an earlier run → do not post it again; carry the
+  restored finding forward. A `BLOCKER` is never suppressed this way. Post and reconcile
+  it again: a public marker that anyone can copy is not authority to retire a blocker.
+
+Every suppression is a real ending. Record it as `dropped`, with the ledger item or
+`site_key` it merged into. A suppressed finding with no status sits `open` forever and
+reds a clean head.
+
+---
+
 ## Filter 2 — independent scoring
 
-**The agent that found the issue does not score it.** Dispatch a separate scoring
-subagent per finding. Give it the finding, the diff, the quoted evidence, and the
-rubric below **verbatim**. The finder is invested in its own finding; the scorer is
-not, and that is the entire mechanism.
+**No specialist that found the issue scores it.** Dispatch a separate scoring subagent
+per finding that is not any name in `corroborated_by`. Give it the finding, the diff,
+the quoted evidence, and the rubric below **verbatim**. The finders are invested in the
+finding; the scorer is not, and that is the entire mechanism.
 
 ### Rubric — pass this text unchanged
 
@@ -99,7 +160,10 @@ to handle it runs. `docs/DESIGN.md` records what this replaced.
 
 ### Threshold
 
-**Below 70 dies.** No exceptions, no "but it's cheap to mention".
+**Below 70 dies unless the corroboration pass recorded at least two distinct
+specialists with compatible fixes.** There is no "but it's cheap to mention" exception.
+Independent convergence is the one alternate evidence path, and it remains visible in
+`corroborated_by` rather than being folded into or substituted for the raw score.
 
 **70, because the scale tops out near 88.** Across 38 scored findings the highest score
 any scorer returned was 88; no finding reached 90, and none reached the rubric's 100
@@ -109,7 +173,9 @@ threshold also sat two full steps above the floor `calibration.md` sets for its 
 movement rules, on no evidence. Raising it again is one calibration step and needs the
 hand sample in `calibration.md`, not a judgement call mid-review.
 
-**The threshold follows the `category` field, never the lens that emitted it.** A lens
+**The threshold follows the `category` field, never the lens that emitted it.** For a
+corroborated finding with multiple `categories`, use the strictest threshold among them;
+today they are all 70. A lens
 may emit on another's behalf — `security` emits the production-reachable test key as
 `category: "money"` when `money` is not dispatched — and once per-category thresholds
 exist, that finding is scored against `money`'s number. The category is the claim about
@@ -161,34 +227,6 @@ not act on a per-category threshold until `review-agent.thresholds.json` exists.
 Apply `exclusions.md` as a blocklist. A finding matching any listed pattern drops
 regardless of score. Order matters — a 95-scored "outdated dependency" finding still
 dies here.
-
----
-
-## Dedupe
-
-Findings carry a `fingerprint` of `path:anchor:category` — a greppable symbol, never a
-bare line number, because the key has to survive code moving above it. See
-`specialists/_schema.md`.
-
-- Same fingerprint from two specialists → keep the one with better evidence, record
-  both categories on it.
-- Same `path:line`, different category → keep both only if they propose different
-  fixes. If the fix is the same, they are one finding.
-- Same finding as a reviewer's existing comment in the ledger → **do not post it
-  again.** Link the ledger item and handle it there. Restating a bot's finding back
-  at it was a real source of noise.
-- Same fingerprint as a finding **we** posted on an earlier run → do not post it again.
-  `intake.md`'s previous-run load puts it in the ledger with the status its marker
-  carries; carry that forward. A fleet reviewing the same PR every hour otherwise
-  re-posts the same nit every hour.
-  **A `BLOCKER` is never suppressed this way.** Post it again and reconcile it again: a
-  blocker that was posted and not fixed is still blocking, and the marker it matched is a
-  public comment anyone can write. Silencing a blocker on a fingerprint match would let a
-  PR author retire review of their own code by pasting one line.
-
-Every suppression above is a real ending, so record it: the finding is `dropped`, with
-the ledger item or the fingerprint it merged into. A suppressed finding with no status
-sits `open` forever and reds a clean head.
 
 ---
 

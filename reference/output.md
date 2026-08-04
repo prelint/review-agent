@@ -107,11 +107,32 @@ Three causes, all legitimate:
 - **Silence.** Section 7 posts nothing when nothing blocks and every item is closed, so
   an unfixed `Required:` is dropped by it too — not only nits. Silence is a decision not
   to spend the author's attention, never a decision to forget.
-- **Dedupe.** `verification.md` suppresses a finding matching a reviewer's ledger item or
-  one we posted on an earlier run. Record which it merged into.
+- **Dedupe.** `verification.md` uses `site_key` to find a matching reviewer item or
+  finding from an earlier run, then verifies it is the same defect before suppression.
+  Record the item or site key it merged into.
 
 A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
 that nothing blocking survived, and dedupe never suppresses a blocker.
+
+### Coverage evidence
+
+Read the ledger's run-local `coverage` array before deciding what to say. Session output
+always includes the full `checked` value for every `clean` and `cleared` object; this is
+the substantive evidence that a lens looked and found the changed surface sound. Also
+name `not-dispatched` and dead lenses under their existing rules. Do not turn coverage
+objects into findings or give them finding statuses.
+
+When a summary is posted for any reason, include one compact coverage line naming the
+clean and cleared lenses, for example:
+
+```
+Coverage: clean — money, security, tenancy; cleared — red-team (7 checks).
+```
+
+This line does not break silence by itself. A clean review may still post nothing; its
+full coverage remains in the session output. If the visible-character budget binds,
+reduce the line to lens names and counts, never remove it from a summary that is already
+being posted.
 
 **Stamp `reconciled_at_head` when reconciliation finishes**: `git rev-parse HEAD`, never
 `$HEAD_SHA`. Stage 0 bound that before Stage 4 committed anything, so the two fields
@@ -481,20 +502,23 @@ Otherwise, one top-level comment. Hard caps:
 
 - **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
   non-blocking findings first, down to the count line; then the not-dispatched reasons;
-  then prose. Never the markers, and never the three lines silence cannot suppress — a
-  dead lens, `unresolvable` items, failed deliveries. Those are the summary's whole
-  reason for existing on a run that would otherwise be quiet. The mandatory lines added
-  here spend budget that issue #23 already measured as nearly exhausted, so which line
-  gives has to be written down rather than decided in the moment.
+  then prose. Compress coverage to lens names and counts but do not remove it. Never the
+  markers, and never the three lines silence cannot suppress — a dead lens,
+  `unresolvable` items, failed deliveries. Those are the summary's whole reason for
+  existing on a run that would otherwise be quiet. The mandatory lines added here spend
+  budget that issue #23 already measured as nearly exhausted, so which line gives has to
+  be written down rather than decided in the moment.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
 - Every finding carries an invisible marker so it can be found again later:
-  `<!-- review-agent: {"fingerprint":"<f>","category":"<c>","score":88,"severity":"REQUIRED","status":"posted"} -->`.
+  `<!-- review-agent: {"fingerprint":"<f>","site_key":"<path:anchor>","specialist":"money","category":"money","categories":["correctness","money"],"corroborated_by":["correctness","money"],"score":68,"gate_reason":"corroboration","severity":"REQUIRED","status":"posted"} -->`.
   `severity` and `status` are not optional — section 5's counters read exactly those two
   fields off every finding, and a rebuilt finding missing them counts as neither open nor
-  closed. Without the marker, category is unrecoverable from a posted comment and
-  calibration is impossible.
+  closed. `score` is always raw, never raised to encode corroboration. Without the
+  marker, category and convergence are unrecoverable from a posted comment and
+  calibration is impossible. Older markers without the additive fields remain valid;
+  `intake.md` defines their normalization.
 - **A status with a destination carries it.** `"status":"deferred","issue":42` and
   `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
   `rebutted` need nothing more: the reason is the visible text beside the marker. A
@@ -536,6 +560,7 @@ wrong answer.
 Blocker: <file:line> — <problem>. <fix>.
 Required: <file:line> — <problem>. <fix>.
 
+Coverage: clean — money, security, tenancy; cleared — red-team (7 checks).
 Reviewer items: N fixed, N rebutted, N deferred.
 ```
 

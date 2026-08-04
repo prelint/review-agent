@@ -330,6 +330,13 @@ status carries — a `deferred` finding's issue, a `dropped` one's cause. Stage 
 dedupes against it: that is the array `verification.md`'s re-post guard reads, and Stage 1
 leaving it empty is what made that guard dead on arrival.
 
+Normalize a restored finding's `site_key` before Stage 3 reads it. New markers carry the
+field directly. For an older JSON or legacy marker, derive `path:anchor` from its
+`fingerprint` by removing the final `:<category>` only when the fingerprint ends with
+that exact known category. Do not split on every colon: real anchors contain spaces and
+colons. Preserve the original category-bearing `fingerprint` for calibration and commit
+history; `site_key` is the cross-category match key.
+
 **A `fixed` finding comes from `git log`, not from a marker.** Stage 4 writes
 `Finding: <specialist>/<fingerprint>` into the commit, so
 `git log --fixed-strings --grep="<fingerprint>"` on the current branch says both whether we
@@ -532,8 +539,9 @@ costs one substitution.
 Stage 1 ends by writing `.review-agent/pr-${PR}.json`. Everything downstream is
 measured against it, and Stage 5 cannot finish while any entry is `open`.
 
-Two arrays. `items` is what reviewers said; `findings` is what we found. Both reconcile
-in Stage 5.
+Three arrays. `items` is what reviewers said; `findings` is what we found. Both reconcile
+in Stage 5. `coverage` is run-local evidence from non-finding protocol objects; it is
+reported, not reconciled, and is never restored from prior-run markers.
 
 ```json
 {
@@ -575,24 +583,50 @@ in Stage 5.
   ],
   "findings": [
     {
-      "fingerprint": "backend/apps/billing/services.py:charge_org:money",
+      "fingerprint": "backend/apps/billing/services.py:charge_org():money",
+      "site_key": "backend/apps/billing/services.py:charge_org()",
+      "specialist": "money",
       "category": "money",
+      "categories": ["correctness", "money"],
+      "corroborated_by": ["correctness", "money"],
       "severity": "BLOCKER",
       "score": 88,
+      "gate_reason": "corroboration",
       "path": "backend/apps/billing/services.py",
       "anchor": "charge_org()",
       "status": "open",
       "resolution": null
     }
+  ],
+  "coverage": [
+    {
+      "kind": "clean",
+      "specialist": "security",
+      "checked": "authentication and secret-handling paths changed by the diff"
+    },
+    {
+      "kind": "cleared",
+      "specialist": "red-team",
+      "checked": ["retry is bounded", "rollback preserves the prior state"]
+    }
   ]
 }
 ```
 
-Stage 1 writes `findings: []`. Stage 3 fills it with every survivor of the gate; Stage 4
-moves each status as it commits. A finding the five-finding cap cut is `dropped` with
-its reason, never absent — the run on this repo's PR #10 produced nine findings and
-nine commits and the ledger recorded none of them, so nothing could check a commit
-against the finding it claimed to fix.
+Stage 1 writes `findings: []` and `coverage: []`. Stage 2 fills `coverage` with validated
+`clean`, `cleared`, and `not-dispatched` objects, consuming `end` as protocol rather than
+evidence. Stage 3 fills `findings` with every survivor of the gate; Stage 4 moves each
+status as it commits. A finding the five-finding cap cut is `dropped` with its reason,
+never absent — the run on this repo's PR #10 produced nine findings and nine commits and
+the ledger recorded none of them, so nothing could check a commit against the finding it
+claimed to fix.
+
+`score` is always the independent scorer's raw answer, including when it is below 70.
+`gate_reason` is `score` or `corroboration`; the latter is legal only when
+`corroborated_by` names at least two distinct dispatched specialists that proposed a
+compatible fix. `categories` and `corroborated_by` are sorted unique arrays. `category`
+and `specialist` retain the best-evidenced representative for backwards-compatible
+output and calibration.
 
 **Finding statuses.** `open`, `fixed` (a commit SHA), `posted` (it went in the summary
 and the author owns it), `deferred` (a reason and an issue link), `rebutted` (the

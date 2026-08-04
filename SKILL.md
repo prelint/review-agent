@@ -72,7 +72,9 @@ against this file.
 
 The ledger's second array, `findings`, is ours. Stage 1 writes it empty, Stage 3 fills
 it, Stage 4 and Stage 5 close it. Our findings get a status for the same reason
-reviewers' claims do.
+reviewers' claims do. Its third array, `coverage`, is run-local evidence from lenses
+that answered `clean`, `cleared`, or `not-dispatched`; Stage 1 writes it empty and
+Stage 2 fills it.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
@@ -119,6 +121,13 @@ response requires:
 
 Anything else is a dead lens — empty, truncated mid-line, prose, an unrecognised `kind`, a
 count that does not add up, or **findings closed by something other than `end`**.
+
+After validating a response, consume its `end` terminator and write every `clean`,
+`cleared`, and `not-dispatched` object to the ledger's `coverage` array. Verify that the
+`specialist` on every object, including findings, is the lens that was dispatched; a
+lens cannot claim a second independent identity. Also verify each finding's fingerprint
+is exactly its `path:anchor:category`. Coverage is evidence about what ran, not a
+finding, so it is never scored or assigned a finding status.
 
 That last case is the one a terminator alone does not catch. Checking the count only when
 the last line happens to be `end` lets a lens truncated after two findings of five land on
@@ -174,15 +183,22 @@ Read `reference/verification.md`. All three run; none substitutes for another.
 body. "Race between A and B" must quote both A and B. Cannot quote it → drop it.
 Do not route around this by asserting high confidence.
 
-**Filter 2 — independent scoring.** A scoring agent that did **not** find the issue
-scores each survivor 0–100 against the rubric in `reference/verification.md`, passed
-verbatim. Below 70 dies. The finder is invested; the scorer is not.
+**Corroborate and dedupe.** Derive the category-free `site_key` as `path:anchor` and
+group Filter 1 survivors before scoring. Compatible fixes at one site from at least two
+distinct specialists become one finding carrying every supporting category and
+specialist. Incompatible fixes stay separate. Use the same `site_key`, not the
+category-bearing fingerprint, to find candidates in prior runs and reviewer claims;
+suppress only after verifying the candidate describes the same defect.
+
+**Filter 2 — independent scoring.** A scoring agent that is not among the specialists
+that found the issue scores each survivor 0–100 against the rubric in
+`reference/verification.md`, passed verbatim. Below 70 dies unless two or more distinct
+specialists corroborated the same compatible fix. Preserve the raw score and record
+whether score or corroboration opened the gate; the finders are invested, while the
+scorer and independent lenses provide different evidence.
 
 Then apply `reference/exclusions.md` as a blocklist. Anything matching a listed
 pattern is dropped regardless of score.
-
-Dedupe by `fingerprint` across specialists. When two lenses find the same thing, keep
-the one with the better evidence and record both categories.
 
 **Filter 3 — likelihood.** Score says whether the claim is true; likelihood says
 whether it ever fires. Every finding arrives with a `likelihood` band and a named
@@ -194,8 +210,9 @@ know the condition is reachable for reasons the diff does not show. A downgrade 
 no stated condition is a review bug; send it back.
 
 **Stage 3 ends by writing every survivor into the ledger's `findings` array**, one
-entry each at `status: "open"`, carrying its fingerprint, category, severity and score.
-A finding that is not in the ledger is one nothing can hold you to.
+entry each at `status: "open"`, carrying its fingerprint, site key, categories,
+supporting specialists, severity, raw score, and gate reason. A finding that is not in
+the ledger is one nothing can hold you to.
 
 ---
 
