@@ -36,8 +36,16 @@ one re-fetch into a batch before deciding:
    link. A changed PR description is a changed item under the same rule — it is the
    `description` item `intake.md` defines, and its claim is where that reason and that
    issue link go; do not launch `spec-drift` a second time.
-3. Name those deferrals in the summary. They are closed ledger statuses, not permission to
-   imply that the late changes were reviewed.
+3. Name those deferrals in the summary, **in the author's terms, not these ones**. The
+   ledger's `reason` is machine-traceable and stays as written; the summary line says what
+   happened and what to do about it — "arrived while this run was finishing and was not
+   reviewed — re-run the agent to pick it up". A reader who does not know this skill has
+   stage numbers gets a fact they can act on instead of one they cannot. They are closed
+   ledger statuses, not permission to imply that the late changes were reviewed.
+
+The issue link is the one section 2 already specifies: fold into an open issue on the same
+surface before opening a new one. There is no standing "late arrivals" issue to point at,
+and #19 closes with this change — a deferral linked there would land on a closed issue.
 
 The counter is run-local, and **the re-fetch above must not reset it.** Stage 1 writes
 `stage5_reentries` only when it creates the ledger; re-running its fetch against a ledger
