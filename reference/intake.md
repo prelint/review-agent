@@ -299,9 +299,11 @@ Three rules, and all three are load-bearing:
 
 Anything that fails these is not a parse failure. It is somebody else's text.
 
-The summary sentinel, `{"summary":true}`, restores no ledger entry. It only proves a
-`SELF` comment is the carrier written by this skill, including when every state marker was
-omitted because the state is recoverable or informational.
+The summary sentinel, `{"summary":true}`, restores no item and no finding. It sets
+`prior.sentinel`, and that is its whole job: it proves a `SELF` comment is the carrier
+written by this skill, including when every state marker was omitted because the state is
+recoverable or informational. Its absence on a `SELF` top-level comment is a refusal
+condition below — the sentinel is cheap precisely so that not finding one means something.
 
 **The trailer, not the last line.** A summary can carry the sentinel, actionable
 threadless items and non-fixed findings — a dozen markers on a busy PR — and only one can
@@ -354,17 +356,31 @@ our last review, from `reviews.jsonl`, or `null`. `prior.carried` counts both ki
 separately — `{"claims": 11, "findings": 9}` — so loss on one surface cannot hide inside
 the other's total. Zero carried findings is valid when all prior findings were fixed or
 none existed; fixed findings are recovered from `git log` after Stage 3 names them again.
-`prior.unparsed` holds marker lines that failed to parse.
+`prior.unparsed` holds marker lines that failed to parse. `prior.sentinel` is `true` when
+a summary sentinel was read, and it is what makes zero carried findings checkable: the
+condition that excuses the zero is "the sentinel parsed", so a run that does not store
+whether it parsed cannot apply it.
 
-**Three cases, and only one of them is ours:**
+**Four cases, and only two of them are ours:**
 
-- **No markers at all** is `source: "none"`. The PR predates them, or we have not posted
-  here. Treat it as a first review. Do not call it a parse bug.
+- **No markers at all, and no `SELF` top-level comment** is `source: "none"`. The PR
+  predates them, or we have not posted here. Treat it as a first review. Do not call it a
+  parse bug.
 - **Only legacy markers** is `source: "legacy"`. Read them, do not stop. See below.
 - **`unparsed` non-empty** is a parse bug. Stop and say so — see "Refusing to run". A run
   that silently degrades to a cold start re-does every fix and re-replies in every thread,
-  and the one record of why dies with the gitignored ledger. A valid summary sentinel with
-  no state markers is not a parse bug.
+  and the one record of why dies with the gitignored ledger.
+- **A `SELF` top-level comment exists and `prior.sentinel` is false** is the same parse
+  bug reached by the other door, and it stops the run too. Our summary always carries the
+  sentinel, so a summary without one is a trailer we failed to read — and the marker
+  formats this file already documents fail *silently*: "the marker is neither read nor
+  recorded as unparsed", which leaves `unparsed` empty and would let the run continue. It
+  is also the worse failure, because classify step 1 then files our own summary as a
+  reviewer's item and the run answers itself.
+
+`prior.sentinel` true with zero carried findings is not a parse bug. That is the state the
+summary is allowed to be in when every finding was fixed and every threadless item was
+informational.
 
 ### The legacy marker
 
@@ -554,7 +570,7 @@ in Stage 5.
   "pr_updated_at": "2026-08-02T14:11:58Z",
   "pr_body_hash": "sha256:...",
   "pr_substance_hash": "sha256:...",
-  "prior": {"reviewed_at": "9a1c4e2", "source": "markers",
+  "prior": {"reviewed_at": "9a1c4e2", "source": "markers", "sentinel": true,
             "carried": {"claims": 11, "findings": 9}, "unparsed": []},
   "reconciled_at_head": null,
   "items": [
@@ -661,9 +677,12 @@ Stop and say so when:
   `reviews.jsonl` whose `author` is `SELF` and whose `commit_id` is `HEAD_SHA`. Nothing
   has changed; a second identical review is noise.
 - `gh` is unauthenticated, or the repo has no PR.
-- **The previous-run load found markers it could not read** — `prior.unparsed` non-empty.
-  Proceeding turns a parse bug into a cold start that re-does every fix and re-replies in
-  every thread, and says nothing. Zero carried findings is valid when the summary sentinel
-  parsed and no non-fixed finding state remained.
+- **The previous-run load found markers it could not read** — `prior.unparsed` non-empty,
+  **or** a `SELF` top-level comment exists and `prior.sentinel` is false. Proceeding turns
+  a parse bug into a cold start that re-does every fix and re-replies in every thread, and
+  says nothing. The second test is the one that catches a silent loss: a marker the parser
+  skips never reaches `unparsed`, so the first test alone reads it as no history at all.
+  Zero carried findings with `prior.sentinel` true is not this — it is the valid state
+  where every finding was fixed and every threadless item informational.
 
 Do not invent work to justify the run.

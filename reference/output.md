@@ -502,7 +502,10 @@ Otherwise, one top-level comment. Hard caps:
   storing it forever; losing a fix, rebuttal or deferral is not.
 - Every posted summary carries one sentinel marker even when no state markers remain:
   `<!-- review-agent: {"summary":true} -->`. It identifies our carrier comment without
-  pretending to restore an item or finding.
+  pretending to restore an item or finding. **It is not optional.** `intake.md` refuses to
+  run on a `SELF` top-level comment whose trailer yields no sentinel, because that is the
+  only way a silently-unread trailer differs from a PR we never posted on — so a summary
+  written without one halts the next run instead of being read.
 - **A status with a destination carries it.** `"status":"deferred","issue":42` and
   `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
   `rebutted` need nothing more: the reason is the visible text beside the marker. A
