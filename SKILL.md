@@ -46,6 +46,11 @@ if ! git merge-base --is-ancestor "$PR_HEAD_SHA" HEAD; then
   exit 1
 fi
 
+if [ -n "$(git status --porcelain -uno)" ]; then
+  echo "review-agent: uncommitted tracked changes would be read as part of the PR" >&2
+  exit 1
+fi
+
 SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
                                            # prior comments to rebuild the last ledger
 RUN_DIR="$WORKDIR/.review-agent"
@@ -66,6 +71,12 @@ Equality rejects both, and a fleet that hits either one exits here every hour fo
 What is actually wrong is a `HEAD` the PR head cannot reach — a stale or unrelated
 checkout. Stop there, and say which two SHAs differed. Never review one PR's comments
 against another branch's diff.
+
+**A matching SHA is necessary and not sufficient — the tree has to be clean too.**
+`git diff "$DIFF_BASE"` and every specialist's copy of it read the *working tree*, not
+`HEAD`, so an uncommitted tracked edit is reviewed as if the PR contained it. `-uno`
+because untracked files cannot reach that diff, and `.review-agent/` is gitignored, so
+the run's own state never trips the gate.
 
 **Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
 or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — and the
