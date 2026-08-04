@@ -136,6 +136,14 @@ per finding that is not any name in `corroborated_by`. Give it the finding, the 
 the quoted evidence, and the rubric below **verbatim**. The finders are invested in the
 finding; the scorer is not, and that is the entire mechanism.
 
+**Strip the corroboration metadata first.** The pass above stamps `corroborated_by`,
+`categories`, `gate_reason` and `specialist` onto the finding before this filter runs, so
+"give it the finding" would hand the scorer the news that two lenses already agreed. It
+anchors upward on that exactly as it would on a previous score, and the raw number stops
+being independent of the thing it is supposed to be checked against — which is the whole
+reason this filter still runs on a corroborated finding at all. Pass the defect, the
+evidence and the fix; withhold who found it and how many.
+
 ### Rubric — pass this text unchanged
 
 > Score this finding 0–100 for how confident you are that it is a real issue worth
