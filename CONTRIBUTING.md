@@ -64,7 +64,7 @@ caught and it did not is a finding about the skill, and it goes in `docs/DESIGN.
 with the evidence. That is how `coherence` got written: three findings in a row that
 external reviewers caught and no lens owned.
 
-Same bar for the review itself. `reference/output.md` sets the caps — 2,000
+Same bar for the review itself. `reference/output.md` sets the caps — 2,000 visible
 characters, five non-blocking findings, verdict on line one. Hold human comments to it
 too.
 

@@ -49,6 +49,15 @@ agent driving the PR through this same skill cannot leave a ledger item open —
 will not let it. Humans forget to cite and leave threads dangling; the unknown bucket
 is small here and large everywhere else.
 
+**The first row assumes the target repo does not squash on merge.** A squash collapses
+the fix commits and their trailers into one message, so the `Useful` outcome is
+unrecoverable from the merged history and those findings land in `Unknown` instead. This
+is the calibrate pass's constraint alone: a review run greps the PR branch, which still
+carries every commit while the PR is open, and Stage 5 refuses to run on a merged PR. On
+a squashing repo, read the row from the branch before merge or accept the larger unknown
+bucket — and the file already says a large unknown bucket means the number is not
+trustworthy.
+
 ### The hazard, and it is real
 
 Agents comply. An agent author will fix almost anything it is told to fix, so "a
@@ -138,7 +147,7 @@ evidence.
 | 1 missing-test finding reported in full | `specialists/testing.md` | None. Chosen to stop coverage sweeps. Raised twice in review as arbitrary — a diff with three untested branches has three gaps. Now overflows to a count rather than dropping, so the cap bounds volume without losing information. Whether the right number is 1 or 2 is answerable from the logs. |
 | 70 score threshold | `reference/verification.md` | Measured, once. Was 80, chosen with no basis under a five-band rubric where the practical floor was 100. A 38-finding sample put the scorers' observed ceiling at 88, so 80 passed only the top tenth of the range actually used. Moved to 70, the floor this file's own movement rules set. One sample is not a calibration pass: no hand sample has been taken, and no per-category rate exists. |
 | 40 / 60 useful-rate bands | this file | Industry write-ups, not measured here, not measured on agent-authored PRs. |
-| 2,000 character summary cap | `reference/output.md` | Measured — the old median posted comment was 1,718 and the worst was 10,289. The only number here with a source. |
+| 2,000 visible-character summary cap | `reference/output.md` | Measured — the old median visible comment was 1,718 and the worst was 10,289. Marker trailers are state, not attention cost. |
 | 5 non-blocking findings | `reference/output.md` | None. |
 | 400 words per lens | `specialists/_schema.md` | None. |
 
