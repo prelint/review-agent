@@ -96,6 +96,16 @@ compatible fix:
 Incompatible fix groups at the same site remain separate. Proximity is not agreement;
 each retains only the specialists that support that proposed fix.
 
+**`likelihood` and `condition` merge as one pair, never separately.** Members routinely
+disagree on the band — `_schema.md` has each lens assess it independently — and the
+best-evidenced version is chosen for its evidence, not for having judged reachability
+best. Keep the strongest band among the members **together with the condition that band
+was assessed against**, and carry that condition into the output text. Taking the
+strongest band beside a different member's condition states a trigger the band was never
+measured on, and Filter 3 then downgrades or spares the finding on a pairing no lens
+asserted. `severity` needs no rule here: it is assigned after scoring, from the
+consequence table below.
+
 When two findings describe one source span with different but nearby anchors, normalize
 both to the narrowest greppable anchor that their quoted evidence shares before deriving
 `site_key`. Never merge on path alone or on a line number; both turn unrelated defects
