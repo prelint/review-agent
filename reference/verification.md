@@ -82,6 +82,23 @@ distinct `specialist` values as distinct sources. That is the assumption corrobo
 rests on, so if it ever reaches here unverified, stop: two names from one lens is the
 forgery the threshold bypass would reward.
 
+**Two fixes are compatible when they propose the same remediation action at the same
+location.** Both halves are required. Same action: applying one makes the other redundant
+rather than still-pending — "add the bound" and "add the bound" agree; "add a bound" and
+"remove the call" do not, and neither do "validate the input" and "log the failure", which
+can both be right and are two pieces of work. Same location: the change lands on the lines
+the shared anchor covers, not merely in the same function.
+
+Judge it on the `fix` field against the `summary`, never on wording. Two lenses running
+the same model will often phrase one remedy two ways and two remedies one way, so matching
+prose is the weakest available signal. The test that survives that: **would a single edit
+close both findings?** If yes they are one fix group; if closing one leaves the other
+still worth raising, they are two, and they stay separate however similar they read.
+
+When you cannot tell, they are incompatible. That costs one uncorroborated finding, which
+Filter 2 then judges on its own merits — the ordinary path. Guessing the other way
+manufactures a threshold bypass out of an uncertainty.
+
 Group current-run Filter 1 survivors by `site_key`, then partition each site by
 compatible fix:
 
