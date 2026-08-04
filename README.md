@@ -96,6 +96,27 @@ integrity and safety rules stay non-overridable at every tier. Split on `user.ty
 Reading is never gated. A bot's finding gets the same verification as a maintainer's —
 evidence decides, not the login.
 
+## What it assumes about your repo
+
+Nothing on disk survives a run — `.review-agent/` is gitignored. What has to outlive one
+lives in two places GitHub already keeps: the markers in the summary comment, and a
+`Finding:` trailer on each fix commit. That is why the git workflow below matters at all.
+
+- **It pushes to the PR branch** — `git push origin HEAD`, never a force-push, never a
+  rewrite, never another branch. A fork PR needs *Allow edits by maintainers*. Nothing in
+  the record shows that path being run.
+- **Rebase or force-push the branch and its fixes re-open.** The trailer leaves with the
+  commit, and the next run reads that as the fix being gone. That is the intended
+  behaviour — it cannot tell a rebase from a dropped fix, and re-opening is the safe
+  guess — but it costs a re-review.
+- **Squash on merge is fine for review, not for measurement.** A run reads the PR branch,
+  which still holds every commit while the PR is open. Squashing collapses the trailers
+  into one message, so outcomes read back from merged history land in the unknown bucket.
+  [`reference/calibration.md`](reference/calibration.md) says where that bites.
+- **It authenticates as a user, not a GitHub App.** `SELF` comes from `gh api user`,
+  which 403s for an App — and `SELF` is how a run finds its own last comment.
+- **One run at a time per PR.** Concurrent runs on the same PR are best effort.
+
 ## Status
 
 Every run has been on this repo, most on its own PR #10. For the count, ask git:
