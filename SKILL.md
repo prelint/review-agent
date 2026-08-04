@@ -46,8 +46,13 @@ if ! git merge-base --is-ancestor "$PR_HEAD_SHA" HEAD; then
   exit 1
 fi
 
-if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] &&
-   [ "$(git rev-parse -q --verify 'HEAD^2')" != "$PR_HEAD_SHA" ]; then
+CI_MERGE=no                                # the Actions pull_request ref, and only that:
+if [ "$(git rev-parse -q --verify 'HEAD^2')" = "$PR_HEAD_SHA" ] &&
+   git merge-base --is-ancestor 'HEAD^1' "origin/$BASE"; then
+  CI_MERGE=yes                             # base branch on one side, PR head on the other
+fi
+
+if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] && [ "$CI_MERGE" = no ]; then
   EXTRA=$(git log --format=%h -E --invert-grep --grep='^Finding: ' "$PR_HEAD_SHA..HEAD")
   if [ -n "$EXTRA" ]; then
     echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
@@ -83,10 +88,16 @@ against another branch's diff.
 
 **Reachable is not sufficient on its own** — commits stacked on top of the PR head are
 read as if the PR contained them. Exactly two kinds belong there: this run's own Stage 4
-fixes, which carry a `Finding:` trailer, and the Actions merge commit, whose second
-parent is the PR head. Anything else is somebody's unpushed work, and reviewing it is
-the same defect as reviewing an uncommitted edit. The trailer match is anchored to the
-start of a line so that prose merely mentioning `Finding: ` does not count.
+fixes, which carry a `Finding:` trailer, and the Actions merge commit. Anything else is
+somebody's unpushed work, and reviewing it is the same defect as reviewing an
+uncommitted edit. The trailer match is anchored to the start of a line so that prose
+merely mentioning `Finding: ` does not count.
+
+**Test the merge exception on both parents.** A second parent equal to the PR head is
+half the shape; the other half is a first parent that is base-branch history. Checking
+only the second lets any hand-built merge skip the trailer check entirely, carrying
+whatever its first parent holds into the diff — `DIFF_BASE` is a merge-base against
+`origin/$BASE`, so first-parent commits absent from the base branch survive into it.
 
 **This gate is a mistake-catcher, not a boundary.** Everything above the PR head is
 local to whoever is running the review, and a marker in a commit message cannot be made
