@@ -208,10 +208,9 @@ count that does not add up, **findings closed by something other than `end`**, o
 `specialist` that is not the lens dispatched.
 
 Findings closed by the wrong terminator is the case a terminator alone does not catch.
-Checking the count only when
-the last line happens to be `end` lets a lens truncated after two findings of five land on
-a stray `clean` and pass as answered, with the count check — the entire reason `end`
-exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
+Checking the count only when the last line happens to be `end` lets a lens truncated after
+two findings of five land on a stray `clean` and pass as answered, with the count check —
+the entire reason `end` exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
 means the lens reviewed and found nothing.
 
 Keying this on emptiness alone would miss the commoner shape, and so would checking only
