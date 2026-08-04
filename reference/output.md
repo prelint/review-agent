@@ -176,20 +176,24 @@ the substantive evidence that a lens looked and found the changed surface sound.
 name `not-dispatched` and dead lenses under their existing rules. Do not turn coverage
 objects into findings or give them finding statuses.
 
-When a summary is posted for any reason, include one compact coverage line naming the
-clean and cleared lenses, for example:
+When a summary is posted for any reason, include **one** compact coverage line. It carries
+all three answers — clean, cleared and not-dispatched — because they answer one question
+between them, and the not-dispatched reasons this file requires in a posted summary have
+nowhere else to go:
 
 ```
-Coverage: clean — money, security, tenancy; cleared — red-team (7 checks).
+Coverage: clean — money, security, tenancy; cleared — red-team (7 checks);
+not dispatched — data-migration, tenancy (no migration or per-tenant query in the diff).
 ```
 
 This line does not break silence by itself. A clean review may still post nothing; its
 full coverage remains in the session output.
 
-**It degrades to counts, and counts have a fixed cost.** Naming the lenses is already the
-compressed form, and it is not bounded: eighteen lenses that answer clean is a roster of
-roughly 270 characters against a budget this file calls nearly exhausted. When the budget
-binds, drop the names and post the counts alone —
+**It degrades in two steps, and the last one has a fixed cost.** Naming the lenses is
+already the compressed form and it is not bounded: eighteen lenses is a roster of several
+hundred characters against a budget this file calls nearly exhausted. First drop the
+not-dispatched reasons, keeping their lens names. Then drop all the names and post the
+counts alone —
 
 ```
 Coverage: 15 clean, 1 cleared, 2 not-dispatched.
@@ -545,7 +549,9 @@ No answer from: coherence. That lens's coverage is missing from this review.
 
 Not-dispatched reasons are a different thing: they are a lens correctly declining, not a
 lens failing, so they do not break silence. Name every reason in the session output. When
-another exception causes a summary, include them there in one compact coverage line too.
+another exception causes a summary, they ride in the coverage line beside the clean and
+cleared lenses — one line for all three, defined under **Coverage evidence** above, which
+also owns how it degrades when the budget binds.
 
 **An `unresolvable` item.** Silence means "nothing needs your attention", and an
 `unresolvable` item leaves a thread open that nobody will close. If any item carries
