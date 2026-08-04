@@ -5,6 +5,28 @@ before it posts.
 
 Needs `git`, `gh`, `python3`. Nothing else.
 
+## Install
+
+```
+curl -fsSL https://raw.githubusercontent.com/prelint/review-agent/main/install.sh | bash
+```
+
+Clones into `~/.claude/skills/review-agent` and adds one rule to
+`permissions.allow` in `~/.claude/settings.json`, so Claude Code reads this skill's own
+files without prompting for each one. Re-run it to update.
+
+It backs up `settings.json` before writing, keeps its file mode, and refuses to touch it
+if it is not valid JSON.
+
+To read the script before running it, clone first:
+
+```
+git clone https://github.com/prelint/review-agent ~/.claude/skills/review-agent
+~/.claude/skills/review-agent/install.sh
+```
+
+Restart Claude Code, then `/review-agent`.
+
 ## What it does
 
 1. **Reads everything.** Every reviewer, bot or human. The PR description too.
