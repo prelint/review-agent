@@ -33,8 +33,9 @@ one re-fetch into a batch before deciding:
 2. When `stage5_reentries` is already `1`, do not return again. Classify the late batch;
    `informational` claims stay informational, and every actionable new or changed claim is
    `deferred` with the reason `arrived after the bounded Stage 5 re-entry` and an issue
-   link. A changed PR description is a changed item under the same rule; do not launch
-   `spec-drift` a second time.
+   link. A changed PR description is a changed item under the same rule — it is the
+   `description` item `intake.md` defines, and its claim is where that reason and that
+   issue link go; do not launch `spec-drift` a second time.
 3. Name those deferrals in the summary. They are closed ledger statuses, not permission to
    imply that the late changes were reviewed.
 
@@ -97,9 +98,10 @@ been restated in three places and a third cause would have had to find all three
    its first comment was deleted.
 2. **A reply or resolve that errored**, per section 6. Any surface can hit this one.
 
-**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment and
-a review body have no thread, so null on either is the right answer rather than a failure,
-and they close as `fixed` or `informational` like anything else. Reading null as a failure
+**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment, a
+review body and the PR description have no thread, so null on any of them is the right
+answer rather than a failure, and they close as `fixed`, `deferred` or `informational`
+like anything else. Reading null as a failure
 on every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
 about threads that never existed.
 
@@ -357,7 +359,7 @@ limit, and every run afterwards pages the grown comment set back in.
 Resolve a thread when its fix commit exists **and** `thread_id` is not null. Skip the
 mutation entirely when it is null — calling it with an empty argument errors. On an
 `inline` item that null is the `unresolvable` case and is already accounted for; on a
-`top` or `review` item there is no thread to resolve and nothing is owed.
+`top`, `review` or `description` item there is no thread to resolve and nothing is owed.
 
 ```bash
 gh api graphql -f query='
