@@ -18,7 +18,10 @@ Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
 - Changed `substance_hash` on any existing item → it re-opens, even if it was `fixed`.
   A `body_hash` that moved alone is a typo or a reformat: store it and leave the item
   closed. The full table is in `intake.md`.
-- Changed `pr_substance_hash` → re-run `spec-drift` before continuing.
+- Changed `pr_substance_hash`, and `stage5_reentries` is `0` → re-run `spec-drift`
+  before continuing. Once the counter is `1` the sub-section below owns this case and
+  bars the second run; without the qualifier the two instructions contradict each other
+  on exactly the pass the bound exists for.
 
 ### One re-entry, then defer
 
