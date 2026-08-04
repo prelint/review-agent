@@ -46,6 +46,15 @@ if ! git merge-base --is-ancestor "$PR_HEAD_SHA" HEAD; then
   exit 1
 fi
 
+if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] &&
+   [ "$(git rev-parse -q --verify 'HEAD^2')" != "$PR_HEAD_SHA" ]; then
+  EXTRA=$(git log --format=%h --invert-grep --grep='Finding: ' "$PR_HEAD_SHA..HEAD")
+  if [ -n "$EXTRA" ]; then
+    echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
+    exit 1
+  fi
+fi
+
 if [ -n "$(git status --porcelain -uno)" ]; then
   echo "review-agent: uncommitted tracked changes would be read as part of the PR" >&2
   exit 1
@@ -71,6 +80,12 @@ Equality rejects both, and a fleet that hits either one exits here every hour fo
 What is actually wrong is a `HEAD` the PR head cannot reach — a stale or unrelated
 checkout. Stop there, and say which two SHAs differed. Never review one PR's comments
 against another branch's diff.
+
+**Reachable is not sufficient on its own** — commits stacked on top of the PR head are
+read as if the PR contained them. Exactly two kinds belong there: this run's own Stage 4
+fixes, which carry a `Finding:` trailer, and the Actions merge commit, whose second
+parent is the PR head. Anything else is somebody's unpushed work, and reviewing it is
+the same defect as reviewing an uncommitted edit.
 
 **A matching SHA is necessary and not sufficient — the tree has to be clean too.**
 `git diff "$DIFF_BASE"` and every specialist's copy of it read the *working tree*, not
