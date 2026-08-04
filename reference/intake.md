@@ -337,17 +337,16 @@ dedupes against it: that is the array `verification.md`'s re-post guard reads, a
 leaving it empty is what made that guard dead on arrival.
 
 **A `fixed` finding comes from `git log`, not from a marker.** Stage 4 writes
-`Finding: <specialist>/<fingerprint>` into the commit, so
-`git log --fixed-strings --grep="Finding: <specialist>/<fingerprint>"` on the current
-branch says both whether we fixed it and whether the fix survived. A commit that left the
-branch takes its grep result with it and the finding re-opens — the same guarantee the
-ancestry check below gives a carried claim, except nothing has to store a SHA for it to
-hold.
+`Finding: <specialist>/<fingerprint>` into the commit, so the branch's own trailers say
+both whether we fixed it and whether the fix survived. A commit that left the branch takes
+its trailer with it and the finding re-opens — the same guarantee the ancestry check below
+gives a carried claim, except nothing has to store a SHA for it to hold.
 
-**Match the whole trailer, never the bare fingerprint.** A fingerprint is
-`path:anchor:category`, so it is a substring of every longer fingerprint on the same path
-and of any commit message quoting the same anchor. Grepping for it alone lets an unrelated
-commit stand as proof of a fix, and the finding is suppressed unfixed.
+**Read the trailer; never `--grep` for the fingerprint.** `--grep` matches a substring
+anywhere in the message, and prefixing it with `Finding: ` does not anchor it — an anchor
+may itself contain a colon, so one whole trailer can be a prefix of another and the
+shorter finding is suppressed unfixed. `output.md` owns the command that reads the trailer
+block and compares the value whole.
 
 ### What it records, and when that is a bug
 
