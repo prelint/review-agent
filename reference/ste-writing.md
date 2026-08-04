@@ -25,15 +25,11 @@ convert them. A file converts when you next have a reason to touch it.
 ## Two modes
 
 **Strict** covers procedures, runbooks, safety text, error messages, and UI
-microcopy. Apply every rule below, plus the closed STE dictionary, plus both
-length caps.
+microcopy. Every rule below is hard, including both length caps.
 
 **STE-flavored** covers general prose such as review comments, summaries, PR
-bodies, and docs. Apply every rule below except the closed dictionary. The wider
-vocabulary keeps enough range to read naturally. Treat the caps as targets, and
-split any sentence over 25 words.
-
-The rules below hold in both modes. Only the dictionary and the hard caps differ.
+bodies, and docs. Every rule below still applies. Treat the two caps as targets,
+and split anything over 25 words.
 
 ## Rules
 
@@ -86,7 +82,7 @@ The rules below hold in both modes. Only the dictionary and the hard caps differ
 
 Run this before you commit prose, post a comment, or return text.
 
-1. Any sentence over 20 words? Split it.
+1. Any instruction over 20 words, or any other sentence over 25? Split it.
 2. Any semicolon or em dash? Replace it with a period.
 3. Any contraction? Expand it.
 4. Any passive voice with a known actor? Make it active.
