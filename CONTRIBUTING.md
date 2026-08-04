@@ -8,8 +8,7 @@ the function.
 `reference/ste-writing.md` owns the mechanics: word choice, voice, sentence length,
 and punctuation. It binds this file, every reference and specialist file, and every
 comment this skill posts. The rules below say what to put in a sentence. That file
-says how to build one. Two rules from it bite on every page here: no contractions,
-and no em dash.
+says how to build one.
 
 **Say it once.** No summary of what you just said, no closing restatement.
 

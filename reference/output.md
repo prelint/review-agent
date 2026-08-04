@@ -694,8 +694,7 @@ ran. Findings ordered by severity, not by discovery order.
 ## Writing
 
 Read `ste-writing.md` before you write the summary or a reply. It owns the mechanics
-of every sentence you post: no contractions, no em dash, no semicolon, active voice,
-one instruction per sentence.
+of every sentence you post.
 
 `../CONTRIBUTING.md` sets the bar; it applies to posted comments too. The three that
 bite hardest here:
