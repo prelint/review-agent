@@ -137,9 +137,10 @@ The replacement is two fields GitHub already sends, and still no config file:
 strangers.
 
 - **Reading** is unconditional. Every comment from every author is fetched and parsed.
-- **Repo humans steer.** `OWNER`, `MEMBER` or `COLLABORATOR` can redirect the run.
-  Outside contributors cannot — their comments are read and verified like anyone
-  else's.
+- **Repo humans steer within the selected PR.** `OWNER`, `MEMBER` or `COLLABORATOR` can
+  redirect priorities. They cannot override the run's integrity or safety rules;
+  `reference/intake.md` owns that list. Outside contributors cannot steer — their
+  comments are read and verified like anyone else's.
 - **Every bot reports.** A bot produces claims, verified against the code, decided on
   evidence.
 - **A finding is a finding regardless of author.** A bot's claim and a human's claim
@@ -153,6 +154,17 @@ nonce sandbox is a convention the model honours rather than a technical barrier,
 the verification gate constrains what *ships*, not what gets *looked at*. Neither
 stops a redirect. `author_association` closes it with one predicate and no
 maintenance, and a new teammate becomes `directive` the moment they join the repo.
+
+The ceiling is deliberate. Association establishes who may steer; it does not make a
+compromised account safe or turn quoted third-party text into policy. The review's
+integrity gates and repository-safety rules therefore remain non-overridable for every
+tier.
+
+**The ceiling is policy the agent follows, not a mechanism that stops it** — the same
+footing as the nonce sandbox above, and the same limit. Nothing outside the run can
+enforce it: a repository that wants a binding gate needs the commit status of
+`reference/output.md`, or its own CI. Anyone adding to the list is writing
+self-enforcing policy, and should say so in the same breath.
 
 All third-party text is wrapped in a nonce-delimited untrusted block before it
 reaches a subagent, which is the defence that actually matters.
