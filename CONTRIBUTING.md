@@ -5,6 +5,11 @@ the function.
 
 ## How to write here
 
+`reference/ste-writing.md` owns the mechanics: word choice, voice, sentence length,
+and punctuation. It binds this file, every reference and specialist file, and every
+comment this skill posts. The rules below say what to put in a sentence. That file
+says how to build one.
+
 **Say it once.** No summary of what you just said, no closing restatement.
 
 **Rule first, reason second.** "Commit each fix alone" before "because an interrupted
@@ -49,6 +54,8 @@ Reread the diff and delete:
 3. Hedging adverbs carrying no real uncertainty.
 4. Bold used for emphasis rather than lookup.
 5. Every remaining word that does not change the meaning.
+
+Then run the self-lint in `reference/ste-writing.md` over the diff.
 
 Then check: does the first line of each section state the rule?
 

@@ -16,6 +16,11 @@ directory and the repository under review.
 thread join in `reference/intake.md` are the only two. The previous version made
 14,249 Bash calls against 2 Grep calls and paid for it in context and in quoting bugs.
 
+**Every word you publish follows `reference/ste-writing.md`.** That covers commit
+messages, issue bodies, thread replies, and the summary. Read it the first time you
+write one, not at Stage 5. Stage 4 commits and files issues before the summary
+exists.
+
 ---
 
 ## Stage 0: Bind the run
