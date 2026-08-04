@@ -1,6 +1,7 @@
 # Simplified Technical English
 
-Write prose in ASD-STE100 Simplified Technical English (STE). This file owns the
+Write prose in [ASD-STE100](https://asd-ste100.org) Simplified Technical English
+(STE). This file owns the
 mechanics: words, verbs, sentence length, and punctuation. `../CONTRIBUTING.md`
 owns what to say and in what order. Read both. Neither one repeats the other.
 
@@ -93,11 +94,3 @@ Run this before you commit prose, post a comment, or return text.
    plain verb.
 6. Same thing named two ways? Pick one name.
 
-## What this does not fix
-
-Every rule above is mechanical, and mechanical rules remove the form of slop.
-They cannot make a hollow paragraph true. Choosing the right technical noun, and
-judging whether a finding is real, stays your job. A comment that obeys every
-rule here and reports a bug that does not exist is still a bad comment.
-
-Source: ASD-STE100, https://asd-ste100.org.
