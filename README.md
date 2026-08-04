@@ -86,10 +86,9 @@ and two fixes that left already-broken production data unmentioned.
 
 ## Trust
 
-Repo members steer priorities within the selected PR; everyone else reports. Required
-review stages, evidence gates, the success refusal and repository-safety rules remain
-non-overridable. Split on `user.type` and `author_association`, both sent by GitHub. No
-config, no list to maintain.
+Repo members steer priorities within the selected PR; everyone else reports. The run's
+integrity and safety rules stay non-overridable at every tier. Split on `user.type` and
+`author_association`, both sent by GitHub. No config, no list to maintain.
 
 Reading is never gated. A bot's finding gets the same verification as a maintainer's —
 evidence decides, not the login.
