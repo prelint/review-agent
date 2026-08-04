@@ -336,10 +336,16 @@ leaving it empty is what made that guard dead on arrival.
 
 **A `fixed` finding comes from `git log`, not from a marker.** Stage 4 writes
 `Finding: <specialist>/<fingerprint>` into the commit, so
-`git log --fixed-strings --grep="<fingerprint>"` on the current branch says both whether we
-fixed it and whether the fix survived. A commit that left the branch takes its grep result
-with it and the finding re-opens — the same guarantee the ancestry check below gives a
-carried claim, except nothing has to store a SHA for it to hold.
+`git log --fixed-strings --grep="Finding: <specialist>/<fingerprint>"` on the current
+branch says both whether we fixed it and whether the fix survived. A commit that left the
+branch takes its grep result with it and the finding re-opens — the same guarantee the
+ancestry check below gives a carried claim, except nothing has to store a SHA for it to
+hold.
+
+**Match the whole trailer, never the bare fingerprint.** A fingerprint is
+`path:anchor:category`, so it is a substring of every longer fingerprint on the same path
+and of any commit message quoting the same anchor. Grepping for it alone lets an unrelated
+commit stand as proof of a fix, and the finding is suppressed unfixed.
 
 ### What it records, and when that is a bug
 

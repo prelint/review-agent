@@ -518,9 +518,16 @@ beside the summary sentinel. All-informational items are deliberately reclassifi
 
 **A `fixed` finding is recovered from `git log`, and carries no marker.** Stage 4 writes
 `Finding: <specialist>/<fingerprint>` into the commit that fixes it, so
-`git log --fixed-strings --grep="<fingerprint>"` on the current branch answers both questions
-at once: whether we fixed it, and whether the fix is still here. A force-push or a dropped
-rebase takes the commit and the grep result together, and the finding re-opens.
+`git log --fixed-strings --grep="Finding: <specialist>/<fingerprint>"` on the current
+branch answers both questions at once: whether we fixed it, and whether the fix is still
+here. A force-push or a dropped rebase takes the commit and the grep result together, and
+the finding re-opens.
+
+**Grep the whole trailer, never the bare fingerprint.** A fingerprint is
+`path:anchor:category`, so it is a substring of every longer fingerprint on the same path
+and of any commit message quoting the same anchor. A bare-fingerprint grep lets an
+unrelated commit stand as proof, and the finding is suppressed unfixed — the one failure
+this recovery path must not have, since no marker is left to contradict it.
 
 That is the ancestry check the claim side does by hand, for free and with no SHA to keep
 in sync — which is why the marker has no resolution field for `fixed`. Putting one there
