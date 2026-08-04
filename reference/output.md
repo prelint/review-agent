@@ -451,8 +451,9 @@ so the summary is the only place it can land. One line, and it does not block:
 No answer from: coherence. That lens's coverage is missing from this review.
 ```
 
-Not-dispatched reasons are a different thing and stay out of this: they are a lens
-correctly declining, not a lens failing.
+Not-dispatched reasons are a different thing: they are a lens correctly declining, not a
+lens failing, so they do not break silence. Name every reason in the session output. When
+another exception causes a summary, include them there in one compact coverage line too.
 
 **An `unresolvable` item.** Silence means "nothing needs your attention", and an
 `unresolvable` item leaves a thread open that nobody will close. If any item carries
@@ -480,12 +481,13 @@ work is done, the PR still looks unaddressed, and nothing says why.
 Otherwise, one top-level comment. Hard caps:
 
 - **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
-  non-blocking findings first, down to the count line; then the not-dispatched reasons;
-  then prose. Never the markers, and never the three lines silence cannot suppress — a
-  dead lens, `unresolvable` items, failed deliveries. Those are the summary's whole
-  reason for existing on a run that would otherwise be quiet. The mandatory lines added
-  here spend budget that issue #23 already measured as nearly exhausted, so which line
-  gives has to be written down rather than decided in the moment.
+  non-blocking findings first, down to the count line; compress the not-dispatched line
+  from reasons to lens names; then prose. Never delete the coverage line, the markers, or
+  the three lines silence cannot suppress — a dead lens, `unresolvable` items, failed
+  deliveries. Those are the summary's whole reason for existing on a run that would
+  otherwise be quiet. The mandatory lines added here spend budget that issue #23 already
+  measured as nearly exhausted, so which line gives has to be written down rather than
+  decided in the moment.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
