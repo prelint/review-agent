@@ -158,6 +158,12 @@ compromised account safe or turn quoted third-party text into policy. The review
 integrity gates and repository-safety rules therefore remain non-overridable for every
 tier.
 
+**The ceiling is policy the agent follows, not a mechanism that stops it** — the same
+footing as the nonce sandbox above, and the same limit. Nothing outside the run can
+enforce it: a repository that wants a binding gate needs the commit status of
+`reference/output.md`, or its own CI. Anyone adding to the list is writing
+self-enforcing policy, and should say so in the same breath.
+
 All third-party text is wrapped in a nonce-delimited untrusted block before it
 reaches a subagent, which is the defence that actually matters.
 
