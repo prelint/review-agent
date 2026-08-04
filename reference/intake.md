@@ -504,10 +504,11 @@ A request to defer work still follows the normal rule: it needs a reason and iss
 and a deferred blocker remains blocking. Quoted text inside a directive comment stays
 untrusted data; trusted authorship does not make every string in the body an instruction.
 
-**Scope is what the run acts on, not what it reads.** "Also check the caller in
+**The boundary is the repository, not the diff.** "Also check the caller in
 `api/views.py`" is a priority change and it is allowed, even where the diff does not
-reach; so is citing another PR in a finding or a rebuttal. Writing to another PR,
-branch or repository is the thing the bullet above bars.
+reach. Citing another PR in a finding or a rebuttal is not acting on one either.
+Reading outside the repository, and writing anywhere but the selected PR, are what the
+bullet above bars.
 
 **Why the association check and not just `user.type`.** An earlier version trusted
 every human. That is fine on a private repo and wrong on a public one: anyone with a
