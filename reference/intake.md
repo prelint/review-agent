@@ -337,6 +337,21 @@ that exact known category. Do not split on every colon: real anchors contain spa
 colons. Preserve the original category-bearing `fingerprint` for calibration and commit
 history; `site_key` is the cross-category match key.
 
+**Then normalize the anchor itself, on both sides of every comparison.** Stripping the
+category is not enough to make two keys equal. This repo's own legacy marker reads
+`fingerprint=backend/apps/billing/services.py:charge_org:tenancy`, which yields anchor
+`charge_org`, while a current lens emits `charge_org()` — the same symbol and an unequal
+string. Casefold the anchor, strip surrounding backticks and a trailing `()`, and collapse
+internal whitespace runs to one space before comparing.
+
+**Two derivations produce no usable `site_key`, and both say so rather than guessing.**
+A purely numeric anchor — from a marker written against the older `path:line:category`
+shape — is a line number, which `verification.md` forbids matching on. A final segment
+that is not a known category leaves the fingerprint unsplit. In both cases set
+`site_key` to `null`, fall back to exact `fingerprint` equality for that finding alone,
+and count them in `prior.carried` so a run that restored mostly unmatchable keys is
+visible rather than looking like a run that found no duplicates.
+
 **A `fixed` finding comes from `git log`, not from a marker.** Stage 4 writes
 `Finding: <specialist>/<fingerprint>` into the commit, so
 `git log --fixed-strings --grep="<fingerprint>"` on the current branch says both whether we

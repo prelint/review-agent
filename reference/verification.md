@@ -65,10 +65,15 @@ body and stopped.
 `fingerprint` remains `path:anchor:category` because old summary markers, calibration,
 and fix commits already carry that shape. It is not the dedupe key. Derive a
 category-free `site_key` as `path:anchor` from every current finding and use `site_key`
-for both within-run and across-run matching. For a carried marker that predates
-`site_key`, derive it from the marker's `fingerprint` by removing the final
-`:<category>` **only when that exact known category is the suffix**. Anchors can contain
-spaces and colons; splitting on every colon corrupts real keys.
+for both within-run and across-run matching. **A carried marker's `site_key` is
+`intake.md`'s to derive** — that file owns the suffix rule, the anchor normalization the
+comparison needs, and the two cases that yield no usable key. A second copy of the
+procedure here would drift from it, and the halves disagreeing is precisely what makes
+one defect carry two keys. Apply the same anchor normalization to the current run's
+findings before comparing: a key normalized on one side only is a key that never matches.
+
+A restored finding whose `site_key` is `null` matches on exact `fingerprint` equality and
+nothing else.
 
 Before grouping, verify that each finding's `specialist` equals the lens Stage 2
 dispatched. A finding cannot manufacture a second independent source by naming another
