@@ -93,14 +93,19 @@ characters on them before a single visible character.
 
 | Dropped | What it did | What does its job now |
 |---|---|---|
-| The marker on a `fixed` finding | carried the ending across runs so the finding was not re-found | the `Finding: <specialist>/<fingerprint>` commit trailer, grepped whole |
+| The marker on a `fixed` finding | carried the ending across runs so the finding was not re-found | the `Finding: <specialist>/<fingerprint>` commit trailer, read by key and compared whole |
 | The marker on an all-informational threadless item | carried the classification across runs | nothing — the item is reclassified from scratch, which costs one verification pass and cannot lose a fix, rebuttal or deferral, since none of those is informational |
 | "Zero findings carried while one of our summary comments exists" as a refusal | caught a summary whose markers we failed to read | `prior.sentinel`, whose absence on a `SELF` top-level comment is itself a refusal |
 | "Never the markers" in the cut order | kept the visible budget from eating durable state | nothing needs it — the visible cap no longer measures the trailer, so the cut order never reaches it |
 
-**Grep the whole trailer, not the bare fingerprint.** Row one made the commit message the
-only record of a fix, so a substring match now decides alone. A fingerprint is
-`path:anchor:category` and is a substring of every longer fingerprint on the same path.
+**The substring hazard is closed, and it took two passes.** Row one made the commit
+message the only record of a fix, and the first attempt still matched it with
+`git log --grep`. That is a substring test: a bare fingerprint hit any longer fingerprint
+on the same path, and adding the `Finding: ` prefix did not anchor it either, because an
+anchor may itself contain a colon — so one whole trailer could be a prefix of another and
+the shorter finding was suppressed unfixed. `reference/output.md` now asks git for the
+trailer by key, with `%(trailers:key=Finding,valueonly)`, and compares the value with
+`==`. No substring match remains on this path, and there is no pattern to escape.
 
 **Nothing bounds the raw comment body.** Row four removed the only rule that constrained
 the trailer, and the visible cap deliberately does not. GitHub's issue-comment limit is
@@ -109,12 +114,15 @@ twenty times the largest run measured, so this is recorded rather than fixed. If
 gets there, the edit that carries every non-fixed finding fails and takes the run's
 durable state with it.
 
-**The `git log` recovery is not constrained to our own commits.** It matches any commit
-reachable from the head, and the PR author writes those. The marker path refuses a forged
-marker by requiring `author == SELF`; this path has no equivalent, and `verification.md`'s
-rule that a `BLOCKER` is never suppressed on a fingerprint match does not name it. That
-gap predates this change — it is recorded here because dropping row one leaves nothing to
-contradict a forged trailer.
+**The trailer recovery is not constrained to our own commits.** It reads any commit
+reachable from the head, and on a PR the author writes those. The marker path refuses a
+forged marker by requiring `author == SELF`; this path has no equivalent, because a commit
+message cannot be made to prove authorship. `verification.md`'s `BLOCKER` carve-out now
+names this path, so a blocker is never closed on a trailer match alone; a non-blocking
+finding still can be. What remains is a mistake-catcher rather than a boundary, which is
+the same conclusion `SKILL.md` reaches about its stacked-commit gate. The gap predates
+this change — it is recorded here because dropping row one left nothing else to contradict
+a forged trailer.
 
 [#11]: https://github.com/prelint/review-agent/issues/11
 [#13]: https://github.com/prelint/review-agent/issues/13
