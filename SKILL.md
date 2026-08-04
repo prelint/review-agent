@@ -120,16 +120,11 @@ response requires:
 | no findings | `clean`, `not-dispatched`, or `cleared` for `red-team` |
 
 Anything else is a dead lens — empty, truncated mid-line, prose, an unrecognised `kind`, a
-count that does not add up, or **findings closed by something other than `end`**.
+count that does not add up, **findings closed by something other than `end`**, or a
+`specialist` that is not the lens dispatched.
 
-After validating a response, consume its `end` terminator and write every `clean`,
-`cleared`, and `not-dispatched` object to the ledger's `coverage` array. Verify that the
-`specialist` on every object, including findings, is the lens that was dispatched; a
-lens cannot claim a second independent identity. Also verify each finding's fingerprint
-is exactly its `path:anchor:category`. Coverage is evidence about what ran, not a
-finding, so it is never scored or assigned a finding status.
-
-That last case is the one a terminator alone does not catch. Checking the count only when
+Findings closed by the wrong terminator is the case a terminator alone does not catch.
+Checking the count only when
 the last line happens to be `end` lets a lens truncated after two findings of five land on
 a stray `clean` and pass as answered, with the count check — the entire reason `end`
 exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
@@ -139,6 +134,24 @@ Keying this on emptiness alone would miss the commoner shape, and so would check
 that the last line is valid: a subagent killed at its output cap after emitting two
 findings of five ends on a perfectly good finding object. The count is what makes those
 three visible.
+
+**A wrong `specialist` kills the whole response, not the one object.** It is in the list
+above for that reason. A lens that names another lens is either broken or manufacturing a
+second independent identity to corroborate itself past the score threshold, and neither
+is a response any part of which can be trusted — so none of it enters `coverage` or
+`findings`. Dropping only the mislabelled object would leave the rest of a response that
+just tried to forge its own corroboration.
+
+**A malformed fingerprint drops that finding alone.** If it is not exactly
+`path:anchor:category` for the `path`, `anchor` and `category` the finding itself carries,
+Stage 3 cannot key it and the lens is otherwise answering honestly. Drop the finding, name
+it in the session output, and keep the rest of the response — including its `end` count,
+which still has to add up against what was sent, not against what survived.
+
+After validating a response, consume its `end` terminator and write every `clean`,
+`cleared`, and `not-dispatched` object to the ledger's `coverage` array. Coverage is
+evidence about what ran, not a finding, so it is never scored or assigned a finding
+status.
 
 **Name a dead lens** in the session output always, and in the summary too whenever one is
 posted. A lens that died is coverage you did not get, and reporting a clean review

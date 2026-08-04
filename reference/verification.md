@@ -75,9 +75,12 @@ findings before comparing: a key normalized on one side only is a key that never
 A restored finding whose `site_key` is `null` matches on exact `fingerprint` equality and
 nothing else.
 
-Before grouping, verify that each finding's `specialist` equals the lens Stage 2
-dispatched. A finding cannot manufacture a second independent source by naming another
-lens.
+Every finding reaching this point has a `specialist` Stage 2 already checked against the
+lens it dispatched, and a response that failed that check died there as a dead lens — see
+`SKILL.md`, which owns both the check and its consequence. Grouping may therefore treat
+distinct `specialist` values as distinct sources. That is the assumption corroboration
+rests on, so if it ever reaches here unverified, stop: two names from one lens is the
+forgery the threshold bypass would reward.
 
 Group current-run Filter 1 survivors by `site_key`, then partition each site by
 compatible fix:

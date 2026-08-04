@@ -81,7 +81,7 @@ JSON, one object per line, nothing else. No prose before or after.
 
 | Field | Required | Notes |
 |---|---|---|
-| `specialist` | yes | The lens emitting the finding. Stage 3 uses distinct specialists as the independence check for corroboration. |
+| `specialist` | yes | The lens emitting the finding — your own name, never another's. Stage 3 uses distinct specialists as the independence check for corroboration, so Stage 2 treats a response naming any other lens as a dead lens and discards all of it. |
 | `severity` | yes | `BLOCKER` only for: breaks behaviour, leaks data, loses money, blocks rollback |
 | `likelihood` | yes | Will it actually fire? See below. Independent of `severity` and of how sure you are the claim is true. |
 | `condition` | yes | The triggering condition in one clause. This is the field that makes `likelihood` checkable. |
@@ -90,7 +90,7 @@ JSON, one object per line, nothing else. No prose before or after.
 | `failure` | yes | Concrete: inputs or interleaving → wrong outcome. "Could be unsafe" is not a failure scenario. |
 | `evidence` | yes | Verbatim source. This is the quote gate. |
 | `fix` | yes | The specific change. "Consider reviewing this" is not a fix. |
-| `fingerprint` | yes | Exactly `path:anchor:category`; Stage 2 rejects a value that does not match those fields. See below. |
+| `fingerprint` | yes | Exactly `path:anchor:category`, for the `path`, `anchor` and `category` on this same object; Stage 2 drops a finding whose value does not match those fields, and keeps the rest of the response. See below. |
 | `test_stub` | no | A failing test that would catch it, if you can write one cheaply |
 
 ### Not dispatched
