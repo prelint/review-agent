@@ -100,15 +100,23 @@ below 70. Record `gate_reason: "corroboration"`; ordinary threshold survivors re
 `gate_reason: "score"`. The quote gate still ran first and exclusions still win later,
 so two lenses cannot corroborate an unevidenced or expressly excluded claim into output.
 
-Then dedupe against durable history using `site_key`, not `fingerprint`. A matching site
-is a candidate, not proof: verify from the claim or visible summary text that it is the
-same defect with a compatible remedy before suppressing it.
+Then dedupe against durable history. A match is a candidate, not proof: verify from the
+claim or visible summary text that it is the same defect with a compatible remedy before
+suppressing it. **The two arms match on different keys**, because a reviewer's item and a
+finding of ours carry different fields — `intake.md` gives `items` a `path` and a `line`
+and no anchor at all.
 
 - Same defect as a reviewer's existing ledger claim → **do not post it again.** Link the
-  ledger item and handle it there.
+  ledger item and handle it there. Match on `path` plus a `line` inside or adjacent to the
+  finding's span, then confirm from the claim text that it is the same defect. **Never on
+  `site_key`:** an item has none, so the comparison matches nothing every time, and the
+  arm that exists to stop us restating a bot's finding back at it fails silently at fleet
+  cadence.
 - Same defect as a finding we posted on an earlier run → do not post it again; carry the
-  restored finding forward. A `BLOCKER` is never suppressed this way. Post and reconcile
-  it again: a public marker that anyone can copy is not authority to retire a blocker.
+  restored finding forward. **This** is the arm `site_key` keys, and every restored finding
+  carries one or has had it normalized per `intake.md`. A `BLOCKER` is never suppressed
+  this way. Post and reconcile it again: a public marker that anyone can copy is not
+  authority to retire a blocker.
 
 Every suppression is a real ending. Record it as `dropped`, with the ledger item or
 `site_key` it merged into. A suppressed finding with no status sits `open` forever and

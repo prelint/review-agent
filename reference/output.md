@@ -107,9 +107,9 @@ Three causes, all legitimate:
 - **Silence.** Section 7 posts nothing when nothing blocks and every item is closed, so
   an unfixed `Required:` is dropped by it too — not only nits. Silence is a decision not
   to spend the author's attention, never a decision to forget.
-- **Dedupe.** `verification.md` uses `site_key` to find a matching reviewer item or
-  finding from an earlier run, then verifies it is the same defect before suppression.
-  Record the item or site key it merged into.
+- **Dedupe.** `verification.md` finds a candidate — a reviewer item by `path` and line, a
+  finding from an earlier run by `site_key` — then verifies it is the same defect before
+  suppression. Record the item or site key it merged into.
 
 A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
 that nothing blocking survived, and dedupe never suppresses a blocker.

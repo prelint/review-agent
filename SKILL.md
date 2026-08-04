@@ -186,9 +186,10 @@ Do not route around this by asserting high confidence.
 **Corroborate and dedupe.** Derive the category-free `site_key` as `path:anchor` and
 group Filter 1 survivors before scoring. Compatible fixes at one site from at least two
 distinct specialists become one finding carrying every supporting category and
-specialist. Incompatible fixes stay separate. Use the same `site_key`, not the
-category-bearing fingerprint, to find candidates in prior runs and reviewer claims;
-suppress only after verifying the candidate describes the same defect.
+specialist. Incompatible fixes stay separate. Use the same `site_key` to find candidates
+among findings we posted on prior runs; match a reviewer's claim on `path` and line
+instead, because a ledger item carries no anchor and so has no `site_key` to compare
+against. Suppress only after verifying the candidate describes the same defect.
 
 **Filter 2 — independent scoring.** A scoring agent that is not among the specialists
 that found the issue scores each survivor 0–100 against the rubric in
