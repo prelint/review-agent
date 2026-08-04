@@ -259,7 +259,9 @@ the fix. The commit shows you heard it.
 Read `reference/output.md`. In order:
 
 1. **Re-fetch** the PR. New comments since Stage 1 open new ledger items; process
-   them or say explicitly that you are deferring them.
+   them or say explicitly that you are deferring them. Stage 5 may return to Stages 2–4
+   once per run, for one collected batch. `reference/output.md` owns the counter and the
+   second-pass rule.
 2. **Reconcile the ledger, claim by claim.** Every claim must be `fixed` (with a commit
    SHA), `rebutted` (with evidence), `deferred` (with a reason **and** an issue link),
    `informational` (it asked for nothing), or `unresolvable` — which `reference/output.md`

@@ -18,7 +18,45 @@ Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
 - Changed `substance_hash` on any existing item → it re-opens, even if it was `fixed`.
   A `body_hash` that moved alone is a typo or a reformat: store it and leave the item
   closed. The full table is in `intake.md`.
-- Changed `pr_substance_hash` → re-run `spec-drift` before continuing.
+- Changed `pr_substance_hash`, and `stage5_reentries` is `0` → re-run `spec-drift`
+  before continuing. Once the counter is `1` the sub-section below owns this case and
+  bars the second run; without the qualifier the two instructions contradict each other
+  on exactly the pass the bound exists for.
+
+### One re-entry, then defer
+
+**Stage 5 may return to Stages 2–4 once per run.** Collect every new or changed item from
+one re-fetch into a batch before deciding:
+
+1. When `stage5_reentries` is `0`, set it to `1` in the ledger, process the whole batch
+   through the required earlier stages, then restart this section and re-fetch once more.
+2. When `stage5_reentries` is already `1`, do not return again. Classify the late batch;
+   `informational` claims stay informational, and every actionable new or changed claim is
+   `deferred` with the reason `arrived after the bounded Stage 5 re-entry` and an issue
+   link. A changed PR description is a changed item under the same rule — it is the
+   `description` item `intake.md` defines, and its claim is where that reason and that
+   issue link go; do not launch `spec-drift` a second time.
+3. Name those deferrals in the summary, **in the author's terms, not these ones**. The
+   ledger's `reason` is machine-traceable and stays as written; the summary line says what
+   happened and what to do about it — "arrived while this run was finishing and was not
+   reviewed — re-run the agent to pick it up". A reader who does not know this skill has
+   stage numbers gets a fact they can act on instead of one they cannot. They are closed
+   ledger statuses, not permission to imply that the late changes were reviewed.
+
+The issue link is the one section 2 already specifies: fold into an open issue on the same
+surface before opening a new one. There is no standing "late arrivals" issue to point at,
+and #19 closes with this change — a deferral linked there would land on a closed issue.
+
+The counter is run-local, and **the re-fetch above must not reset it.** Stage 1 writes
+`stage5_reentries` only when it creates the ledger; re-running its fetch against a ledger
+that already exists updates items, hashes and watermarks and leaves this field alone.
+Without that carve-out the bound erases itself: step 1 sends the run back through section
+1, section 1 re-runs the Stage 1 fetch, and a Stage 1 that rewrites the ledger head puts
+the counter back to `0` — so step 2 is unreachable and the cycle this section exists to
+close stays open.
+
+Recording the counter in the ledger is what keeps a resumed Stage 5 from inventing
+whether its one return was already spent.
 
 ## 2. Reconcile
 
@@ -72,9 +110,10 @@ been restated in three places and a third cause would have had to find all three
    its first comment was deleted.
 2. **A reply or resolve that errored**, per section 6. Any surface can hit this one.
 
-**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment and
-a review body have no thread, so null on either is the right answer rather than a failure,
-and they close as `fixed` or `informational` like anything else. Reading null as a failure
+**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment, a
+review body and the PR description have no thread, so null on any of them is the right
+answer rather than a failure, and they close as `fixed`, `deferred` or `informational`
+like anything else. Reading null as a failure
 on every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
 about threads that never existed.
 
@@ -337,7 +376,7 @@ limit, and every run afterwards pages the grown comment set back in.
 Resolve a thread when its fix commit exists **and** `thread_id` is not null. Skip the
 mutation entirely when it is null — calling it with an empty argument errors. On an
 `inline` item that null is the `unresolvable` case and is already accounted for; on a
-`top` or `review` item there is no thread to resolve and nothing is owed.
+`top`, `review` or `description` item there is no thread to resolve and nothing is owed.
 
 ```bash
 gh api graphql -f query='
