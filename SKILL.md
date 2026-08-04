@@ -104,8 +104,9 @@ schema's JSON — one object per line, nothing else.
 which apply — you would be reading their triggers to guess at what they will conclude
 from reading their own.
 
-Each lens reads line 5 of its own file — `**Runs on every review.**`, or a
-`**Runs when**` clause it tests against the diff — and answers in one of the kinds
+Each lens reads its complete opening `**Runs ...**` paragraph, through the first blank
+line. It says `**Runs on every review.**`, or carries a multi-line `**Runs when**` clause
+the lens tests against the diff. The lens then answers in one of the kinds
 `specialists/_schema.md` defines. That file owns the list. **None of them is silence.**
 
 **A lens answered only if its response parses, and the terminator matches its shape.**
@@ -142,12 +143,13 @@ happened on PR #31 — `coherence` died mid-response and returned an empty strin
 the specialist contract then accepted as "found nothing".
 
 That is the whole dispatch rule. There is no table here to drift from the files — the
-trigger is written once, on line 5 of the lens, and evaluated once, by the lens.
+trigger is written once, in the lens's opening paragraph, and evaluated once, by the lens.
 
-**Every `not-dispatched` reason goes in the summary.** "Not dispatched: `money`,
-`tenancy` — no billing path or per-tenant query in the diff." Coverage you do not have is
-coverage you say you do not have. Dead lenses are reported under their own rule above,
-which is stricter because a lens failing is not a lens declining.
+**Every `not-dispatched` reason goes in the session output.** When a summary is posted for
+another reason, it carries the same coverage line: "Not dispatched: `money`, `tenancy` —
+no billing path or per-tenant query in the diff." A correct decline does not break silence
+by itself, but it never disappears from the run's output. Dead lenses are reported under
+their own rule above, which is stricter because a lens failing is not a lens declining.
 
 A missing file is a different thing: it is a skip, not an error, and it is also named.
 
