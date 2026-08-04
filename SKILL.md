@@ -36,12 +36,13 @@ fi
 BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
 PR_HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
 git fetch origin "$BASE" --quiet
+git fetch origin "refs/pull/$PR/head" --quiet   # the gate below needs that object locally
 DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
 HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
                                            # Stage 4 commits, so it is stale after that
-if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ]; then
-  echo "review-agent: checkout $HEAD_SHA does not match PR head $PR_HEAD_SHA" >&2
+if ! git merge-base --is-ancestor "$PR_HEAD_SHA" HEAD; then
+  echo "review-agent: PR head $PR_HEAD_SHA is not reachable from checkout $HEAD_SHA" >&2
   exit 1
 fi
 
@@ -56,9 +57,14 @@ mkdir -p "$FETCH_DIR"
 Confirm `DIFF_BASE` resolves and `git diff "$DIFF_BASE" --stat` is non-empty. Fail
 here, in the parent, rather than inside eight subagents that each rediscover it.
 
-**Confirm `HEAD_SHA` equals `PR_HEAD_SHA` before reading the diff.** The PR number names
-the conversation and `HEAD` names the code; a review is valid only when they name the same
-commit. On a mismatch, stop and say which two SHAs differed. Never review one PR's comments
+**Confirm `PR_HEAD_SHA` is reachable from `HEAD` before reading the diff.** The PR number
+names the conversation and `HEAD` names the code; a review is valid only when the code
+contains the commit the conversation is about. **Reachable, not equal** — Stage 4 commits
+before Stage 5 pushes, so a resumed run is legitimately ahead of the PR head, and an
+Actions `pull_request` checkout sits on a merge commit whose second parent is that head.
+Equality rejects both, and a fleet that hits either one exits here every hour forever.
+What is actually wrong is a `HEAD` the PR head cannot reach — a stale or unrelated
+checkout. Stop there, and say which two SHAs differed. Never review one PR's comments
 against another branch's diff.
 
 **Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
