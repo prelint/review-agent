@@ -21,21 +21,45 @@ thread join in `reference/intake.md` are the only two. The previous version made
 ## Stage 0: Bind the run
 
 ```bash
+if ! gh auth status -h github.com >/dev/null 2>&1; then
+  echo "review-agent: gh is not authenticated; run gh auth login -h github.com" >&2
+  exit 1
+fi
+
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 PR=${1:-$(gh pr view --json number --jq .number)}
+if [ -z "$PR" ]; then
+  echo "review-agent: no pull request was supplied or found for this checkout" >&2
+  exit 1
+fi
+
 BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
+PR_HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
 git fetch origin "$BASE" --quiet
 DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
 HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
                                            # Stage 4 commits, so it is stale after that
+if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ]; then
+  echo "review-agent: checkout $HEAD_SHA does not match PR head $PR_HEAD_SHA" >&2
+  exit 1
+fi
+
 SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
                                            # prior comments to rebuild the last ledger
-LEDGER=".review-agent/pr-${PR}.json"
+RUN_DIR="$WORKDIR/.review-agent"
+FETCH_DIR="$RUN_DIR/fetch-stage1"
+LEDGER="$RUN_DIR/pr-${PR}.json"
+mkdir -p "$FETCH_DIR"
 ```
 
 Confirm `DIFF_BASE` resolves and `git diff "$DIFF_BASE" --stat` is non-empty. Fail
 here, in the parent, rather than inside eight subagents that each rediscover it.
+
+**Confirm `HEAD_SHA` equals `PR_HEAD_SHA` before reading the diff.** The PR number names
+the conversation and `HEAD` names the code; a review is valid only when they name the same
+commit. On a mismatch, stop and say which two SHAs differed. Never review one PR's comments
+against another branch's diff.
 
 **Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
 or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — and the
