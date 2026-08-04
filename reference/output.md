@@ -35,8 +35,16 @@ one re-fetch into a batch before deciding:
 3. Name those deferrals in the summary. They are closed ledger statuses, not permission to
    imply that the late changes were reviewed.
 
-The counter is run-local: Stage 1 writes `0` on every new run. Recording it in the ledger
-keeps a resumed Stage 5 from inventing whether its one return was already spent.
+The counter is run-local, and **the re-fetch above must not reset it.** Stage 1 writes
+`stage5_reentries` only when it creates the ledger; re-running its fetch against a ledger
+that already exists updates items, hashes and watermarks and leaves this field alone.
+Without that carve-out the bound erases itself: step 1 sends the run back through section
+1, section 1 re-runs the Stage 1 fetch, and a Stage 1 that rewrites the ledger head puts
+the counter back to `0` — so step 2 is unreachable and the cycle this section exists to
+close stays open.
+
+Recording the counter in the ledger is what keeps a resumed Stage 5 from inventing
+whether its one return was already spent.
 
 ## 2. Reconcile
 

@@ -532,6 +532,12 @@ costs one substitution.
 Stage 1 ends by writing `.review-agent/pr-${PR}.json`. Everything downstream is
 measured against it, and Stage 5 cannot finish while any entry is `open`.
 
+**Creating the ledger and re-fetching into it are different writes.** Stage 5 re-runs
+this stage's fetch, so a Stage 1 that rebuilds the head every time it runs would reset
+the fields Stage 5 keeps there. Re-running the fetch updates items, hashes and
+watermarks; it does not re-initialise `stage5_reentries`, which only a Stage 1 that
+creates the file writes.
+
 Two arrays. `items` is what reviewers said; `findings` is what we found. Both reconcile
 in Stage 5.
 
@@ -625,7 +631,7 @@ so.
 |---|---|---|
 | `base` | Stage 0 | the ref the diff is against; Stage 5 refuses to post if it moved |
 | `pr_updated_at` | Stage 1 | the PR's own watermark |
-| `stage5_reentries` | Stage 1, then Stage 5 | starts at `0`; records whether this run already spent its one return to Stages 2–4 |
+| `stage5_reentries` | Stage 1 **on create only**, then Stage 5 | starts at `0`; records whether this run already spent its one return to Stages 2–4. A Stage 5 re-fetch preserves it — re-initialising it there erases the bound |
 | `watermark` | Stage 1 | `max(created_at, updated_at)` on the item |
 | `split_branch` | Stage 1 | which branches of the claim split fired, so the count check is auditable afterwards |
 | `reconciled_at_head` | Stage 5 | the SHA reconciliation ran against — `head_sha` is Stage 0's and Stage 4 has committed since |
