@@ -361,6 +361,12 @@ a summary sentinel was read, and it is what makes zero carried findings checkabl
 condition that excuses the zero is "the sentinel parsed", so a run that does not store
 whether it parsed cannot apply it.
 
+**A marker that parses but says nothing this version knows is not `unparsed`.** Skip it
+and carry on. `unparsed` means the line would not parse at all; a well-formed payload
+carrying an unrecognised key is a marker from a version that knows more than this one, and
+halting on it would let any future addition stop every older copy still installed. This is
+what keeps the sentinel's shape free to grow now that a refusal reads it.
+
 **Four cases, and only two of them are ours:**
 
 - **No markers at all, and no `SELF` top-level comment** is `source: "none"`. The PR
