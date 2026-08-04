@@ -54,7 +54,7 @@ Two weeks of logs: 2,600 sessions, 454 reviews, 53 PRs. Five things kept going w
 | Watermarked on `created_at`, so a bot editing its verdict in place was invisible. | Watermarks on edits. |
 | Never read the PR description. | Reads it, and checks the diff against it. |
 | Forbidden from committing, so 11% of runs left uncommitted edits. | Commits each fix as it makes it. |
-| No output cap. Worst comment was 10,289 characters with nothing blocking. | 2,000 characters, five findings, or silence. |
+| No output cap. Worst comment was 10,289 characters with nothing blocking. | 2,000 visible characters, five findings, or silence. |
 
 Evidence for each: [`docs/DESIGN.md`](docs/DESIGN.md).
 

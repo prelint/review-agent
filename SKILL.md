@@ -397,14 +397,15 @@ Read `reference/output.md`. In order:
 
 ### Output caps
 
-- Summary comment: **2,000 characters**. The old one averaged 1,718 and peaked at
-  10,289.
+- Summary comment: **2,000 visible characters**. The invisible marker trailer is state,
+  not prose, and does not count against the attention budget. The old visible comments
+  averaged 1,718 and peaked at 10,289.
 - At most **5 non-blocking findings** posted. More than that, give a count.
 - Severity prefix on every finding: `Blocker:` / `Required:` / `Nit:` / `FYI:`.
   Unlabelled feedback reads as mandatory and wastes the author's time.
-- Every finding carries an invisible marker so the next run can find it again, and the
-  summary carries one per item without a thread. `reference/output.md` owns the format —
-  it writes them, and a second copy here would drift from it.
+- Findings and threadless items carry only the markers whose state cannot be recovered or
+  cheaply reclassified. `reference/output.md` owns the inclusion rules and format — a
+  second copy here would drift from it.
 
 ### Writing
 

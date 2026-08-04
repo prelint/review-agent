@@ -191,9 +191,9 @@ full coverage remains in the session output.
 
 **It degrades in two steps, and the last one has a fixed cost.** Naming the lenses is
 already the compressed form and it is not bounded: eighteen lenses is a roster of several
-hundred characters against a budget this file calls nearly exhausted. First drop the
-not-dispatched reasons, keeping their lens names. Then drop all the names and post the
-counts alone —
+hundred characters, and this line is visible text, so it spends the 2,000-character budget
+that excluding the trailer markers did not loosen. First drop the not-dispatched reasons,
+keeping their lens names. Then drop all the names and post the counts alone —
 
 ```
 Coverage: 15 clean, 1 cleared, 2 not-dispatched.
@@ -397,8 +397,9 @@ item and does the work again.
 <!-- review-agent: {"item":3640790504,"substance":"sha256:9f2a...","claims":{"1":{"status":"fixed","sha":"abc123f"},"2":{"status":"deferred","issue":42}}} -->
 ```
 
-**JSON, and only constrained values** — ids, hex, status words, issue numbers. No prose,
-ever. The delimited form this replaced (`claims=1:fixed:abc,2:rebutted`) broke on the
+**JSON, and only constrained values** — ids, hex, booleans, status words, issue numbers.
+No prose, ever. The delimited form this replaced
+(`claims=1:fixed:abc,2:rebutted`) broke on the
 first resolution containing a comma or a colon, which a deferral's issue URL always does.
 Evidence and reasons live in the reply text, where a human reads them; the marker carries
 only what the next run has to parse.
@@ -578,33 +579,47 @@ work is done, the PR still looks unaddressed, and nothing says why.
 
 Otherwise, one top-level comment. Hard caps:
 
-- **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
-  the coverage line's detail — the not-dispatched reasons first, then the clean, cleared
-  and not-dispatched lens names — leaving its counts; then non-blocking findings, down to
-  the count line; then prose. Never delete the coverage line, the markers, or the four
-  lines silence cannot suppress — an unreadable ledger, a dead lens, `unresolvable` items,
-  failed deliveries. Those are the summary's whole reason for existing on a run that would
-  otherwise be quiet. The mandatory lines added here spend budget that issue #23 already measured as
-  nearly exhausted, so which line gives has to be written down rather than decided in the
-  moment.
+- **2,000 visible characters.** Not a target — a limit. Measure the comment before the
+  first trailer marker; HTML marker lines and the blank line before them are excluded.
+  GitHub receives the visible body plus the trailer, so the raw comment may exceed 2,000
+  while the part a human reads may not. **When the visible budget binds, cut in this
+  order:** the coverage line's detail — the not-dispatched reasons first, then the clean,
+  cleared and not-dispatched lens names — leaving its counts; then non-blocking findings,
+  down to the count line; then prose. Never delete the coverage counts, or the four
+  visible lines silence cannot suppress — an unreadable ledger, a dead lens,
+  `unresolvable` items, failed deliveries. Those are the summary's whole reason for
+  existing on a run that would otherwise be quiet. Excluding the trailer does not make the
+  budget loose — the mandatory visible lines still spend it — so which line gives has to
+  be written down rather than decided in the moment.
 
   **Compress before deleting, so coverage gives before findings do.** Degrading the
   coverage line loses detail; cutting a finding loses the finding. Coverage is also the
-  only element here whose cost grows with the number of lenses rather than with what the
-  review found, so it is what a wide run should spend first. And cutting a finding to keep
-  a lens name mislabels the ledger: that finding is recorded `dropped` with reason `cap`,
-  on a run where the 5-finding cap never bound.
+  only visible element whose cost grows with the number of lenses rather than with what
+  the review found, so it is what a wide run should spend first. And cutting a finding to
+  keep a lens name mislabels the ledger: that finding is recorded `dropped` with reason
+  `cap`, on a run where the 5-finding cap never bound.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
-- Every finding carries an invisible marker so it can be found again later:
+- Every non-fixed finding carries an invisible marker so it can be found again later:
   `<!-- review-agent: {"fingerprint":"<f>","site_key":"<path:anchor>","specialist":"money","category":"money","categories":["correctness","money"],"corroborated_by":["correctness","money"],"score":68,"gate_reason":"corroboration","severity":"REQUIRED","status":"posted"} -->`.
   `severity` and `status` are not optional — section 5's counters read exactly those two
   fields off every finding, and a rebuilt finding missing them counts as neither open nor
   closed. `score` is always raw, never raised to encode corroboration. Without the
   marker, category and convergence are unrecoverable from a posted comment and
   calibration is impossible. Older markers without the additive fields remain valid;
-  `intake.md` defines their normalization.
+  `intake.md` defines their normalization. A `fixed` finding is the exception: its commit
+  trailer is the durable record, so duplicating it here spends marker bytes on state
+  `git log` already recovers.
+- A threadless item carries a marker only when at least one claim is not
+  `informational`. Reclassifying an all-informational item next run is cheaper than
+  storing it forever; losing a fix, rebuttal or deferral is not.
+- Every posted summary carries one sentinel marker even when no state markers remain:
+  `<!-- review-agent: {"summary":true} -->`. It identifies our carrier comment without
+  pretending to restore an item or finding. **It is not optional.** `intake.md` refuses to
+  run on a `SELF` top-level comment whose trailer yields no sentinel, because that is the
+  only way a silently-unread trailer differs from a PR we never posted on — so a summary
+  written without one halts the next run instead of being read.
 - **A status with a destination carries it.** `"status":"deferred","issue":42` and
   `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
   `rebutted` need nothing more: the reason is the visible text beside the marker. A
@@ -614,14 +629,31 @@ Otherwise, one top-level comment. Hard caps:
 ### The summary is one comment per PR, edited in place
 
 Post it once and **edit that same comment on later runs**. It is the carrier for
-everything without a thread: `top` items, `review` items, the PR description, and every
-finding whose ending `git` cannot show. Each gets one marker, in the trailer.
+everything without a thread: actionable `top` items, `review` items, the PR description,
+and every finding whose ending `git` cannot show. Each gets one marker in the trailer,
+beside the summary sentinel. All-informational items are deliberately reclassified.
 
-**A `fixed` finding is recovered from `git log`, not from a marker.** Stage 4 writes
-`Finding: <specialist>/<fingerprint>` into the commit that fixes it, so
-`git log --fixed-strings --grep="<fingerprint>"` on the current branch answers both questions
-at once: whether we fixed it, and whether the fix is still here. A force-push or a dropped
-rebase takes the commit and the grep result together, and the finding re-opens.
+**A `fixed` finding is recovered from `git log`, and carries no marker.** Stage 4 writes
+`Finding: <specialist>/<fingerprint>` into the commit that fixes it, so the branch's own
+trailers answer both questions at once: whether we fixed it, and whether the fix is still
+here. A force-push or a dropped rebase takes the commit and its trailer together, and the
+finding re-opens.
+
+**Read the trailer; never `--grep` for the fingerprint.** `--grep` matches a substring
+anywhere in the message, and prefixing it with `Finding: ` does not anchor it — an anchor
+may itself contain a colon, so one whole trailer can be a prefix of another and the
+shorter finding is suppressed unfixed. Ask git for the trailer and compare the value
+whole. **This is where the lookup is defined; everywhere else refers here.**
+
+```bash
+git log "$DIFF_BASE"..HEAD \
+  --format='%(trailers:key=Finding,valueonly,separator=%x1F)%x1E'
+```
+
+Split on `\x1E` per commit and `\x1F` per trailer, then match `<specialist>/<fingerprint>`
+with `==`. Git parses the trailer block, so there is no pattern to escape and no substring
+to over-match. Nothing else can catch a false match here: the marker that used to
+corroborate it is gone.
 
 That is the ancestry check the claim side does by hand, for free and with no SHA to keep
 in sync — which is why the marker has no resolution field for `fixed`. Putting one there
@@ -630,13 +662,17 @@ goes stale.
 
 An inline comment has a thread to reply in. The other three surfaces have none, so a
 second top-level comment per run is the only alternative, and that is the noise the
-2,000-character cap exists to stop. Bots in this record already work this way — one
+2,000-visible-character cap exists to stop. Bots in this record already work this way — one
 summary, edited on each run — which is why intake watermarks on `updated_at`.
 
 **When silence suppresses the summary and no prior one exists, nothing carries.** Those
 items re-verify on the next run at the cost of one verification pass. That is the price
 of not announcing a clean review, and it is the right way round: a wasted pass, never a
 wrong answer.
+
+The same trade applies to an all-informational threadless item when a summary does exist:
+it carries no item marker and is reclassified on the next run. The sentinel still keeps
+the summary itself out of the reviewer ledger.
 
 ### Shape
 

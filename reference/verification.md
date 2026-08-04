@@ -160,6 +160,20 @@ and no anchor at all.
   carries one or has had it normalized per `intake.md`. A `BLOCKER` is never suppressed
   this way. Post and reconcile it again: a public marker that anyone can copy is not
   authority to retire a blocker.
+- Same defect as a finding **we already fixed** → do not post it again. A `fixed` finding
+  carries no marker, so the previous-run load cannot restore it and the bullet above never
+  fires. **This step owns the lookup**, because it is the first point at which a
+  fingerprint exists to look up — Stage 1 has none. Read the `Finding:` trailers off the
+  branch by the command in `output.md` and compare the value whole; an exact match
+  restores the finding as `fixed`, and anything else leaves it open. A commit that left
+  the branch takes its trailer with it, which is the ancestry check for free.
+  **Match the fingerprint, not the `site_key`**, and only here: the trailer is a frozen
+  string from an earlier run, so an exact comparison is available and a derived key would
+  only widen it. Where a trailer's fingerprint differs but its derived `site_key` matches,
+  the earlier run fixed a different category's defect at the same anchor — that is a
+  candidate for the bullet above, never a fixed match here.
+  **A `BLOCKER` is not suppressed this way either**, for a sharper version of the reason
+  above: the trailer is a commit message, and on a PR the author writes those.
 
 Every suppression is a real ending. Record it as `dropped`, with the ledger item or
 `site_key` it merged into. A suppressed finding with no status sits `open` forever and
