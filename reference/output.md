@@ -10,7 +10,18 @@ artifact that could answer.
 
 ## 1. Re-fetch
 
-Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
+Re-run the Stage 1 fetch into a new absolute directory. All of Stage 2–4 took time; the
+PR moved, but the raw Stage 1 snapshot is still the before-state and must not be overwritten:
+
+```bash
+STAGE1_FETCH_DIR="$RUN_DIR/fetch-stage1"
+FETCH_DIR="$RUN_DIR/fetch-stage5"
+mkdir -p "$FETCH_DIR"
+```
+
+Run `reference/intake.md`'s fetch commands with that `FETCH_DIR`, then compare the two
+directories. Do not infer the before-state only from the ledger: the raw bodies, timestamps,
+thread state and PR metadata are the evidence for whether an item moved.
 
 - New comments since Stage 1 → new ledger items. Process them, or record them
   `deferred` with a reason and say so in the summary. Silently ignoring them is how
@@ -170,7 +181,7 @@ did not survive to be read.
 Before writing anything public:
 
 ```bash
-gh pr view "$PR" --json state,mergedAt,baseRefName,isDraft
+gh pr view "$PR" --json state,mergedAt,baseRefName
 ```
 
 Stop if closed, merged, or the base branch changed — changed against the ledger's

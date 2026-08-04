@@ -27,15 +27,18 @@ never read before.
 No `select(.user.login == ...)` anywhere in this file. Filtering happens after
 reading, never at the API call.
 
+`FETCH_DIR` is an absolute directory bound by the calling stage. Stage 1 uses
+`$RUN_DIR/fetch-stage1`; Stage 5 uses a different directory so this snapshot survives.
+
 ```bash
-mkdir -p .review-agent
+mkdir -p "$FETCH_DIR"
 
 # 1. PR description + metadata. Never fetched by the previous version.
 gh api "repos/$REPO/pulls/$PR" --jq '{
-  body, title, state, draft, merged,
+  body, title, state, merged,
   base: .base.ref, head: .head.sha,
   updated_at, author: .user.login
-}' > .review-agent/pr.json
+}' > "$FETCH_DIR/pr.json"
 
 # 2. Top-level comments — EVERY author. updated_at is the point.
 gh api --paginate "repos/$REPO/issues/$PR/comments" --jq '.[] | {
@@ -44,7 +47,7 @@ gh api --paginate "repos/$REPO/issues/$PR/comments" --jq '.[] | {
   association: .author_association,
   body, created_at, updated_at,
   url: .html_url
-}' > .review-agent/comments-top.jsonl
+}' > "$FETCH_DIR/comments-top.jsonl"
 
 # 3. Inline comments — EVERY author. position == null means the line is gone.
 gh api --paginate "repos/$REPO/pulls/$PR/comments" --jq '.[] | {
@@ -55,7 +58,7 @@ gh api --paginate "repos/$REPO/pulls/$PR/comments" --jq '.[] | {
   body, created_at, updated_at,
   in_reply_to: .in_reply_to_id,
   url: .html_url
-}' > .review-agent/comments-inline.jsonl
+}' > "$FETCH_DIR/comments-inline.jsonl"
 
 # 4. Reviews. Keep empty bodies: APPROVED and CHANGES_REQUESTED are verdicts
 #    that live in `state`, not in `body`.
@@ -65,7 +68,7 @@ gh api --paginate "repos/$REPO/pulls/$PR/reviews" --jq '.[] | {
   association: .author_association,
   state, commit_id, body, submitted_at,
   url: .html_url
-}' > .review-agent/reviews.jsonl
+}' > "$FETCH_DIR/reviews.jsonl"
 ```
 
 `--paginate` on all three list endpoints. The API returns 30 oldest-first per page;
@@ -105,7 +108,7 @@ gh api graphql --paginate -f query='
     }
   }' -f owner="${REPO%/*}" -f name="${REPO#*/}" -F pr="$PR" \
   --jq '.data.repository.pullRequest.reviewThreads.nodes[]' \
-  > .review-agent/threads.jsonl
+  > "$FETCH_DIR/threads.jsonl"
 ```
 
 The `$endCursor` variable and the `pageInfo` block are both required — `gh` needs the
@@ -547,7 +550,7 @@ costs one substitution.
 
 ## The ledger
 
-Stage 1 ends by writing `.review-agent/pr-${PR}.json`. Everything downstream is
+Stage 1 ends by writing `$LEDGER` (`$RUN_DIR/pr-${PR}.json`). Everything downstream is
 measured against it, and Stage 5 cannot finish while any entry is `open`.
 
 **Creating the ledger and re-fetching into it are different writes.** Stage 5 re-runs

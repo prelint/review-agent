@@ -21,21 +21,95 @@ thread join in `reference/intake.md` are the only two. The previous version made
 ## Stage 0: Bind the run
 
 ```bash
+if ! gh auth status -h github.com >/dev/null 2>&1; then
+  echo "review-agent: gh is not authenticated; run gh auth login -h github.com" >&2
+  exit 1
+fi
+
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 PR=${1:-$(gh pr view --json number --jq .number)}
+if [ -z "$PR" ]; then
+  echo "review-agent: no pull request was supplied or found for this checkout" >&2
+  exit 1
+fi
+
 BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
+PR_HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
 git fetch origin "$BASE" --quiet
+git fetch origin "refs/pull/$PR/head" --quiet   # the gate below needs that object locally
 DIFF_BASE=$(git merge-base "origin/$BASE" HEAD)
 WORKDIR=$(git rev-parse --show-toplevel)   # absolute; pass to every specialist
 HEAD_SHA=$(git rev-parse HEAD)             # the reviewed SHA, for the ledger only:
                                            # Stage 4 commits, so it is stale after that
+if ! git merge-base --is-ancestor "$PR_HEAD_SHA" HEAD; then
+  echo "review-agent: PR head $PR_HEAD_SHA is not reachable from checkout $HEAD_SHA" >&2
+  exit 1
+fi
+
+CI_MERGE=no                                # the Actions pull_request ref, and only that:
+if [ "$(git rev-parse -q --verify 'HEAD^2')" = "$PR_HEAD_SHA" ] &&
+   git merge-base --is-ancestor 'HEAD^1' "origin/$BASE"; then
+  CI_MERGE=yes                             # base branch on one side, PR head on the other
+fi
+
+if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] && [ "$CI_MERGE" = no ]; then
+  EXTRA=$(git log --format=%h -E --invert-grep --grep='^Finding: ' "$PR_HEAD_SHA..HEAD")
+  if [ -n "$EXTRA" ]; then
+    echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
+    exit 1
+  fi
+fi
+
+if [ -n "$(git status --porcelain -uno)" ]; then
+  echo "review-agent: uncommitted tracked changes would be read as part of the PR" >&2
+  exit 1
+fi
+
 SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
                                            # prior comments to rebuild the last ledger
-LEDGER=".review-agent/pr-${PR}.json"
+RUN_DIR="$WORKDIR/.review-agent"
+FETCH_DIR="$RUN_DIR/fetch-stage1"
+LEDGER="$RUN_DIR/pr-${PR}.json"
+mkdir -p "$FETCH_DIR"
 ```
 
 Confirm `DIFF_BASE` resolves and `git diff "$DIFF_BASE" --stat` is non-empty. Fail
 here, in the parent, rather than inside eight subagents that each rediscover it.
+
+**Confirm `PR_HEAD_SHA` is reachable from `HEAD` before reading the diff.** The PR number
+names the conversation and `HEAD` names the code; a review is valid only when the code
+contains the commit the conversation is about. **Reachable, not equal** — Stage 4 commits
+before Stage 5 pushes, so a resumed run is legitimately ahead of the PR head, and an
+Actions `pull_request` checkout sits on a merge commit whose second parent is that head.
+Equality rejects both, and a fleet that hits either one exits here every hour forever.
+What is actually wrong is a `HEAD` the PR head cannot reach — a stale or unrelated
+checkout. Stop there, and say which two SHAs differed. Never review one PR's comments
+against another branch's diff.
+
+**Reachable is not sufficient on its own** — commits stacked on top of the PR head are
+read as if the PR contained them. Exactly two kinds belong there: this run's own Stage 4
+fixes, which carry a `Finding:` trailer, and the Actions merge commit. Anything else is
+somebody's unpushed work, and reviewing it is the same defect as reviewing an
+uncommitted edit. The trailer match is anchored to the start of a line so that prose
+merely mentioning `Finding: ` does not count.
+
+**Test the merge exception on both parents.** A second parent equal to the PR head is
+half the shape; the other half is a first parent that is base-branch history. Checking
+only the second lets any hand-built merge skip the trailer check entirely, carrying
+whatever its first parent holds into the diff — `DIFF_BASE` is a merge-base against
+`origin/$BASE`, so first-parent commits absent from the base branch survive into it.
+
+**This gate is a mistake-catcher, not a boundary.** Everything above the PR head is
+local to whoever is running the review, and a marker in a commit message cannot be made
+to prove authorship. It exists to catch the operator who forgot what was on their
+branch, which is the realistic failure; someone who writes the trailer deliberately is
+reviewing their own work on purpose, and no string check reaches that.
+
+**A matching SHA is necessary and not sufficient — the tree has to be clean too.**
+`git diff "$DIFF_BASE"` and every specialist's copy of it read the *working tree*, not
+`HEAD`, so an uncommitted tracked edit is reviewed as if the PR contained it. `-uno`
+because untracked files cannot reach that diff, and `.review-agent/` is gitignored, so
+the run's own state never trips the gate.
 
 **Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
 or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — and the
