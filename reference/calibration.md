@@ -49,6 +49,15 @@ agent driving the PR through this same skill cannot leave a ledger item open —
 will not let it. Humans forget to cite and leave threads dangling; the unknown bucket
 is small here and large everywhere else.
 
+**The first row assumes the target repo does not squash on merge.** A squash collapses
+the fix commits and their trailers into one message, so the `Useful` outcome is
+unrecoverable from the merged history and those findings land in `Unknown` instead. This
+is the calibrate pass's constraint alone: a review run greps the PR branch, which still
+carries every commit while the PR is open, and Stage 5 refuses to run on a merged PR. On
+a squashing repo, read the row from the branch before merge or accept the larger unknown
+bucket — and the file already says a large unknown bucket means the number is not
+trustworthy.
+
 ### The hazard, and it is real
 
 Agents comply. An agent author will fix almost anything it is told to fix, so "a
