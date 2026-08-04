@@ -10,7 +10,18 @@ artifact that could answer.
 
 ## 1. Re-fetch
 
-Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
+Re-run the Stage 1 fetch into a new absolute directory. All of Stage 2–4 took time; the
+PR moved, but the raw Stage 1 snapshot is still the before-state and must not be overwritten:
+
+```bash
+STAGE1_FETCH_DIR="$RUN_DIR/fetch-stage1"
+FETCH_DIR="$RUN_DIR/fetch-stage5"
+mkdir -p "$FETCH_DIR"
+```
+
+Run `reference/intake.md`'s fetch commands with that `FETCH_DIR`, then compare the two
+directories. Do not infer the before-state only from the ledger: the raw bodies, timestamps,
+thread state and PR metadata are the evidence for whether an item moved.
 
 - New comments since Stage 1 → new ledger items. Process them, or record them
   `deferred` with a reason and say so in the summary. Silently ignoring them is how
@@ -18,7 +29,45 @@ Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
 - Changed `substance_hash` on any existing item → it re-opens, even if it was `fixed`.
   A `body_hash` that moved alone is a typo or a reformat: store it and leave the item
   closed. The full table is in `intake.md`.
-- Changed `pr_substance_hash` → re-run `spec-drift` before continuing.
+- Changed `pr_substance_hash`, and `stage5_reentries` is `0` → re-run `spec-drift`
+  before continuing. Once the counter is `1` the sub-section below owns this case and
+  bars the second run; without the qualifier the two instructions contradict each other
+  on exactly the pass the bound exists for.
+
+### One re-entry, then defer
+
+**Stage 5 may return to Stages 2–4 once per run.** Collect every new or changed item from
+one re-fetch into a batch before deciding:
+
+1. When `stage5_reentries` is `0`, set it to `1` in the ledger, process the whole batch
+   through the required earlier stages, then restart this section and re-fetch once more.
+2. When `stage5_reentries` is already `1`, do not return again. Classify the late batch;
+   `informational` claims stay informational, and every actionable new or changed claim is
+   `deferred` with the reason `arrived after the bounded Stage 5 re-entry` and an issue
+   link. A changed PR description is a changed item under the same rule — it is the
+   `description` item `intake.md` defines, and its claim is where that reason and that
+   issue link go; do not launch `spec-drift` a second time.
+3. Name those deferrals in the summary, **in the author's terms, not these ones**. The
+   ledger's `reason` is machine-traceable and stays as written; the summary line says what
+   happened and what to do about it — "arrived while this run was finishing and was not
+   reviewed — re-run the agent to pick it up". A reader who does not know this skill has
+   stage numbers gets a fact they can act on instead of one they cannot. They are closed
+   ledger statuses, not permission to imply that the late changes were reviewed.
+
+The issue link is the one section 2 already specifies: fold into an open issue on the same
+surface before opening a new one. There is no standing "late arrivals" issue to point at,
+and #19 closes with this change — a deferral linked there would land on a closed issue.
+
+The counter is run-local, and **the re-fetch above must not reset it.** Stage 1 writes
+`stage5_reentries` only when it creates the ledger; re-running its fetch against a ledger
+that already exists updates items, hashes and watermarks and leaves this field alone.
+Without that carve-out the bound erases itself: step 1 sends the run back through section
+1, section 1 re-runs the Stage 1 fetch, and a Stage 1 that rewrites the ledger head puts
+the counter back to `0` — so step 2 is unreachable and the cycle this section exists to
+close stays open.
+
+Recording the counter in the ledger is what keeps a resumed Stage 5 from inventing
+whether its one return was already spent.
 
 ## 2. Reconcile
 
@@ -36,6 +85,10 @@ Every claim on every ledger item must be one of:
 and do not fix: fix it now, or file it where someone will see it. "Noted it" is not a
 third ending — a silent deferral costs the fix entirely, and an issue costs one
 paragraph.
+
+**An accepted fix that you attempted and could not complete is `deferred`.** The linked
+issue records what you tried and why it failed. It is not `rebutted`, because the claim is
+still true, and not `unresolvable`, which requires a fix commit that already exists.
 
 **Too minor to file is too minor to defer.** A real finding that does not warrant an
 issue is not stuck between the two endings — it takes the first one at a lower
@@ -68,9 +121,10 @@ been restated in three places and a third cause would have had to find all three
    its first comment was deleted.
 2. **A reply or resolve that errored**, per section 6. Any surface can hit this one.
 
-**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment and
-a review body have no thread, so null on either is the right answer rather than a failure,
-and they close as `fixed` or `informational` like anything else. Reading null as a failure
+**A null `thread_id` makes only an `inline` item unresolvable.** A top-level comment, a
+review body and the PR description have no thread, so null on any of them is the right
+answer rather than a failure, and they close as `fixed`, `deferred` or `informational`
+like anything else. Reading null as a failure
 on every surface turns ten items of thirteen unresolvable on a real PR and posts a warning
 about threads that never existed.
 
@@ -104,9 +158,9 @@ Three causes, all legitimate:
 
 - **The cap.** Section 7's "plus N similar" line is the count; a `dropped` finding
   missing from it has vanished.
-- **Silence.** Section 7 posts nothing when nothing blocks and every item is closed, so
-  an unfixed `Required:` is dropped by it too — not only nits. Silence is a decision not
-  to spend the author's attention, never a decision to forget.
+- **Silence.** The final checklist permits silence only when the remaining findings are
+  `NIT`/`FYI` and no ledger item needed a reply. Those low-severity findings are dropped,
+  not forgotten.
 - **Dedupe.** `verification.md` suppresses a finding matching a reviewer's ledger item or
   one we posted on an earlier run. Record which it merged into.
 
@@ -127,7 +181,7 @@ did not survive to be read.
 Before writing anything public:
 
 ```bash
-gh pr view "$PR" --json state,mergedAt,baseRefName,isDraft
+gh pr view "$PR" --json state,mergedAt,baseRefName
 ```
 
 Stop if closed, merged, or the base branch changed — changed against the ledger's
@@ -137,7 +191,7 @@ merged PR is pure noise and it happened in the record.
 ## 4. Refuse to report success
 
 The gate is the agent's own refusal, not a repository setting. **Do not report a clean
-result while a ledger item is open or a `Blocker:` is still unfixed.** A blocker that
+result while a ledger item is open or a `BLOCKER` is still unfixed.** A blocker that
 survived Stage 3 and was fixed in Stage 4 is not outstanding — what blocks is what is
 unfixed now, not what the gate saw. Say what is outstanding, in the session output and
 in the summary comment, and exit non-zero if the host gives you an exit code.
@@ -179,8 +233,13 @@ print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in clo
   || LEDGER_UNREADABLE=1
 
 BLOCKERS=$(python3 -c 'import json,sys
-print(sum(1 for f in json.load(open(sys.argv[1])).get("findings", [])
-          if f.get("severity") == "BLOCKER" and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER") \
+led = json.load(open(sys.argv[1]))
+print(sum(1 for i in led["items"] for c in i["claims"]
+          if c.get("severity") == "BLOCKER"
+          and c.get("status") not in {"fixed", "rebutted", "unresolvable"})
+    + sum(1 for f in led.get("findings", [])
+          if f.get("severity") == "BLOCKER"
+          and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER") \
   || LEDGER_UNREADABLE=1
 
 if [ -n "$LEDGER_UNREADABLE" ]; then
@@ -203,9 +262,9 @@ has the same defect plus one more: the commit it names is not on the remote yet.
 whose status is not one of the five section 2 accepts — **claims, because that is where
 status lives**; an item carries none, and `i["status"]` raises `KeyError` on every
 ledger `intake.md` describes — plus every finding of ours still open. `$BLOCKERS` is
-derived from that same array: `BLOCKER` findings that are neither `fixed` nor
-`rebutted`. Nothing decrements it, so it cannot disagree with the statuses it is
-computed from.
+derived from both arrays: reviewer claims and findings carrying `BLOCKER`, with their
+schema-defined fixed endings excluded. Nothing decrements it, so it cannot disagree with
+the statuses it is computed from.
 
 `closed_finding` is `intake.md`'s five endings, spelled out because bash cannot read a
 table. Add a sixth status there and not here and every finding carrying it counts as
@@ -220,8 +279,8 @@ reading and the one that keeps the status truthful.
 
 Compute both after Stage 4, never before — the count that survived the gate is not the
 count still open, and posting the first one reds a head where every blocker is already
-fixed. Section 7's silence rule is a separate question and keeps its Stage 3 wording: a
-blocker found and fixed still gets said out loud. An unassigned counter makes
+fixed. Section 7's silence checklist is a separate question: a blocker found and fixed
+still gets said out loud. An unassigned counter makes
 `[ "$OPEN_CLAIMS" -eq 0 ]` an error, and the `else` branch posts `failure` on a clean
 head — the exact defect this section exists to prevent.
 
@@ -329,7 +388,7 @@ limit, and every run afterwards pages the grown comment set back in.
 Resolve a thread when its fix commit exists **and** `thread_id` is not null. Skip the
 mutation entirely when it is null — calling it with an empty argument errors. On an
 `inline` item that null is the `unresolvable` case and is already accounted for; on a
-`top` or `review` item there is no thread to resolve and nothing is owed.
+`top`, `review` or `description` item there is no thread to resolve and nothing is owed.
 
 ```bash
 gh api graphql -f query='
@@ -428,11 +487,12 @@ resolved on arrival, claim closed two commits later by this run.
 
 ## 7. The summary — or silence
 
-**If nothing blocking survived Stage 3 and every ledger item is closed, post nothing.**
-Push the fixes and stop. A clean PR does not need an announcement, and the record's
-worst comment was 10 KB reporting "0 blocking, 6 informational".
+**Decide once, with the silence checklist at the end of this file.** Do not derive a
+second decision from blocker and ledger counts here. The rest of this section defines
+what a required summary contains; a clean PR still does not need an announcement.
 
-**Four exceptions, and each of them means "silence would be a lie".**
+**Four delivery and coverage failures require their own summary line.** In each case,
+silence would be a lie.
 
 **An unreadable ledger.** Section 5 skips the status when it cannot read the ledger, and
 sections 6 and 7 then run with nothing to announce — so the PR ends up carrying no
@@ -452,8 +512,9 @@ so the summary is the only place it can land. One line, and it does not block:
 No answer from: coherence. That lens's coverage is missing from this review.
 ```
 
-Not-dispatched reasons are a different thing and stay out of this: they are a lens
-correctly declining, not a lens failing.
+Not-dispatched reasons are a different thing: they are a lens correctly declining, not a
+lens failing, so they do not break silence. Name every reason in the session output. When
+another exception causes a summary, include them there in one compact coverage line too.
 
 **An `unresolvable` item.** Silence means "nothing needs your attention", and an
 `unresolvable` item leaves a thread open that nobody will close. If any item carries
@@ -471,9 +532,9 @@ a single label over a mixed set sends the maintainer to check the wrong thing. T
 line is not "fixed but not resolvable": the claims on it may be rebuttals or deferrals,
 and calling those fixed would be worse than saying nothing.
 
-**A third exception: any claim carrying `delivery: "failed"`.** Same reason as the other
-two. The decision is sound and the author never heard it, so silence would report a
-conversation that did not happen.
+**A failed delivery.** Any claim carrying `delivery: "failed"` needs the line for its
+failure cause. The decision is sound and the author never heard it, so silence would
+report a conversation that did not happen.
 
 Silence here would be a lie of exactly the kind the ledger exists to prevent: the
 work is done, the PR still looks unaddressed, and nothing says why.
@@ -484,10 +545,13 @@ Otherwise, one top-level comment. Hard caps:
   first trailer marker; HTML marker lines and the blank line before them are excluded.
   GitHub receives the visible body plus the trailer, so the raw comment may exceed 2,000
   while the part a human reads may not. **When the visible budget binds, cut in this
-  order:** non-blocking findings first, down to the count line; then the not-dispatched
-  reasons; then prose. Never the three visible lines silence cannot suppress — a dead
-  lens, `unresolvable` items, failed deliveries. Those are the summary's whole reason for
-  existing on a run that would otherwise be quiet.
+  order:** non-blocking findings first, down to the count line; then compress the
+  not-dispatched line from reasons to lens names; then prose. Never delete the coverage
+  line, or the three visible lines silence cannot suppress — a dead lens, `unresolvable`
+  items, failed deliveries. Those are the summary's whole reason for existing on a run
+  that would otherwise be quiet. Excluding the trailer does not make the budget loose —
+  the mandatory visible lines still spend it — so which line gives has to be written down
+  rather than decided in the moment.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
@@ -587,20 +651,21 @@ bite hardest here:
 - **One structural problem and ten nits means the structural problem *is* the review.**
   Post it alone.
 
-## Refusing to post
+## The silence checklist
 
 Post nothing when **all** of these hold:
 
+- No reviewer claim or finding remains `BLOCKER` under section 5's derived count.
 - No claim is `unresolvable`.
 - No claim carries a `delivery` failure.
 - No lens was classified as dead.
 - The ledger parsed.
-- Everything found is in `exclusions.md`, **or** the only findings are `Nit:`/`FYI:`
+- Everything found is in `exclusions.md`, **or** the only findings are `NIT`/`FYI`
   and no ledger item needed a reply.
 - A prior review by us exists at this head SHA and nothing re-opened.
 
-The first three are gates, not options among five. An `unresolvable` item, an undelivered
-claim or a dead lens posts regardless of what the others say — each is a case where
-silence states something untrue.
+Every condition is required. An unfixed blocker, an `unresolvable` item, an undelivered
+claim, a dead lens or an unreadable ledger posts regardless of what the others say — each
+is a case where silence states something untrue.
 
 Say what you did in the session output instead. The PR is not a log.

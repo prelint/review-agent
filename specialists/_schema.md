@@ -94,10 +94,11 @@ JSON, one object per line, nothing else. No prose before or after.
 
 ### Not dispatched
 
-You are dispatched on every review. **Your first job is to read line 5 of your own
-file.** It is either `**Runs on every review.**` — you review, always — or a
-`**Runs when**` clause you test against the diff. Only the second can fail to match.
-If it does not, emit exactly one object and stop:
+You are dispatched on every review. **Your first job is to read your complete opening
+`**Runs ...**` paragraph, through the first blank line.** It either says
+`**Runs on every review.**` — you review, always — or carries a `**Runs when**` clause
+you test against the diff. Only the second can fail to match. If it does not, emit exactly
+one object and stop:
 
 ```json
 {"kind":"not-dispatched","specialist":"money","why":"no billing, credits, invoice, voucher, refund, metering or Stripe path in the diff"}
@@ -148,7 +149,7 @@ The kinds:
 | findings | one object per finding, no `kind` field, closed by `end` |
 | `end` | the last line after findings, carrying how many you sent |
 | `clean` | you reviewed and found nothing |
-| `not-dispatched` | line 5's trigger did not match the diff |
+| `not-dispatched` | the opening trigger paragraph did not match the diff |
 | `cleared` | what you checked and found sound — `red-team` only, and it precedes findings rather than replacing them |
 
 `clean` and `cleared` are different answers. `cleared` accompanies findings; `clean` is
