@@ -1,9 +1,10 @@
 # Calibration
 
-**Status: not implemented.** This file describes the mechanism. Nothing in Stages 1–5
-reads or writes a threshold today; `verification.md` uses a flat 80 for every
-category. Written down because an earlier draft claimed a feedback loop existed and it
-did not.
+**Status: markers ship, the loop does not.** Step 1 below is done — `output.md` requires
+the HTML marker on every posted finding, carrying `category`, `fingerprint` and `score`
+plus `severity` and `status`. Steps 2 and 3 are not built: no threshold file exists, and
+nothing in Stages 1-5 reads or writes a per-category threshold. Written down because an
+earlier draft claimed the whole feedback loop existed and it did not.
 
 ## The problem this has to solve
 
@@ -69,18 +70,12 @@ Until someone has looked at a sample, treat every rate as provisional.
 ## Making findings findable later
 
 A finding posted today must be identifiable months later by a process that was not
-running when it was posted. One invisible marker does it:
+running when it was posted. The invisible marker `output.md` already requires on every
+posted finding does it. HTML comments do not render on GitHub, and without one, category
+is unrecoverable from a posted comment and per-category rates cannot be computed at all.
 
-```html
-<!-- review-agent: {"fingerprint":"backend/apps/billing/services.py:charge_org:tenancy","category":"tenancy","score":88,"severity":"REQUIRED","status":"posted"} -->
-```
-
-HTML comments do not render on GitHub. Without this, category is unrecoverable from a
-posted comment and per-category rates cannot be computed at all. This ships first or
-nothing else works.
-
-`output.md` owns the format and writes it; the fields this file needs are `category`,
-`fingerprint` and `score`, and it must tolerate the others being added.
+`output.md` owns the format. This file reads `category`, `fingerprint` and `score` off
+it, and must tolerate the others being added.
 
 ## The calibrate pass
 
@@ -149,8 +144,10 @@ evidence.
 
 ## Order of work
 
-1. HTML markers on posted findings. Nothing else works without it.
+1. ~~HTML markers on posted findings.~~ Done — `output.md` requires one on every posted
+   finding. Nothing else works without it.
 2. `review-agent.thresholds.json`, read by Stage 3, hand-edited at first.
 3. The `calibrate` pass, with the human sample built in from the start.
 
-Until (1) ships, no calibration claim belongs in any other file in this repo.
+Until (2) ships, a per-category threshold claim belongs in no other file in this repo.
+A run still reads one flat number from `verification.md`.
