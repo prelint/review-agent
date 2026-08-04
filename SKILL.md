@@ -176,7 +176,7 @@ Do not route around this by asserting high confidence.
 
 **Filter 2 — independent scoring.** A scoring agent that did **not** find the issue
 scores each survivor 0–100 against the rubric in `reference/verification.md`, passed
-verbatim. Below 80 dies. The finder is invested; the scorer is not.
+verbatim. Below 70 dies. The finder is invested; the scorer is not.
 
 Then apply `reference/exclusions.md` as a blocklist. Anything matching a listed
 pattern is dropped regardless of score.
