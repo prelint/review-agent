@@ -186,9 +186,9 @@ the one with the better evidence and record both categories.
 
 **Filter 3 — likelihood.** Score says whether the claim is true; likelihood says
 whether it ever fires. Every finding arrives with a `likelihood` band and a named
-`condition`. `remote` downgrades one step — `Blocker:`→`Required:`,
-`Required:`→`Nit:` — keeping the condition in the text. `unverified` does not
-downgrade: label it and say what you would need to check it. `Blocker:` requires
+`condition`. `remote` downgrades the stored severity one step — `BLOCKER`→`REQUIRED`,
+`REQUIRED`→`NIT` — keeping the condition in the text. `unverified` does not
+downgrade: label it and say what you would need to check it. `BLOCKER` requires
 `plausible` or better. **This filter downgrades and never drops** — the author may
 know the condition is reachable for reasons the diff does not show. A downgrade with
 no stated condition is a review bug; send it back.
@@ -220,11 +220,11 @@ Commit immediately. Do not batch. Do not defer to a later "ship" step. An interr
 run must leave a clean tree, and `git log` must be a complete answer to "did you
 address this?".
 
-**A blocker you fix stops being a blocker.** Set that finding's `status` to `fixed`
-with its commit SHA in the same step that commits. The blocker count is derived from
-those statuses, so there is nothing to decrement and no way for the count to drift from
-what `git log` shows. Only `fixed` and `rebutted` stop something blocking: a blocker you
-post or defer is still unfixed and still counts.
+**A blocker you fix stops being a blocker.** Set that finding or reviewer claim's
+`status` to `fixed` with its commit SHA in the same step that commits. The blocker count
+is derived from those statuses, so there is nothing to decrement and no way for the count
+to drift from what `git log` shows. `reference/output.md` owns the exact closed sets; a
+blocker you defer is still unfixed and still counts.
 
 **Fix every instance the finding reaches.** Correcting a pattern in one file and
 leaving its copies is not a smaller fix, it is a half-migration — and the un-migrated
@@ -242,6 +242,10 @@ with the evidence that refutes it. A rebuttal is an outcome, not a failure.
 
 **When a claim is unclear**, stop and ask before implementing *any* of a linked set.
 Partial understanding of related items produces the wrong fix.
+
+**When you accept a claim, attempt its fix, and cannot complete it**, record it as
+`deferred` with an issue link. Put what you tried and why it failed in the issue. It is
+not a rebuttal, and leaving it `open` only hides that an attempt was made.
 
 **Never** say "you're absolutely right", "great catch", or thank a reviewer. State
 the fix. The commit shows you heard it.
@@ -263,7 +267,7 @@ Read `reference/output.md`. In order:
    status in step 5 counts anything still `open`. Step 7 posts what is marked `posted`.
 3. **Re-check eligibility.** Is the PR still open, still unmerged, still the same
    base? All of Stage 2–4 took time. Verify before writing anything public.
-4. **Never report success with an open item or a surviving `Blocker:`.** That refusal
+4. **Never report success with an open item or a surviving `BLOCKER`.** That refusal
    is the gate.
 5. **Push**, then post the commit status if the repo wants one — optional,
    repo-dependent, and after the push so it lands on the SHA that is now the head.
@@ -271,8 +275,8 @@ Read `reference/output.md`. In order:
 6. **Reply in threads, not at the top.** Inline findings get inline replies on their
    own thread. Resolve a thread only when its fix commit exists; never auto-resolve a
    rebuttal.
-7. **Post the summary — or don't.** If nothing blocking survived Stage 3 and every
-   ledger item is closed, post nothing. A clean PR does not need an announcement.
+7. **Post the summary — or don't.** Apply `reference/output.md`'s single silence
+   checklist. Do not derive a second rule from blocker and ledger counts here.
 
 ### Output caps
 

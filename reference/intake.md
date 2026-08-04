@@ -469,7 +469,13 @@ For each item, before any trust decision:
 
    A comment carrying one finding is one claim. The shape does not change; only the
    place the status sits.
-6. **Trust tier** — see below.
+6. **Assign claim severity.** Store the same uppercase enum Stage 3 uses. An explicit
+   `Blocker:` / `Required:` / `Nit:` / `FYI:` prefix on that claim wins. Otherwise, an
+   actionable claim in a `CHANGES_REQUESTED` review is `BLOCKER`, any other actionable
+   claim is `REQUIRED`, and an unlabelled informational claim has `severity: null`. A
+   reviewer's label is not accepted on trust: verification may rebut it, which is one of
+   the endings that stops it blocking.
+7. **Trust tier** — see below.
 
 ## Trust tiers
 
@@ -566,6 +572,7 @@ in Stage 5.
         {
           "n": 1,
           "text": "the first numbered point, verbatim or to its first sentence",
+          "severity": "REQUIRED",
           "status": "open",
           "resolution": null,
           "delivery": null
@@ -597,14 +604,16 @@ against the finding it claimed to fix.
 **Finding statuses.** `open`, `fixed` (a commit SHA), `posted` (it went in the summary
 and the author owns it), `deferred` (a reason and an issue link), `rebutted` (the
 evidence disproving our own claim), `dropped` (the summary never carried it — record
-which of `output.md`'s two rules kept it out). Not `informational` or `unresolvable`: a
+which of `output.md`'s three causes kept it out). Not `informational` or `unresolvable`: a
 finding of ours always asks for something, and it has no thread to fail to close.
 
-**`surviving_blockers` is derived, never stored.** Count the `findings` whose `severity`
-is `BLOCKER` and whose `status` is neither `fixed` nor `rebutted` — the only two endings
-that stop something blocking. A posted or deferred blocker is still unfixed and still
-counts. The stored field was decremented by hand, and nothing checked a decrement
-against a real fix. `output.md` computes it where it is read.
+**`BLOCKERS` is derived, never stored.** Count two sets: findings whose `severity` is
+`BLOCKER` and whose status is neither `fixed` nor `rebutted`; and reviewer claims whose
+`severity` is `BLOCKER` and whose status is none of `fixed`, `rebutted`, or
+`unresolvable`. `unresolvable` requires a verified fix commit, so it closes the code
+obligation even when GitHub could not close the thread. A deferred blocker is still
+unfixed and still counts. The stored field was decremented by hand, and nothing checked a
+decrement against a real fix. `output.md` computes both sets where they are read.
 
 `state` is the verdict on a `review` item — `APPROVED`, `CHANGES_REQUESTED`,
 `COMMENTED` — and `null` on every other surface. Carry it: it is the only field that
@@ -613,6 +622,10 @@ distinguishes a blocking review from a bodiless one.
 `deferred`, `informational`, `unresolvable`. An item is closed when every one of its
 claims is closed, and not before. A single-finding comment is one claim — the shape
 does not change, only the place the status sits.
+`severity` is the uppercase `BLOCKER`, `REQUIRED`, `NIT` or `FYI` enum, or `null` for an
+unlabelled informational claim. Re-derive it from the current review state and claim
+prefix on every fetch; reply markers restore decisions, not reviewer wording that the API
+still carries.
 `resolution` carries the commit SHA, the evidence, or the reason.
 `delivery` is `null` until a reply or resolve for that claim errors, then `"failed"` with
 the URL. It is separate from `status` because they answer different questions: `status` is

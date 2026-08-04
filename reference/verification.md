@@ -234,13 +234,17 @@ Assign after scoring, never before. Score is "is this real"; severity is "how mu
 does it matter"; likelihood is "will it fire". All three are independent, and
 conflating any two inflates both.
 
-| Prefix | Meaning |
-|---|---|
-| `Blocker:` | Breaks behaviour, leaks data, loses money, or blocks rollback — **and** `likelihood` is `plausible` or better. Merging is wrong. |
-| `Required:` | A real defect that should be fixed in this PR. |
-| `Nit:` | Minor. The author may decline it without justifying the decision. |
-| `FYI:` | No action wanted. Context only. |
+**Store uppercase bare enum values; add punctuation only when rendering a comment.**
+`BLOCKER` in the schema and ledger renders as `Blocker:`. The same mapping applies to
+the other three values.
 
-Reserve `Blocker:` for the four named consequences. Everything else is `Required:` at
+| Stored | Rendered | Meaning |
+|---|---|---|
+| `BLOCKER` | `Blocker:` | Breaks behaviour, leaks data, loses money, or blocks rollback — **and** `likelihood` is `plausible` or better. Merging is wrong. |
+| `REQUIRED` | `Required:` | A real defect that should be fixed in this PR. |
+| `NIT` | `Nit:` | Minor. The author may decline it without justifying the decision. |
+| `FYI` | `FYI:` | No action wanted. Context only. |
+
+Reserve `BLOCKER` for the four named consequences. Everything else is `REQUIRED` at
 most. An unlabelled finding reads as mandatory, which is how a review of eleven nits
 becomes a day of someone's work.
