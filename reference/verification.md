@@ -125,7 +125,7 @@ judge.
 **Watch for a dead scorer.** The failure mode is silent: a scorer that errors on every
 call returns unparseable output, every finding counts as 100, and the review looks
 unusually decisive. Three signatures, all cheap to check before posting — every finding
-in a review scoring exactly 100, no finding ever landing between 70 and 88, or the gate
+in a review scoring exactly 100, no finding ever landing between 70 and 99, or the gate
 killing nothing at all across a whole run. Say so in the summary when you see any of
 them. A gate that has stopped filtering reads exactly like a gate that found nothing to
 filter.
