@@ -130,9 +130,20 @@ Coverage: clean — money, security, tenancy; cleared — red-team (7 checks).
 ```
 
 This line does not break silence by itself. A clean review may still post nothing; its
-full coverage remains in the session output. If the visible-character budget binds,
-reduce the line to lens names and counts, never remove it from a summary that is already
-being posted.
+full coverage remains in the session output.
+
+**It degrades to counts, and counts have a fixed cost.** Naming the lenses is already the
+compressed form, and it is not bounded: eighteen lenses that answer clean is a roster of
+roughly 270 characters against a budget this file calls nearly exhausted. When the budget
+binds, drop the names and post the counts alone —
+
+```
+Coverage: 15 clean, 1 cleared, 2 not-dispatched.
+```
+
+— which costs the same on every run whatever the lenses did. That form is never removed
+from a summary that is already being posted. The named form is a courtesy the budget
+grants when it can afford it, not a floor.
 
 **Stamp `reconciled_at_head` when reconciliation finishes**: `git rev-parse HEAD`, never
 `$HEAD_SHA`. Stage 0 bound that before Stage 4 committed anything, so the two fields
@@ -501,13 +512,19 @@ work is done, the PR still looks unaddressed, and nothing says why.
 Otherwise, one top-level comment. Hard caps:
 
 - **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
-  non-blocking findings first, down to the count line; then the not-dispatched reasons;
-  then prose. Compress coverage to lens names and counts but do not remove it. Never the
-  markers, and never the three lines silence cannot suppress — a dead lens,
+  the coverage line's lens names, leaving its counts; then non-blocking findings, down to
+  the count line; then the not-dispatched reasons; then prose. Never the coverage counts,
+  never the markers, and never the three lines silence cannot suppress — a dead lens,
   `unresolvable` items, failed deliveries. Those are the summary's whole reason for
   existing on a run that would otherwise be quiet. The mandatory lines added here spend
   budget that issue #23 already measured as nearly exhausted, so which line gives has to
   be written down rather than decided in the moment.
+
+  **Coverage gives before findings do.** A roster of lenses that found nothing is worth
+  less of a bounded budget than a defect the author has to act on, and it is the only
+  element here whose cost grows with the number of lenses rather than with what the review
+  found. Cutting a finding to keep a lens name also mislabels the ledger: that finding is
+  recorded `dropped` with reason `cap`, on a run where the 5-finding cap never bound.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
