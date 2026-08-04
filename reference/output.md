@@ -575,10 +575,10 @@ Otherwise, one top-level comment. Hard caps:
 - **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
   the coverage line's detail — the not-dispatched reasons first, then the clean, cleared
   and not-dispatched lens names — leaving its counts; then non-blocking findings, down to
-  the count line; then prose. Never delete the coverage line, the markers, or the three
-  lines silence cannot suppress — a dead lens, `unresolvable` items, failed deliveries.
-  Those are the summary's whole reason for existing on a run that would otherwise be
-  quiet. The mandatory lines added here spend budget that issue #23 already measured as
+  the count line; then prose. Never delete the coverage line, the markers, or the four
+  lines silence cannot suppress — an unreadable ledger, a dead lens, `unresolvable` items,
+  failed deliveries. Those are the summary's whole reason for existing on a run that would
+  otherwise be quiet. The mandatory lines added here spend budget that issue #23 already measured as
   nearly exhausted, so which line gives has to be written down rather than decided in the
   moment.
 
