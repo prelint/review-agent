@@ -73,13 +73,17 @@ not, and that is the entire mechanism.
 >   scrutiny, or a pre-existing issue not introduced by this change.
 > - **25** — Somewhat confident. Might be real, might not. You could not verify it.
 >   If stylistic, it is not called out in any project convention file.
-> - **50** — Moderately confident. Verified as real, but it may be a nitpick or rare
->   in practice. Relative to the rest of this change, not important.
-> - **75** — Highly confident. Double-checked and verified; very likely to be hit in
->   practice. The current approach is insufficient. Directly affects functionality,
->   or is explicitly required by a project convention file.
-> - **100** — Certain. Double-checked and confirmed as definitely real, frequent in
->   practice, with evidence that directly demonstrates it.
+> - **50** — Moderately confident. Verified as real, but it may be a nitpick.
+>   Relative to the rest of this change, not important.
+> - **75** — Highly confident. Double-checked and verified. The current approach is
+>   insufficient. Directly affects functionality, or is explicitly required by a
+>   project convention file.
+> - **100** — Certain. Double-checked and confirmed as definitely real, with evidence
+>   that directly demonstrates it.
+>
+> **Do not lower the score because the bug is rare, or because the path that reaches
+> it is hard to hit.** Score only whether the claim is true. How often it fires is
+> judged separately, after you.
 >
 > If the finding cites a project convention, verify the convention file actually says
 > that. Do not take the finder's word for it.
@@ -88,6 +92,19 @@ not, and that is the entire mechanism.
 > one. Score it from the evidence alone.
 >
 > Return only: `{"score": N, "why": "<one sentence>"}`
+
+**Rarity used to be in the rubric, and it double-counted.** The 50 anchor said "or rare
+in practice" and the 75 anchor said "very likely to be hit in practice", so a scorer
+docked a verified finding for being hard to reach. Filter 3 then docked it again — and
+Filter 3 downgrades where the score kills, so the finding died before the filter that
+was supposed to handle it ever ran.
+
+Measured over 38 scored findings: nine landed at 68-78, verified true and docked for
+rarity, all dead. Two were rescued by hand because the reviewing agent disagreed with
+its own gate — a removed `--clean` flag that argparse silently abbreviated into
+`--clean-only`, wiping a developer's data and exiting 0, and an alarm detector that
+could not report its own death. Both are exactly what Filter 3's `remote` band exists
+to downgrade rather than drop.
 
 ### Threshold
 
