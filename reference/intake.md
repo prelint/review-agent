@@ -543,6 +543,7 @@ in Stage 5.
   "pr_updated_at": "2026-08-02T14:11:58Z",
   "pr_body_hash": "sha256:...",
   "pr_substance_hash": "sha256:...",
+  "stage5_reentries": 0,
   "prior": {"reviewed_at": "9a1c4e2", "source": "markers",
             "carried": {"claims": 11, "findings": 9}, "unparsed": []},
   "reconciled_at_head": null,
@@ -624,18 +625,20 @@ so.
 |---|---|---|
 | `base` | Stage 0 | the ref the diff is against; Stage 5 refuses to post if it moved |
 | `pr_updated_at` | Stage 1 | the PR's own watermark |
+| `stage5_reentries` | Stage 1, then Stage 5 | starts at `0`; records whether this run already spent its one return to Stages 2–4 |
 | `watermark` | Stage 1 | `max(created_at, updated_at)` on the item |
 | `split_branch` | Stage 1 | which branches of the claim split fired, so the count check is auditable afterwards |
 | `reconciled_at_head` | Stage 5 | the SHA reconciliation ran against — `head_sha` is Stage 0's and Stage 4 has committed since |
 
-A sixth invented field, `skipped_self`, is deliberately not here. It recorded the
-comments the old classify step threw away; nothing is thrown away now, and `prior`
-records what was read instead.
+`stage5_reentries` was specified before its first use. A sixth field that earlier runs
+invented, `skipped_self`, is deliberately not here. It recorded the comments the old
+classify step threw away; nothing is thrown away now, and `prior` records what was read
+instead.
 
-**A field a run needs and this schema lacks is a bug here.** All five above were
-invented at runtime before they were written down, and one earlier run parked a claim in
-an `embedded_claims` field that has never existed. Add the field, or delete the rule
-that wanted it: an invented field is invisible to every stage that did not invent it.
+**A field a run needs and this schema lacks is a bug here.** The other five table fields
+were invented at runtime before they were written down, and one earlier run parked a
+claim in an `embedded_claims` field that has never existed. Add the field, or delete the
+rule that wanted it: an invented field is invisible to every stage that did not invent it.
 
 Commit the ledger directory to `.gitignore` — it is run state, not source.
 

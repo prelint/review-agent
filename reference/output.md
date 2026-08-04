@@ -20,6 +20,24 @@ Re-run the Stage 1 fetch. All of Stage 2–4 took time; the PR moved.
   closed. The full table is in `intake.md`.
 - Changed `pr_substance_hash` → re-run `spec-drift` before continuing.
 
+### One re-entry, then defer
+
+**Stage 5 may return to Stages 2–4 once per run.** Collect every new or changed item from
+one re-fetch into a batch before deciding:
+
+1. When `stage5_reentries` is `0`, set it to `1` in the ledger, process the whole batch
+   through the required earlier stages, then restart this section and re-fetch once more.
+2. When `stage5_reentries` is already `1`, do not return again. Classify the late batch;
+   `informational` claims stay informational, and every actionable new or changed claim is
+   `deferred` with the reason `arrived after the bounded Stage 5 re-entry` and an issue
+   link. A changed PR description is a changed item under the same rule; do not launch
+   `spec-drift` a second time.
+3. Name those deferrals in the summary. They are closed ledger statuses, not permission to
+   imply that the late changes were reviewed.
+
+The counter is run-local: Stage 1 writes `0` on every new run. Recording it in the ledger
+keeps a resumed Stage 5 from inventing whether its one return was already spent.
+
 ## 2. Reconcile
 
 Every claim on every ledger item must be one of:
