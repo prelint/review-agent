@@ -278,7 +278,7 @@ that usually is not there.
 | Source | Restores |
 |---|---|
 | our thread replies | `inline` items: the `substance_hash` a decision was made against, and every claim's status |
-| our summary comment | `top`, `review` and PR-description items, and every finding we posted |
+| our summary comment | actionable `top`, `review` and PR-description items; every non-fixed finding; and a sentinel identifying the carrier |
 | `threads.jsonl` | which threads are resolved, already fetched above |
 
 ### Which markers count
@@ -299,10 +299,14 @@ Three rules, and all three are load-bearing:
 
 Anything that fails these is not a parse failure. It is somebody else's text.
 
-**The trailer, not the last line.** The summary comment carries one marker per threadless
-item and one per finding — a dozen on a busy PR — and only one of them can ever be last.
-A last-line rule reads one and silently drops the rest, which breaks the carrier for three
-of the four surfaces while looking like it works.
+The summary sentinel, `{"summary":true}`, restores no ledger entry. It only proves a
+`SELF` comment is the carrier written by this skill, including when every state marker was
+omitted because the state is recoverable or informational.
+
+**The trailer, not the last line.** A summary can carry the sentinel, actionable
+threadless items and non-fixed findings — a dozen markers on a busy PR — and only one can
+ever be last. A last-line rule reads one and silently drops the rest, which breaks the
+carrier for three of the four surfaces while looking like it works.
 
 It is still what makes GitHub's Quote reply safe. Quoting copies our body, HTML comments
 included, into someone else's words: those lines arrive `>`-prefixed, and the quoter's own
@@ -324,9 +328,9 @@ lie, and carrying it forward would make that lie permanent, since the re-verify 
 only fires when the comment text moves. Findings get the same guarantee from the `git log`
 lookup below rather than from a stored SHA.
 
-**The load fills `findings`, not only `items`.** Every finding restored from a summary
-marker enters `findings` at the status its marker carries, with the destination that
-status carries — a `deferred` finding's issue, a `dropped` one's cause. Stage 3 then
+**The load fills `findings`, not only `items`.** Every non-fixed finding restored from a
+summary marker enters `findings` at the status its marker carries, with the destination
+that status carries — a `deferred` finding's issue, a `dropped` one's cause. Stage 3 then
 dedupes against it: that is the array `verification.md`'s re-post guard reads, and Stage 1
 leaving it empty is what made that guard dead on arrival.
 
@@ -341,19 +345,20 @@ carried claim, except nothing has to store a SHA for it to hold.
 
 `prior.source` is `markers`, `ledger` or `none`. `prior.reviewed_at` is the head SHA of
 our last review, from `reviews.jsonl`, or `null`. `prior.carried` counts both kinds
-separately — `{"claims": 11, "findings": 9}` — because a run that restores every claim
-and no finding looks healthy against a single total and re-posts every finding it ever
-made. `prior.unparsed` holds marker lines that failed to parse.
+separately — `{"claims": 11, "findings": 9}` — so loss on one surface cannot hide inside
+the other's total. Zero carried findings is valid when all prior findings were fixed or
+none existed; fixed findings are recovered from `git log` after Stage 3 names them again.
+`prior.unparsed` holds marker lines that failed to parse.
 
 **Three cases, and only one of them is ours:**
 
 - **No markers at all** is `source: "none"`. The PR predates them, or we have not posted
   here. Treat it as a first review. Do not call it a parse bug.
 - **Only legacy markers** is `source: "legacy"`. Read them, do not stop. See below.
-- **`unparsed` non-empty**, or zero findings carried while one of our summary comments
-  exists, is a parse bug. Stop and say so — see "Refusing to run". A run that silently
-  degrades to a cold start re-does every fix and re-replies in every thread, and the one
-  record of why dies with the gitignored ledger.
+- **`unparsed` non-empty** is a parse bug. Stop and say so — see "Refusing to run". A run
+  that silently degrades to a cold start re-does every fix and re-replies in every thread,
+  and the one record of why dies with the gitignored ledger. A valid summary sentinel with
+  no state markers is not a parse bug.
 
 ### The legacy marker
 
@@ -650,9 +655,9 @@ Stop and say so when:
   `reviews.jsonl` whose `author` is `SELF` and whose `commit_id` is `HEAD_SHA`. Nothing
   has changed; a second identical review is noise.
 - `gh` is unauthenticated, or the repo has no PR.
-- **The previous-run load found markers it could not read** — `prior.unparsed` non-empty,
-  or zero findings carried while one of our summary comments exists. Proceeding turns a
-  parse bug into a cold start that re-does every fix and re-replies in every thread, and
-  says nothing.
+- **The previous-run load found markers it could not read** — `prior.unparsed` non-empty.
+  Proceeding turns a parse bug into a cold start that re-does every fix and re-replies in
+  every thread, and says nothing. Zero carried findings is valid when the summary sentinel
+  parsed and no non-fixed finding state remained.
 
 Do not invent work to justify the run.

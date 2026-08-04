@@ -138,7 +138,7 @@ evidence.
 | 1 missing-test finding reported in full | `specialists/testing.md` | None. Chosen to stop coverage sweeps. Raised twice in review as arbitrary — a diff with three untested branches has three gaps. Now overflows to a count rather than dropping, so the cap bounds volume without losing information. Whether the right number is 1 or 2 is answerable from the logs. |
 | 70 score threshold | `reference/verification.md` | Measured, once. Was 80, chosen with no basis under a five-band rubric where the practical floor was 100. A 38-finding sample put the scorers' observed ceiling at 88, so 80 passed only the top tenth of the range actually used. Moved to 70, the floor this file's own movement rules set. One sample is not a calibration pass: no hand sample has been taken, and no per-category rate exists. |
 | 40 / 60 useful-rate bands | this file | Industry write-ups, not measured here, not measured on agent-authored PRs. |
-| 2,000 character summary cap | `reference/output.md` | Measured — the old median posted comment was 1,718 and the worst was 10,289. The only number here with a source. |
+| 2,000 visible-character summary cap | `reference/output.md` | Measured — the old median visible comment was 1,718 and the worst was 10,289. Marker trailers are state, not attention cost. |
 | 5 non-blocking findings | `reference/output.md` | None. |
 | 400 words per lens | `specialists/_schema.md` | None. |
 

@@ -302,8 +302,9 @@ item and does the work again.
 <!-- review-agent: {"item":3640790504,"substance":"sha256:9f2a...","claims":{"1":{"status":"fixed","sha":"abc123f"},"2":{"status":"deferred","issue":42}}} -->
 ```
 
-**JSON, and only constrained values** — ids, hex, status words, issue numbers. No prose,
-ever. The delimited form this replaced (`claims=1:fixed:abc,2:rebutted`) broke on the
+**JSON, and only constrained values** — ids, hex, booleans, status words, issue numbers.
+No prose, ever. The delimited form this replaced
+(`claims=1:fixed:abc,2:rebutted`) broke on the
 first resolution containing a comma or a colon, which a deferral's issue URL always does.
 Evidence and reasons live in the reply text, where a human reads them; the marker carries
 only what the next run has to parse.
@@ -479,22 +480,29 @@ work is done, the PR still looks unaddressed, and nothing says why.
 
 Otherwise, one top-level comment. Hard caps:
 
-- **2,000 characters.** Not a target — a limit. **When it binds, cut in this order:**
-  non-blocking findings first, down to the count line; then the not-dispatched reasons;
-  then prose. Never the markers, and never the three lines silence cannot suppress — a
-  dead lens, `unresolvable` items, failed deliveries. Those are the summary's whole
-  reason for existing on a run that would otherwise be quiet. The mandatory lines added
-  here spend budget that issue #23 already measured as nearly exhausted, so which line
-  gives has to be written down rather than decided in the moment.
+- **2,000 visible characters.** Not a target — a limit. Measure the comment before the
+  first trailer marker; HTML marker lines and the blank line before them are excluded.
+  GitHub receives the visible body plus the trailer, so the raw comment may exceed 2,000
+  while the part a human reads may not. **When the visible budget binds, cut in this
+  order:** non-blocking findings first, down to the count line; then the not-dispatched
+  reasons; then prose. Never the three visible lines silence cannot suppress — a dead
+  lens, `unresolvable` items, failed deliveries. Those are the summary's whole reason for
+  existing on a run that would otherwise be quiet.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
-- Every finding carries an invisible marker so it can be found again later:
+- Every non-fixed finding carries an invisible marker so it can be found again later:
   `<!-- review-agent: {"fingerprint":"<f>","category":"<c>","score":88,"severity":"REQUIRED","status":"posted"} -->`.
   `severity` and `status` are not optional — section 5's counters read exactly those two
   fields off every finding, and a rebuilt finding missing them counts as neither open nor
-  closed. Without the marker, category is unrecoverable from a posted comment and
-  calibration is impossible.
+  closed. A `fixed` finding is the exception: its commit trailer is the durable record,
+  so duplicating it here spends marker bytes on state `git log` already recovers.
+- A threadless item carries a marker only when at least one claim is not
+  `informational`. Reclassifying an all-informational item next run is cheaper than
+  storing it forever; losing a fix, rebuttal or deferral is not.
+- Every posted summary carries one sentinel marker even when no state markers remain:
+  `<!-- review-agent: {"summary":true} -->`. It identifies our carrier comment without
+  pretending to restore an item or finding.
 - **A status with a destination carries it.** `"status":"deferred","issue":42` and
   `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
   `rebutted` need nothing more: the reason is the visible text beside the marker. A
@@ -504,10 +512,11 @@ Otherwise, one top-level comment. Hard caps:
 ### The summary is one comment per PR, edited in place
 
 Post it once and **edit that same comment on later runs**. It is the carrier for
-everything without a thread: `top` items, `review` items, the PR description, and every
-finding whose ending `git` cannot show. Each gets one marker, in the trailer.
+everything without a thread: actionable `top` items, `review` items, the PR description,
+and every finding whose ending `git` cannot show. Each gets one marker in the trailer,
+beside the summary sentinel. All-informational items are deliberately reclassified.
 
-**A `fixed` finding is recovered from `git log`, not from a marker.** Stage 4 writes
+**A `fixed` finding is recovered from `git log`, and carries no marker.** Stage 4 writes
 `Finding: <specialist>/<fingerprint>` into the commit that fixes it, so
 `git log --fixed-strings --grep="<fingerprint>"` on the current branch answers both questions
 at once: whether we fixed it, and whether the fix is still here. A force-push or a dropped
@@ -520,13 +529,17 @@ goes stale.
 
 An inline comment has a thread to reply in. The other three surfaces have none, so a
 second top-level comment per run is the only alternative, and that is the noise the
-2,000-character cap exists to stop. Bots in this record already work this way — one
+2,000-visible-character cap exists to stop. Bots in this record already work this way — one
 summary, edited on each run — which is why intake watermarks on `updated_at`.
 
 **When silence suppresses the summary and no prior one exists, nothing carries.** Those
 items re-verify on the next run at the cost of one verification pass. That is the price
 of not announcing a clean review, and it is the right way round: a wasted pass, never a
 wrong answer.
+
+The same trade applies to an all-informational threadless item when a summary does exist:
+it carries no item marker and is reclassified on the next run. The sentinel still keeps
+the summary itself out of the reviewer ledger.
 
 ### Shape
 
