@@ -50,16 +50,17 @@ at `~/.claude/skills/gstack/review/` on the day they were taken. The anchors sur
 | A dead or timed-out specialist logs and the run continues on partial results | `review/SKILL.md` `partial results are better than no results` :1370 | No rule ([#13]) |
 | A failed reply POST warns and continues | `greptile-triage.md` `If a reply POST fails` :92 | No rule, in the one stage forbidden from reporting false success ([#18]) |
 | A malformed state file skips its bad lines and continues | `greptile-triage.md` `never fail on a malformed history file` :57 | No rule ([#18]) |
-| The PR comes from the current branch, never an argument | `greptile-triage.md` `PR_NUMBER=$(gh pr view` :13 | A PR number, diffed against local `HEAD`, with nothing comparing the two ([#14]) |
+| The PR comes from the current branch, never an argument | `greptile-triage.md` `PR_NUMBER=$(gh pr view` :13 | A PR number, and Stage 0 refuses to run unless that PR's head is reachable from `HEAD` and the tree is clean (closed, [#14]) |
 | Prior decisions read back off GitHub by matching markers in our own replies | `greptile-triage.md` `Escalation Detection` :156 | Our own comments are skipped ([#11]) |
 | Outcomes append to a per-project and a global history file | `greptile-triage.md` `History File Writes` :182 | Nothing ([#11]) |
 
-Not every gap here is a drop. `gh auth status` is the counter-example worth keeping
-straight: `intake.md` lists an unauthenticated `gh` as a reason to refuse the run and
-Stage 0 never checks it ([#26]), but gstack has no gate either. Its only use of the
-command is platform detection — reached when the remote matches neither `github.com`
-nor `gitlab`, and failing it selects git-native commands rather than stopping. That is
-a condition this repo invented and did not wire, not a mechanism it inherited and lost.
+Not every gap here was a drop. `gh auth status` is the counter-example worth keeping
+straight: `intake.md` listed an unauthenticated `gh` as a reason to refuse the run and
+Stage 0 never checked it ([#26], now wired), but gstack has no gate either. Its only use
+of the command is platform detection — reached when the remote matches neither
+`github.com` nor `gitlab`, and failing it selects git-native commands rather than
+stopping. That was a condition this repo invented and did not wire, not a mechanism it
+inherited and lost.
 
 The two decisions, and the rows each one cost.
 
@@ -79,8 +80,9 @@ all if you found nothing".
 One more from outside gstack. mattpocock's `code-review` pins its diff to a fixed
 point the caller supplies and refuses to run without one
 (`skills/engineering/code-review/SKILL.md` `Whatever the user said is the fixed
-point` :19). Both ancestors bind the diff to something the caller named. This skill
-binds it to whatever is checked out.
+point` :19). Both ancestors bind the diff to something the caller named. This skill now
+does too: the caller names a PR, and Stage 0 stops unless the checkout contains that
+PR's head ([#14]).
 
 [#11]: https://github.com/prelint/review-agent/issues/11
 [#13]: https://github.com/prelint/review-agent/issues/13
