@@ -48,7 +48,7 @@ fi
 
 if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] &&
    [ "$(git rev-parse -q --verify 'HEAD^2')" != "$PR_HEAD_SHA" ]; then
-  EXTRA=$(git log --format=%h --invert-grep --grep='Finding: ' "$PR_HEAD_SHA..HEAD")
+  EXTRA=$(git log --format=%h -E --invert-grep --grep='^Finding: ' "$PR_HEAD_SHA..HEAD")
   if [ -n "$EXTRA" ]; then
     echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
     exit 1
@@ -85,7 +85,14 @@ against another branch's diff.
 read as if the PR contained them. Exactly two kinds belong there: this run's own Stage 4
 fixes, which carry a `Finding:` trailer, and the Actions merge commit, whose second
 parent is the PR head. Anything else is somebody's unpushed work, and reviewing it is
-the same defect as reviewing an uncommitted edit.
+the same defect as reviewing an uncommitted edit. The trailer match is anchored to the
+start of a line so that prose merely mentioning `Finding: ` does not count.
+
+**This gate is a mistake-catcher, not a boundary.** Everything above the PR head is
+local to whoever is running the review, and a marker in a commit message cannot be made
+to prove authorship. It exists to catch the operator who forgot what was on their
+branch, which is the realistic failure; someone who writes the trailer deliberately is
+reviewing their own work on purpose, and no string check reaches that.
 
 **A matching SHA is necessary and not sufficient — the tree has to be clean too.**
 `git diff "$DIFF_BASE"` and every specialist's copy of it read the *working tree*, not
