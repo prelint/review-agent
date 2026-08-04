@@ -113,6 +113,14 @@ compatible fix:
 Incompatible fix groups at the same site remain separate. Proximity is not agreement;
 each retains only the specialists that support that proposed fix.
 
+**Only Filter 1 survivors are grouped, so a dropped finding takes its support with it.**
+Two lenses agree and one of them cannot quote its evidence: that one is gone before this
+pass runs, the group holds one distinct specialist, and the rule above makes it not
+corroboration. The finding faces Filter 2 alone at its raw score, exactly as if the second
+lens had never answered. This is the intended order and not a special case — the quote
+gate is what stops two lenses corroborating something neither can evidence, and it can
+only do that by running first.
+
 **`likelihood` and `condition` merge as one pair, never separately.** Members routinely
 disagree on the band — `_schema.md` has each lens assess it independently — and the
 best-evidenced version is chosen for its evidence, not for having judged reachability
