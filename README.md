@@ -61,14 +61,17 @@ Evidence for each: [`docs/DESIGN.md`](docs/DESIGN.md).
 ## The two ideas that matter
 
 **The ledger.** Stage 1 lists every open reviewer comment, and Stage 3 adds every
-finding of our own. Stage 5 can't finish while one is still open. That is the mechanical answer to "did you address this?" — asked
-thirteen times in two weeks because nothing could answer it. Guaranteed for one
-sequential run on one PR; two runs at once are best effort, and
+finding of our own. Stage 2 also records which lenses answered clean or cleared and
+what they checked. Stage 5 can't finish while a claim or finding is still open. That is
+the mechanical answer to "did you address this?" — asked thirteen times in two weeks
+because nothing could answer it. Guaranteed for one sequential run on one PR; two runs
+at once are best effort, and
 [`docs/DESIGN.md`](docs/DESIGN.md) says where the line is.
 
 **Two filters, not one.** Quote-or-drop kills findings that aren't real. A separate
-scorer kills findings that are real and not worth your time. Either alone leaves half
-the noise.
+scorer kills findings that are real and not worth your time. Independent lenses that
+converge on one compatible fix can carry it through the score threshold, with both the
+raw score and the convergence retained. Either filter alone leaves half the noise.
 
 ## The lenses
 

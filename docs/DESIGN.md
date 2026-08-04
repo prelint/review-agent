@@ -284,6 +284,12 @@ computed from that array — `BLOCKER`, and neither `fixed` nor `rebutted` — i
 maintained beside it, for the same reason the run count below is not written here as a
 number.
 
+`coverage` is a third, run-local array. It holds validated `clean`, `cleared`, and
+`not-dispatched` answers so the evidence that a lens looked is not discarded merely
+because it found no defect. Coverage has no reconciliation status and is not restored
+across runs; Stage 5 reports its full checked detail in the session and a compact lens
+list whenever it posts a summary.
+
 ## Why the gate is two filters, not one
 
 Stage 3 runs them in series because they catch different things.
@@ -295,10 +301,26 @@ hallucinated findings.
 
 **Independent scoring** (from Anthropic's official plugin): a *different* agent, one
 that did not find the issue, scores it 0–100 against a rubric passed verbatim, and
-anything under 70 dies. The finder is invested in its own finding; the scorer is not.
-This kills real-but-worthless findings.
+anything under 70 dies unless at least two independent lenses already converged on the
+same compatible fix. The finder is invested in its own finding; the scorer is not. This
+kills real-but-worthless findings without discarding the stronger signal of independent
+convergence.
 
 A single filter does one or the other. Both, in series, do both.
+
+### Convergence is evidence, not merely redundancy
+
+Fingerprints keep their historical `path:anchor:category` shape for markers,
+calibration, and fix commits. Dedupe instead uses a category-free `site_key` of
+`path:anchor`; putting category in the old key made two lenses' cross-category agreement
+nearly impossible to detect. Compatible findings at one site are represented once with
+every supporting category and specialist attached. Incompatible fixes stay separate.
+
+The independent scorer still runs and its raw number is preserved. A corroborated
+finding may survive below 70, recorded with `gate_reason: corroboration`, so later
+calibration can see the disagreement instead of hiding it behind an inflated score. The
+quote gate runs before convergence and the exclusion blocklist runs after scoring; two
+lenses cannot vote an unevidenced or excluded claim into output.
 
 ### Rarity left the score rubric
 

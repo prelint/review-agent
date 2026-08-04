@@ -161,11 +161,47 @@ Three causes, all legitimate:
 - **Silence.** The final checklist permits silence only when the remaining findings are
   `NIT`/`FYI` and no ledger item needed a reply. Those low-severity findings are dropped,
   not forgotten.
-- **Dedupe.** `verification.md` suppresses a finding matching a reviewer's ledger item or
-  one we posted on an earlier run. Record which it merged into.
+- **Dedupe.** `verification.md` finds a candidate — a reviewer item by `path` and line, a
+  finding from an earlier run by `site_key` — then verifies it is the same defect before
+  suppression. Record the item or site key it merged into.
 
 A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
 that nothing blocking survived, and dedupe never suppresses a blocker.
+
+### Coverage evidence
+
+Read the ledger's run-local `coverage` array before deciding what to say. Session output
+always includes the full `checked` value for every `clean` and `cleared` object; this is
+the substantive evidence that a lens looked and found the changed surface sound. Also
+name `not-dispatched` and dead lenses under their existing rules. Do not turn coverage
+objects into findings or give them finding statuses.
+
+When a summary is posted for any reason, include **one** compact coverage line. It carries
+all three answers — clean, cleared and not-dispatched — because they answer one question
+between them, and the not-dispatched reasons this file requires in a posted summary have
+nowhere else to go:
+
+```
+Coverage: clean — money, security, tenancy; cleared — red-team (7 checks);
+not dispatched — data-migration, tenancy (no migration or per-tenant query in the diff).
+```
+
+This line does not break silence by itself. A clean review may still post nothing; its
+full coverage remains in the session output.
+
+**It degrades in two steps, and the last one has a fixed cost.** Naming the lenses is
+already the compressed form and it is not bounded: eighteen lenses is a roster of several
+hundred characters, and this line is visible text, so it spends the 2,000-character budget
+that excluding the trailer markers did not loosen. First drop the not-dispatched reasons,
+keeping their lens names. Then drop all the names and post the counts alone —
+
+```
+Coverage: 15 clean, 1 cleared, 2 not-dispatched.
+```
+
+— which costs the same on every run whatever the lenses did. That form is never removed
+from a summary that is already being posted. The named form is a courtesy the budget
+grants when it can afford it, not a floor.
 
 **Stamp `reconciled_at_head` when reconciliation finishes**: `git rev-parse HEAD`, never
 `$HEAD_SHA`. Stage 0 bound that before Stage 4 committed anything, so the two fields
@@ -514,7 +550,9 @@ No answer from: coherence. That lens's coverage is missing from this review.
 
 Not-dispatched reasons are a different thing: they are a lens correctly declining, not a
 lens failing, so they do not break silence. Name every reason in the session output. When
-another exception causes a summary, include them there in one compact coverage line too.
+another exception causes a summary, they ride in the coverage line beside the clean and
+cleared lenses — one line for all three, defined under **Coverage evidence** above, which
+also owns how it degrades when the budget binds.
 
 **An `unresolvable` item.** Silence means "nothing needs your attention", and an
 `unresolvable` item leaves a thread open that nobody will close. If any item carries
@@ -545,22 +583,34 @@ Otherwise, one top-level comment. Hard caps:
   first trailer marker; HTML marker lines and the blank line before them are excluded.
   GitHub receives the visible body plus the trailer, so the raw comment may exceed 2,000
   while the part a human reads may not. **When the visible budget binds, cut in this
-  order:** non-blocking findings first, down to the count line; then compress the
-  not-dispatched line from reasons to lens names; then prose. Never delete the coverage
-  line, or the three visible lines silence cannot suppress — a dead lens, `unresolvable`
-  items, failed deliveries. Those are the summary's whole reason for existing on a run
-  that would otherwise be quiet. Excluding the trailer does not make the budget loose —
-  the mandatory visible lines still spend it — so which line gives has to be written down
-  rather than decided in the moment.
+  order:** the coverage line's detail — the not-dispatched reasons first, then the clean,
+  cleared and not-dispatched lens names — leaving its counts; then non-blocking findings,
+  down to the count line; then prose. Never delete the coverage counts, or the four
+  visible lines silence cannot suppress — an unreadable ledger, a dead lens,
+  `unresolvable` items, failed deliveries. Those are the summary's whole reason for
+  existing on a run that would otherwise be quiet. Excluding the trailer does not make the
+  budget loose — the mandatory visible lines still spend it — so which line gives has to
+  be written down rather than decided in the moment.
+
+  **Compress before deleting, so coverage gives before findings do.** Degrading the
+  coverage line loses detail; cutting a finding loses the finding. Coverage is also the
+  only visible element whose cost grows with the number of lenses rather than with what
+  the review found, so it is what a wide run should spend first. And cutting a finding to
+  keep a lens name mislabels the ledger: that finding is recorded `dropped` with reason
+  `cap`, on a run where the 5-finding cap never bound.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
 - Every non-fixed finding carries an invisible marker so it can be found again later:
-  `<!-- review-agent: {"fingerprint":"<f>","category":"<c>","score":88,"severity":"REQUIRED","status":"posted"} -->`.
+  `<!-- review-agent: {"fingerprint":"<f>","site_key":"<path:anchor>","specialist":"money","category":"money","categories":["correctness","money"],"corroborated_by":["correctness","money"],"score":68,"gate_reason":"corroboration","severity":"REQUIRED","status":"posted"} -->`.
   `severity` and `status` are not optional — section 5's counters read exactly those two
   fields off every finding, and a rebuilt finding missing them counts as neither open nor
-  closed. A `fixed` finding is the exception: its commit trailer is the durable record,
-  so duplicating it here spends marker bytes on state `git log` already recovers.
+  closed. `score` is always raw, never raised to encode corroboration. Without the
+  marker, category and convergence are unrecoverable from a posted comment and
+  calibration is impossible. Older markers without the additive fields remain valid;
+  `intake.md` defines their normalization. A `fixed` finding is the exception: its commit
+  trailer is the durable record, so duplicating it here spends marker bytes on state
+  `git log` already recovers.
 - A threadless item carries a marker only when at least one claim is not
   `informational`. Reclassifying an all-informational item next run is cheaper than
   storing it forever; losing a fix, rebuttal or deferral is not.
@@ -632,6 +682,7 @@ the summary itself out of the reviewer ledger.
 Blocker: <file:line> — <problem>. <fix>.
 Required: <file:line> — <problem>. <fix>.
 
+Coverage: clean — money, security, tenancy; cleared — red-team (7 checks).
 Reviewer items: N fixed, N rebutted, N deferred.
 ```
 

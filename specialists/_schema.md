@@ -76,20 +76,21 @@ migrations — quote the construct that creates the symbol, not the class body.
 JSON, one object per line, nothing else. No prose before or after.
 
 ```json
-{"severity":"BLOCKER|REQUIRED|NIT|FYI","likelihood":"likely|plausible|remote|unverified","condition":"what has to be true for this to fire","path":"backend/apps/billing/services.py","line":142,"category":"money","summary":"one sentence: the defect","failure":"concrete inputs or interleaving -> wrong outcome","evidence":"the verbatim line(s) that motivate this","fix":"the specific change","fingerprint":"backend/apps/billing/services.py:142:money"}
+{"specialist":"money","severity":"BLOCKER|REQUIRED|NIT|FYI","likelihood":"likely|plausible|remote|unverified","condition":"what has to be true for this to fire","path":"backend/apps/billing/services.py","line":142,"anchor":"charge_org()","category":"money","summary":"one sentence: the defect","failure":"concrete inputs or interleaving -> wrong outcome","evidence":"the verbatim line(s) that motivate this","fix":"the specific change","fingerprint":"backend/apps/billing/services.py:charge_org():money"}
 ```
 
 | Field | Required | Notes |
 |---|---|---|
+| `specialist` | yes | The lens emitting the finding — your own name, never another's. Stage 3 uses distinct specialists as the independence check for corroboration, so Stage 2 treats a response naming any other lens as a dead lens and discards all of it. |
 | `severity` | yes | `BLOCKER` only for: breaks behaviour, leaks data, loses money, blocks rollback |
 | `likelihood` | yes | Will it actually fire? See below. Independent of `severity` and of how sure you are the claim is true. |
 | `condition` | yes | The triggering condition in one clause. This is the field that makes `likelihood` checkable. |
-| `path`, `line` | yes | Where the problem is, not where you noticed it |
+| `path`, `line`, `anchor` | yes | Where the problem is. `anchor` is the greppable symbol or literal beside the line number. |
 | `summary` | yes | One sentence stating the defect. Not the category, not the fix. |
 | `failure` | yes | Concrete: inputs or interleaving → wrong outcome. "Could be unsafe" is not a failure scenario. |
 | `evidence` | yes | Verbatim source. This is the quote gate. |
 | `fix` | yes | The specific change. "Consider reviewing this" is not a fix. |
-| `fingerprint` | yes | `path:anchor:category` — see below |
+| `fingerprint` | yes | Exactly `path:anchor:category`, for the `path`, `anchor` and `category` on this same object; Stage 2 drops a finding whose value does not match those fields, and keeps the rest of the response. See below. |
 | `test_stub` | no | A failing test that would catch it, if you can write one cheaply |
 
 ### Not dispatched
@@ -153,8 +154,9 @@ The kinds:
 | `cleared` | what you checked and found sound — `red-team` only, and it precedes findings rather than replacing them |
 
 `clean` and `cleared` are different answers. `cleared` accompanies findings; `clean` is
-the response when there are none. Stage 3 passes both through untouched: never scored,
-never deduped, never posted.
+the response when there are none. Stage 2 writes both to the ledger's `coverage` array:
+they are never scored or deduped, and Stage 5 reports them as coverage evidence rather
+than findings.
 
 ### The cleared line
 
@@ -166,9 +168,9 @@ required to — emits **one** extra object, first, before any findings:
 ```
 
 Findings carry no `kind`; only this object does, so a consumer can split them with one
-predicate. Stage 3 passes cleared objects through untouched — they are never scored,
-never deduped, never posted inline. Stage 5 may fold them into one line of the summary
-when a `BLOCKER` is present, and drops them otherwise.
+predicate. Stage 2 writes cleared objects to `coverage` — they are never scored,
+deduped or posted inline. Stage 5 always includes their detail in session output and
+names the cleared lenses in the summary whenever one is posted.
 
 Keep each entry to one clause. The cleared list is evidence that the lens looked, not
 a second report.
@@ -218,9 +220,10 @@ services.py `charge_org()` :142        not  services.py:142
 intake.md `substance_hash` :210        not  intake.md:210
 ```
 
-The `fingerprint` is `path:anchor:category`, never `path:line:category`. It is the key
-that dedupes findings within a run and matches them across runs, so a key that moves
-when unrelated code shifts above it silently breaks both.
+The `fingerprint` is `path:anchor:category`, never `path:line:category`. It identifies
+one category's finding for markers and calibration. Stage 3 derives the category-free
+`site_key` as `path:anchor` and uses that for cross-specialist and cross-run dedupe. A
+line-based key moves when unrelated code shifts above it and silently breaks both.
 
 Two places this has already bitten this repo: an edit aimed at a line number that had
 shifted matched nothing and was reported as applied; and findings posted on a PR are

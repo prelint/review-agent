@@ -53,7 +53,7 @@ if [ "$(git rev-parse -q --verify 'HEAD^2')" = "$PR_HEAD_SHA" ] &&
 fi
 
 if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] && [ "$CI_MERGE" = no ]; then
-  EXTRA=$(git log --format=%h -E --invert-grep --grep='^Finding: ' "$PR_HEAD_SHA..HEAD")
+  EXTRA=$(git log --format=%h -E --invert-grep --grep='^(Finding|Reviewer): ' "$PR_HEAD_SHA..HEAD")
   if [ -n "$EXTRA" ]; then
     echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
     exit 1
@@ -88,10 +88,17 @@ against another branch's diff.
 
 **Reachable is not sufficient on its own** — commits stacked on top of the PR head are
 read as if the PR contained them. Exactly two kinds belong there: this run's own Stage 4
-fixes, which carry a `Finding:` trailer, and the Actions merge commit. Anything else is
-somebody's unpushed work, and reviewing it is the same defect as reviewing an
-uncommitted edit. The trailer match is anchored to the start of a line so that prose
-merely mentioning `Finding: ` does not count.
+fixes and the Actions merge commit. Anything else is somebody's unpushed work, and
+reviewing it is the same defect as reviewing an uncommitted edit. The trailer match is
+anchored to the start of a line so that prose merely mentioning `Finding: ` does not
+count.
+
+**Match either trailer, because Stage 4 commits two kinds of fix.** A finding of ours
+carries `Finding:`; a reviewer claim we accepted carries `Reviewer:` and often no
+fingerprint at all, because the claim is not ours and has none. Keying the gate on
+`Finding:` alone reads every accepted-claim commit as somebody's unpushed work and exits
+— on exactly the runs that did the most work, since a run that fixed nothing but
+reviewer claims would have no matching commit in the range at all.
 
 **Test the merge exception on both parents.** A second parent equal to the PR head is
 half the shape; the other half is a first parent that is base-branch history. Checking
@@ -146,7 +153,9 @@ against this file.
 
 The ledger's second array, `findings`, is ours. Stage 1 writes it empty, Stage 3 fills
 it, Stage 4 and Stage 5 close it. Our findings get a status for the same reason
-reviewers' claims do.
+reviewers' claims do. Its third array, `coverage`, is run-local evidence from lenses
+that answered `clean`, `cleared`, or `not-dispatched`; Stage 1 writes it empty and
+Stage 2 fills it.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
@@ -195,18 +204,37 @@ response requires:
 | no findings | `clean`, `not-dispatched`, or `cleared` for `red-team` |
 
 Anything else is a dead lens — empty, truncated mid-line, prose, an unrecognised `kind`, a
-count that does not add up, or **findings closed by something other than `end`**.
+count that does not add up, **findings closed by something other than `end`**, or a
+`specialist` that is not the lens dispatched.
 
-That last case is the one a terminator alone does not catch. Checking the count only when
-the last line happens to be `end` lets a lens truncated after two findings of five land on
-a stray `clean` and pass as answered, with the count check — the entire reason `end`
-exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
+Findings closed by the wrong terminator is the case a terminator alone does not catch.
+Checking the count only when the last line happens to be `end` lets a lens truncated after
+two findings of five land on a stray `clean` and pass as answered, with the count check —
+the entire reason `end` exists — never running. Findings followed by `clean` is a contradiction anyway: `clean`
 means the lens reviewed and found nothing.
 
 Keying this on emptiness alone would miss the commoner shape, and so would checking only
 that the last line is valid: a subagent killed at its output cap after emitting two
 findings of five ends on a perfectly good finding object. The count is what makes those
 three visible.
+
+**A wrong `specialist` kills the whole response, not the one object.** It is in the list
+above for that reason. A lens that names another lens is either broken or manufacturing a
+second independent identity to corroborate itself past the score threshold, and neither
+is a response any part of which can be trusted — so none of it enters `coverage` or
+`findings`. Dropping only the mislabelled object would leave the rest of a response that
+just tried to forge its own corroboration.
+
+**A malformed fingerprint drops that finding alone.** If it is not exactly
+`path:anchor:category` for the `path`, `anchor` and `category` the finding itself carries,
+Stage 3 cannot key it and the lens is otherwise answering honestly. Drop the finding, name
+it in the session output, and keep the rest of the response — including its `end` count,
+which still has to add up against what was sent, not against what survived.
+
+After validating a response, consume its `end` terminator and write every `clean`,
+`cleared`, and `not-dispatched` object to the ledger's `coverage` array. Coverage is
+evidence about what ran, not a finding, so it is never scored or assigned a finding
+status.
 
 **Name a dead lens** in the session output always, and in the summary too whenever one is
 posted. A lens that died is coverage you did not get, and reporting a clean review
@@ -252,15 +280,23 @@ Read `reference/verification.md`. All three run; none substitutes for another.
 body. "Race between A and B" must quote both A and B. Cannot quote it → drop it.
 Do not route around this by asserting high confidence.
 
-**Filter 2 — independent scoring.** A scoring agent that did **not** find the issue
-scores each survivor 0–100 against the rubric in `reference/verification.md`, passed
-verbatim. Below 70 dies. The finder is invested; the scorer is not.
+**Corroborate and dedupe.** Derive the category-free `site_key` as `path:anchor` and
+group Filter 1 survivors before scoring. Compatible fixes at one site from at least two
+distinct specialists become one finding carrying every supporting category and
+specialist. Incompatible fixes stay separate. Use the same `site_key` to find candidates
+among findings we posted on prior runs; match a reviewer's claim on `path` and line
+instead, because a ledger item carries no anchor and so has no `site_key` to compare
+against. Suppress only after verifying the candidate describes the same defect.
+
+**Filter 2 — independent scoring.** A scoring agent that is not among the specialists
+that found the issue scores each survivor 0–100 against the rubric in
+`reference/verification.md`, passed verbatim. Below 70 dies unless two or more distinct
+specialists corroborated the same compatible fix. Preserve the raw score and record
+whether score or corroboration opened the gate; the finders are invested, while the
+scorer and independent lenses provide different evidence.
 
 Then apply `reference/exclusions.md` as a blocklist. Anything matching a listed
 pattern is dropped regardless of score.
-
-Dedupe by `fingerprint` across specialists. When two lenses find the same thing, keep
-the one with the better evidence and record both categories.
 
 **Filter 3 — likelihood.** Score says whether the claim is true; likelihood says
 whether it ever fires. Every finding arrives with a `likelihood` band and a named
@@ -272,8 +308,9 @@ know the condition is reachable for reasons the diff does not show. A downgrade 
 no stated condition is a review bug; send it back.
 
 **Stage 3 ends by writing every survivor into the ledger's `findings` array**, one
-entry each at `status: "open"`, carrying its fingerprint, category, severity and score.
-A finding that is not in the ledger is one nothing can hold you to.
+entry each at `status: "open"`, carrying its fingerprint, site key, categories,
+supporting specialists, severity, raw score, and gate reason. A finding that is not in
+the ledger is one nothing can hold you to.
 
 ---
 

@@ -150,6 +150,7 @@ evidence.
 | 2,000 visible-character summary cap | `reference/output.md` | Measured — the old median visible comment was 1,718 and the worst was 10,289. Marker trailers are state, not attention cost. |
 | 5 non-blocking findings | `reference/output.md` | None. |
 | 400 words per lens | `specialists/_schema.md` | None. |
+| 2 distinct specialists to carry a sub-70 finding | `reference/verification.md` | None, and the weakest-evidenced number here. It assumes cross-lens agreement predicts acceptance; that has never been measured, and the 38-finding sample cannot answer it because it recorded no `corroborated_by`. Every lens runs the same model family, so some agreement is correlated error rather than independent evidence, and nothing yet separates the two. Until a pass reports corroborated and score-gated findings separately, treat a corroboration-gated finding as an experiment, not a verdict. |
 
 ## Order of work
 

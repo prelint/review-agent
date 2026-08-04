@@ -339,6 +339,28 @@ that status carries — a `deferred` finding's issue, a `dropped` one's cause. S
 dedupes against it: that is the array `verification.md`'s re-post guard reads, and Stage 1
 leaving it empty is what made that guard dead on arrival.
 
+Normalize a restored finding's `site_key` before Stage 3 reads it. New markers carry the
+field directly. For an older JSON or legacy marker, derive `path:anchor` from its
+`fingerprint` by removing the final `:<category>` only when the fingerprint ends with
+that exact known category. Do not split on every colon: real anchors contain spaces and
+colons. Preserve the original category-bearing `fingerprint` for calibration and commit
+history; `site_key` is the cross-category match key.
+
+**Then normalize the anchor itself, on both sides of every comparison.** Stripping the
+category is not enough to make two keys equal. This repo's own legacy marker reads
+`fingerprint=backend/apps/billing/services.py:charge_org:tenancy`, which yields anchor
+`charge_org`, while a current lens emits `charge_org()` — the same symbol and an unequal
+string. Casefold the anchor, strip surrounding backticks and a trailing `()`, and collapse
+internal whitespace runs to one space before comparing.
+
+**Two derivations produce no usable `site_key`, and both say so rather than guessing.**
+A purely numeric anchor — from a marker written against the older `path:line:category`
+shape — is a line number, which `verification.md` forbids matching on. A final segment
+that is not a known category leaves the fingerprint unsplit. In both cases set
+`site_key` to `null`, fall back to exact `fingerprint` equality for that finding alone,
+and count them in `prior.carried` so a run that restored mostly unmatchable keys is
+visible rather than looking like a run that found no duplicates.
+
 **A `fixed` finding comes from `git log`, not from a marker.** Stage 4 writes
 `Finding: <specialist>/<fingerprint>` into the commit, so the branch's own trailers say
 both whether we fixed it and whether the fix survived. A commit that left the branch takes
@@ -624,11 +646,14 @@ measured against it, and Stage 5 cannot finish while any entry is `open`.
 **Creating the ledger and re-fetching into it are different writes.** Stage 5 re-runs
 this stage's fetch, so a Stage 1 that rebuilds the head every time it runs would reset
 the fields Stage 5 keeps there. Re-running the fetch updates items, hashes and
-watermarks; it does not re-initialise `stage5_reentries`, which only a Stage 1 that
-creates the file writes.
+watermarks; it does not re-initialise `stage5_reentries` or `coverage`, which only a
+Stage 1 that creates the file writes. `coverage` is Stage 2's evidence and Stage 2 does
+not run again on a re-entry, so a re-fetch that emptied it would report a review with no
+lens coverage at all — the same defect as the counter, reached through the other array.
 
-Two arrays. `items` is what reviewers said; `findings` is what we found. Both reconcile
-in Stage 5.
+Three arrays. `items` is what reviewers said; `findings` is what we found. Both reconcile
+in Stage 5. `coverage` is run-local evidence from non-finding protocol objects; it is
+reported, not reconciled, and is never restored from prior-run markers.
 
 ```json
 {
@@ -672,24 +697,50 @@ in Stage 5.
   ],
   "findings": [
     {
-      "fingerprint": "backend/apps/billing/services.py:charge_org:money",
+      "fingerprint": "backend/apps/billing/services.py:charge_org():money",
+      "site_key": "backend/apps/billing/services.py:charge_org()",
+      "specialist": "money",
       "category": "money",
+      "categories": ["correctness", "money"],
+      "corroborated_by": ["correctness", "money"],
       "severity": "BLOCKER",
       "score": 88,
+      "gate_reason": "corroboration",
       "path": "backend/apps/billing/services.py",
       "anchor": "charge_org()",
       "status": "open",
       "resolution": null
     }
+  ],
+  "coverage": [
+    {
+      "kind": "clean",
+      "specialist": "security",
+      "checked": "authentication and secret-handling paths changed by the diff"
+    },
+    {
+      "kind": "cleared",
+      "specialist": "red-team",
+      "checked": ["retry is bounded", "rollback preserves the prior state"]
+    }
   ]
 }
 ```
 
-Stage 1 writes `findings: []`. Stage 3 fills it with every survivor of the gate; Stage 4
-moves each status as it commits. A finding the five-finding cap cut is `dropped` with
-its reason, never absent — the run on this repo's PR #10 produced nine findings and
-nine commits and the ledger recorded none of them, so nothing could check a commit
-against the finding it claimed to fix.
+Stage 1 writes `findings: []` and `coverage: []`. Stage 2 fills `coverage` with validated
+`clean`, `cleared`, and `not-dispatched` objects, consuming `end` as protocol rather than
+evidence. Stage 3 fills `findings` with every survivor of the gate; Stage 4 moves each
+status as it commits. A finding the five-finding cap cut is `dropped` with its reason,
+never absent — the run on this repo's PR #10 produced nine findings and nine commits and
+the ledger recorded none of them, so nothing could check a commit against the finding it
+claimed to fix.
+
+`score` is always the independent scorer's raw answer, including when it is below 70.
+`gate_reason` is `score` or `corroboration`; the latter is legal only when
+`corroborated_by` names at least two distinct dispatched specialists that proposed a
+compatible fix. `categories` and `corroborated_by` are sorted unique arrays. `category`
+and `specialist` retain the best-evidenced representative for backwards-compatible
+output and calibration.
 
 **Finding statuses.** `open`, `fixed` (a commit SHA), `posted` (it went in the summary
 and the author owns it), `deferred` (a reason and an issue link), `rebutted` (the
