@@ -100,5 +100,4 @@ They cannot make a hollow paragraph true. Choosing the right technical noun, and
 judging whether a finding is real, stays your job. A comment that obeys every
 rule here and reports a bug that does not exist is still a bad comment.
 
-Source: ASD-STE100, https://asd-ste100.org. The standard is copyrighted. Do not
-paste it into this repo.
+Source: ASD-STE100, https://asd-ste100.org.
