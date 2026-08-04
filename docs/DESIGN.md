@@ -245,6 +245,26 @@ This kills real-but-worthless findings.
 
 A single filter does one or the other. Both, in series, do both.
 
+### Rarity left the score rubric
+
+The rubric used to score frequency as well as truth: its 50 anchor read "or rare in
+practice" and its 75 anchor required "very likely to be hit in practice". Filter 3 then
+judged frequency again. Because Filter 3 downgrades where a score kills, a verified
+finding that was merely hard to reach died at Filter 2, before the filter built for it
+ever ran.
+
+The evidence was a 38-finding sample. Nine landed at 68-78 — verified true, docked for
+rarity, all dead. Two had to be rescued by hand against the gate: a removed `--clean`
+flag that argparse silently abbreviated into `--clean-only`, wiping a developer's seeded
+data and exiting 0; and an alarm detector that could not report its own death, where the
+`except` branch warns, reaches no page and no Sentry issue, and `NOT_BREACHING` keeps the
+alarm green. Both are what Filter 3's `remote` band exists to downgrade rather than drop.
+
+Removing rarity from the score puts the whole frequency judgement on Filter 3. That is
+where it was designed to sit, and the open risk is calibration rather than architecture:
+findings that used to die at 68-78 now reach Filter 3, so a loose `remote`/`plausible`
+call there raises output volume. Nothing measures that split today.
+
 ## One finding, one commit
 
 The old skill separated fixing from committing because a human was watching and might

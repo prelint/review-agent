@@ -73,13 +73,17 @@ not, and that is the entire mechanism.
 >   scrutiny, or a pre-existing issue not introduced by this change.
 > - **25** — Somewhat confident. Might be real, might not. You could not verify it.
 >   If stylistic, it is not called out in any project convention file.
-> - **50** — Moderately confident. Verified as real, but it may be a nitpick or rare
->   in practice. Relative to the rest of this change, not important.
-> - **75** — Highly confident. Double-checked and verified; very likely to be hit in
->   practice. The current approach is insufficient. Directly affects functionality,
->   or is explicitly required by a project convention file.
-> - **100** — Certain. Double-checked and confirmed as definitely real, frequent in
->   practice, with evidence that directly demonstrates it.
+> - **50** — Moderately confident. Verified as real, but it may be a nitpick.
+>   Relative to the rest of this change, not important.
+> - **75** — Highly confident. Double-checked and verified. The current approach is
+>   insufficient. Directly affects functionality, or is explicitly required by a
+>   project convention file.
+> - **100** — Certain. Double-checked and confirmed as definitely real, with evidence
+>   that directly demonstrates it.
+>
+> **Do not lower the score because the bug is rare, or because the path that reaches
+> it is hard to hit.** Score only whether the claim is true. How often it fires is
+> judged separately, after you.
 >
 > If the finding cites a project convention, verify the convention file actually says
 > that. Do not take the finder's word for it.
@@ -88,6 +92,10 @@ not, and that is the entire mechanism.
 > one. Score it from the evidence alone.
 >
 > Return only: `{"score": N, "why": "<one sentence>"}`
+
+**Frequency is not scored here.** Filter 3 owns it, and Filter 3 downgrades where a
+score kills — so docking a verified finding for rarity kills it before the filter built
+to handle it runs. `docs/DESIGN.md` records what this replaced.
 
 ### Threshold
 
@@ -111,12 +119,11 @@ it first, which is the whole reason the handoff stamps a category at all.
 
 **The rubric must stay continuous for that number to mean anything.** A five-value
 rubric — 0/25/50/75/100 — admits only 100 under any threshold above 75, silently killing
-every "highly confident, verified, directly affects functionality" finding at 75. The
-threshold this was inherited at, 80, sat just above that band.
-That is a live bug in the plugin this rubric came from
-([claude-plugins-official #1852](https://github.com/anthropics/claude-plugins-official/issues/1852))
-and it was inherited here verbatim. If you ever tighten the rubric back to fixed
-bands, move the threshold onto a band.
+every "highly confident, verified, directly affects functionality" finding at 75. That is
+a live bug in the plugin this rubric came from
+([claude-plugins-official #1852](https://github.com/anthropics/claude-plugins-official/issues/1852)),
+inherited here verbatim along with the 80 threshold that sat just above the band. If you
+ever tighten the rubric back to fixed bands, move the threshold onto a band.
 
 **An unparseable or missing score counts as 100, not 0.** Fail toward keeping the
 finding. A scorer that errors out must not silently suppress what it was asked to
