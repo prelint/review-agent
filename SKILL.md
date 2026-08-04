@@ -53,7 +53,7 @@ if [ "$(git rev-parse -q --verify 'HEAD^2')" = "$PR_HEAD_SHA" ] &&
 fi
 
 if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] && [ "$CI_MERGE" = no ]; then
-  EXTRA=$(git log --format=%h -E --invert-grep --grep='^Finding: ' "$PR_HEAD_SHA..HEAD")
+  EXTRA=$(git log --format=%h -E --invert-grep --grep='^(Finding|Reviewer): ' "$PR_HEAD_SHA..HEAD")
   if [ -n "$EXTRA" ]; then
     echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
     exit 1
@@ -88,10 +88,17 @@ against another branch's diff.
 
 **Reachable is not sufficient on its own** — commits stacked on top of the PR head are
 read as if the PR contained them. Exactly two kinds belong there: this run's own Stage 4
-fixes, which carry a `Finding:` trailer, and the Actions merge commit. Anything else is
-somebody's unpushed work, and reviewing it is the same defect as reviewing an
-uncommitted edit. The trailer match is anchored to the start of a line so that prose
-merely mentioning `Finding: ` does not count.
+fixes and the Actions merge commit. Anything else is somebody's unpushed work, and
+reviewing it is the same defect as reviewing an uncommitted edit. The trailer match is
+anchored to the start of a line so that prose merely mentioning `Finding: ` does not
+count.
+
+**Match either trailer, because Stage 4 commits two kinds of fix.** A finding of ours
+carries `Finding:`; a reviewer claim we accepted carries `Reviewer:` and often no
+fingerprint at all, because the claim is not ours and has none. Keying the gate on
+`Finding:` alone reads every accepted-claim commit as somebody's unpushed work and exits
+— on exactly the runs that did the most work, since a run that fixed nothing but
+reviewer claims would have no matching commit in the range at all.
 
 **Test the merge exception on both parents.** A second parent equal to the PR head is
 half the shape; the other half is a first parent that is base-branch history. Checking
