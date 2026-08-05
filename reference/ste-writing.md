@@ -62,7 +62,11 @@ and split anything over 25 words.
 - One instruction per sentence.
 - Cap an instruction at 20 words. Cap a descriptive sentence at 25.
 - Do not use contractions. Write "do not", not "don't".
-- Use the articles a, an, the, this, and these.
+- When applicable, use an article (a, an, the) or a demonstrative adjective
+  (this, these) before a noun. This matches the standard's Rule 4.5, qualifier
+  included. Do not add articles to general statements or abstract concepts
+  ("Solvents can cause damage to paint"). In a series of items, the article
+  before the first noun is enough. Labels take no articles (see Structure).
 
 **Punctuation**
 
@@ -75,6 +79,11 @@ and split anything over 25 words.
 
 - One topic per paragraph. Cap a paragraph at six sentences.
 - Write steps as a numbered vertical list. One action per item. Imperative form.
+- A list item can be a label, not a sentence. Flow lists, changelogs, and
+  feature bullets are labels. Keep a label in its short form ("Frontend
+  receives session JWT"). Do not expand a label into a sentence only to give it
+  an article. Decided 2026-08-04, after full-sentence conversion made flow
+  lists harder to scan.
 - Put the condition before the command. Write "If the log is empty, restart the
   job", not "Restart the job if the log is empty".
 
@@ -89,4 +98,6 @@ Run this before you commit prose, post a comment, or return text.
 5. Any "-ing" main verb, nominalization, or phrasal verb? Replace it with a
    plain verb.
 6. Same thing named two ways? Pick one name.
+7. Any label expanded into a sentence only to add an article? Make it a label
+   again.
 
