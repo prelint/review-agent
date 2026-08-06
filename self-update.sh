@@ -43,19 +43,30 @@ if [ -f "${STAMP}" ]; then
   case "${last}" in '' | *[!0-9]*) last=0 ;; esac
   [ $((now - last)) -lt "${THROTTLE_SECONDS}" ] && exit 0
 fi
-# Stamp before the pull, so a failed attempt also waits out the throttle.
+# Stamp before the network step, so a failed attempt also waits out the throttle.
 echo "${now}" >"${STAMP}"
 
-before=$(git -C "${SKILL_DIR}" rev-parse HEAD)
+# A failed fetch is offline, which is normal and transient: stay silent. A clone
+# that fetched fine and still cannot fast-forward never heals on its own, so that
+# message names the cause and the way out.
 if ! GIT_TERMINAL_PROMPT=0 git -C "${SKILL_DIR}" \
   -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=10 \
-  pull --ff-only --quiet origin "${BRANCH}" >/dev/null 2>&1; then
-  say "update skipped: no fast-forward from origin (offline or diverged)"
+  fetch --quiet origin "${BRANCH}" >/dev/null 2>&1; then
   exit 0
 fi
-after=$(git -C "${SKILL_DIR}" rev-parse HEAD)
 
-if [ "${before}" != "${after}" ]; then
-  say "updated ${before:0:7}..${after:0:7}. Read SKILL.md again before you continue."
+if ! git -C "${SKILL_DIR}" merge-base --is-ancestor HEAD "origin/${BRANCH}" 2>/dev/null; then
+  say "update blocked: this checkout has commits that are not on origin/${BRANCH}. Re-run install.sh to reinstall."
+  exit 0
 fi
+
+before=$(git -C "${SKILL_DIR}" rev-parse HEAD)
+after=$(git -C "${SKILL_DIR}" rev-parse "origin/${BRANCH}")
+[ "${before}" = "${after}" ] && exit 0
+
+if ! ff_err=$(git -C "${SKILL_DIR}" merge --ff-only --quiet "origin/${BRANCH}" 2>&1 >/dev/null); then
+  say "update failed: ${ff_err}"
+  exit 0
+fi
+say "updated ${before:0:7}..${after:0:7}. Read SKILL.md again before you continue."
 exit 0
