@@ -246,18 +246,18 @@ is a response any part of which can be trusted — so none of it enters `coverag
 just tried to forge its own corroboration.
 
 **A mismatched fingerprint is re-derived, never dropped.** The canonical value is
-`path:anchor:category` composed from the `path`, `anchor` and `category` the finding
-itself carries, so when the emitted string differs, rebuild it from those three fields
-and keep the finding. The triple is the authoritative source: each field is individually
-required and the anchor is checked by the quote gate, while the fingerprint is a copy the
-lens maintains by hand — and a hand-maintained copy drifts by one character. prelint/prelint
-PR #5493 dropped a real finding because a lens wrote `foo()` in the fingerprint and `foo(`
-in the anchor; every downstream consumer would have accepted either. Re-derivation is also
-the safer direction: a fingerprint that disagrees with its own fields can smuggle nothing,
-because the rebuilt value wins. Name each correction in the session output — one is a typo,
-several from one lens is a response worth reading skeptically. A finding drops only when
-`path`, `anchor` or `category` is itself missing or empty, because then there is nothing
-to derive from. The `end` count still has to add up against what was sent.
+`path:anchor:category`, composed from the fields on the same finding. When the emitted
+string differs, rebuild it from those three fields and keep the finding. The triple is
+the authoritative source: each field is individually required, and the quote gate checks
+the anchor. The fingerprint is a copy the lens maintains by hand, and a hand-kept copy
+drifts. prelint/prelint PR #5493 dropped a real finding over one character (`foo()` in
+the fingerprint, `foo(` in the anchor).
+
+Re-derivation is also the safer direction. A fingerprint that disagrees with its own
+fields can smuggle nothing, because the rebuilt value wins. Name each correction in the
+session output, and read a lens with several corrections skeptically. Drop a finding
+only when its `path`, `anchor` or `category` is missing or empty, because then there is
+nothing to derive from. The `end` count still has to add up against what was sent.
 
 After validating a response, consume its `end` terminator and write every `clean`,
 `cleared`, and `not-dispatched` object to the ledger's `coverage` array. Coverage is
