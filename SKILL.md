@@ -270,8 +270,8 @@ That is the whole dispatch rule. There is no table here to drift from the files 
 trigger is written once, in the lens's opening paragraph, and evaluated once, by the lens.
 
 **Every `not-dispatched` reason goes in the session output.** When a summary is posted for
-another reason, it carries the same coverage line: "Not dispatched: `money`, `tenancy` —
-no billing path or per-tenant query in the diff." A correct decline does not break silence
+another reason, it carries the same coverage line: "Not dispatched: `money`, `tenancy`
+(no billing path or per-tenant query in the diff)." A correct decline does not break silence
 by itself, but it never disappears from the run's output. Dead lenses are reported under
 their own rule above, which is stricter because a lens failing is not a lens declining.
 

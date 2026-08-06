@@ -49,8 +49,8 @@ one re-fetch into a batch before deciding:
    issue link go; do not launch `spec-drift` a second time.
 3. Name those deferrals in the summary, **in the author's terms, not these ones**. The
    ledger's `reason` is machine-traceable and stays as written; the summary line says what
-   happened and what to do about it — "arrived while this run was finishing and was not
-   reviewed — re-run the agent to pick it up". A reader who does not know this skill has
+   happened and what to do about it: "arrived while this run was finishing and was not
+   reviewed. Re-run the agent to pick it up." A reader who does not know this skill has
    stage numbers gets a fact they can act on instead of one they cannot. They are closed
    ledger statuses, not permission to imply that the late changes were reviewed.
 
@@ -182,8 +182,8 @@ between them, and the not-dispatched reasons this file requires in a posted summ
 nowhere else to go:
 
 ```
-Coverage: clean — money, security, tenancy; cleared — red-team (7 checks);
-not dispatched — data-migration, tenancy (no migration or per-tenant query in the diff).
+Coverage: clean (money, security, tenancy). Cleared: red-team (7 checks).
+Not dispatched: data-migration, tenancy (no migration or per-tenant query in the diff).
 ```
 
 This line does not break silence by itself. A clean review may still post nothing; its
@@ -381,7 +381,7 @@ Reply templates — keep them this short:
 
 - **Fixed:** `Fixed in <sha>. <one line on what changed and why that closes it>.`
 - **Rebutted:** `<what the code actually does, with the quoted line>. Not changing this.`
-- **Deferred:** `Real, out of scope here — tracked in <issue>.`
+- **Deferred:** `Real, out of scope here. Tracked in <issue>.`
 
 Never open with "Thanks", "Good catch", or "You're absolutely right". State the fix.
 The commit shows you heard it.
@@ -536,7 +536,7 @@ context and no comment, which is byte-for-byte what a clean review leaves behind
 line, because the session output is not a place anyone is watching:
 
 ```
-Ledger unreadable — nothing in this run was reconciled. Re-run before trusting it.
+Ledger unreadable: nothing in this run was reconciled. Re-run before trusting it.
 ```
 
 **A dead lens.** Stage 2 requires naming a lens that did not answer, and silence would
@@ -560,7 +560,7 @@ that status, post — even when nothing blocks and everything else is clean. One
 enough:
 
 ```
-N item(s) fixed but not resolvable — thread ID missing: <urls>. Close them by hand.
+N item(s) fixed but not resolvable (thread ID missing): <urls>. Close them by hand.
 N reply/resolve call(s) failed, so these were decided but not answered: <urls>.
 ```
 
@@ -679,10 +679,10 @@ the summary itself out of the reviewer ledger.
 ```
 <verdict in one line: what is blocking, or that nothing is>
 
-Blocker: <file:line> — <problem>. <fix>.
-Required: <file:line> — <problem>. <fix>.
+Blocker: <file:line>. <problem>. <fix>.
+Required: <file:line>. <problem>. <fix>.
 
-Coverage: clean — money, security, tenancy; cleared — red-team (7 checks).
+Coverage: clean (money, security, tenancy). Cleared: red-team (7 checks).
 Reviewer items: N fixed, N rebutted, N deferred.
 ```
 
