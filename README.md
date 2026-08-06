@@ -8,7 +8,7 @@ Needs `git`, `gh`, `python3`. Nothing else.
 ## Install
 
 ```
-curl -fsSL https://raw.githubusercontent.com/prelint/review-agent/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/prelint/review-agent/refs/heads/main/install.sh | bash
 ```
 
 Clones into `~/.claude/skills/review-agent` and adds two rules to `permissions.allow`
