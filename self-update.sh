@@ -49,11 +49,20 @@ echo "${now}" >"${STAMP}"
 # A failed fetch is offline, which is normal and transient: stay silent. A clone
 # that fetched fine and still cannot fast-forward never heals on its own, so that
 # message names the cause and the way out.
-if ! GIT_TERMINAL_PROMPT=0 git -C "${SKILL_DIR}" \
+# The watchdog bounds the whole fetch. The lowSpeed settings only abort a transfer
+# that has started, so a blackholed connect would otherwise stall for the OS
+# timeout, and macOS has no timeout(1) to wrap it with.
+GIT_TERMINAL_PROMPT=0 git -C "${SKILL_DIR}" \
   -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=10 \
-  fetch --quiet origin "${BRANCH}" >/dev/null 2>&1; then
-  exit 0
-fi
+  fetch --quiet origin "${BRANCH}" >/dev/null 2>&1 &
+fetch_pid=$!
+(sleep 20 && kill -9 "${fetch_pid}") >/dev/null 2>&1 &
+watchdog_pid=$!
+fetch_ok=yes
+wait "${fetch_pid}" >/dev/null 2>&1 || fetch_ok=no
+kill -9 "${watchdog_pid}" >/dev/null 2>&1 || true
+wait "${watchdog_pid}" >/dev/null 2>&1 || true
+[ "${fetch_ok}" = yes ] || exit 0
 
 if ! git -C "${SKILL_DIR}" merge-base --is-ancestor HEAD "origin/${BRANCH}" 2>/dev/null; then
   say "update blocked: this checkout has commits that are not on origin/${BRANCH}. Re-run install.sh to reinstall."
