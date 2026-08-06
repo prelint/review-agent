@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Installs review-agent into ~/.claude/skills/ and allows Claude Code to read the
-# skill's own files without prompting on each one. Re-run to update.
+# skill's own files and run its self-update without prompting. Re-run to update.
 set -euo pipefail
 
 REPO="https://github.com/prelint/review-agent.git"
 BRANCH="main"
 SKILL_DIR="${HOME}/.claude/skills/review-agent"
 SETTINGS="${HOME}/.claude/settings.json"
-RULE='Read(~/.claude/skills/review-agent/**)'
+RULES=(
+  'Read(~/.claude/skills/review-agent/**)'
+  'Bash(~/.claude/skills/review-agent/self-update.sh)'
+)
 
 for dep in git python3; do
   command -v "$dep" >/dev/null 2>&1 || {
@@ -18,7 +21,7 @@ done
 
 # Compare remotes as https://host/owner/repo, so ssh and .git forms match.
 canonical_url() {
-  printf '%s' "$1" | sed -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
+  printf '%s' "$1" | sed -e 's#^ssh://git@github\.com/#https://github.com/#' -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
 }
 
 if [ -d "${SKILL_DIR}/.git" ]; then
@@ -47,7 +50,7 @@ else
   git clone --quiet "${REPO}" "${SKILL_DIR}"
 fi
 
-python3 - "${SETTINGS}" "${RULE}" <<'PY'
+python3 - "${SETTINGS}" "${RULES[@]}" <<'PY'
 import json
 import os
 import shutil
@@ -55,7 +58,7 @@ import stat
 import sys
 import time
 
-link_path, rule = sys.argv[1], sys.argv[2]
+link_path, rules = sys.argv[1], sys.argv[2:]
 
 # Write through a symlink to whatever it points at. Dotfile managers symlink
 # settings.json, and replacing the link with a regular file detaches it.
@@ -73,7 +76,7 @@ if existing:
     except json.JSONDecodeError as exc:
         sys.exit(
             f"review-agent: {settings_path} is not valid JSON ({exc}).\n"
-            f"review-agent: add {rule} to permissions.allow by hand."
+            f"review-agent: add these to permissions.allow by hand: {', '.join(rules)}"
         )
     if not isinstance(settings, dict):
         sys.exit(f"review-agent: {settings_path} is not a JSON object. Leaving it alone.")
@@ -88,10 +91,11 @@ allow = permissions.setdefault("allow", [])
 if not isinstance(allow, list):
     sys.exit(f"review-agent: permissions.allow in {settings_path} is not a list. Leaving it alone.")
 
-if rule in allow:
-    print("review-agent: permission rule already present")
+missing = [rule for rule in rules if rule not in allow]
+if not missing:
+    print("review-agent: permission rules already present")
     sys.exit(0)
-allow.append(rule)
+allow.extend(missing)
 
 if existing:
     backup = f"{settings_path}.bak.{time.strftime('%Y%m%d-%H%M%S')}"
@@ -105,7 +109,7 @@ with open(tmp, "w") as fh:
     fh.write("\n")
 os.chmod(tmp, mode)
 os.replace(tmp, settings_path)
-print(f"review-agent: added {rule} to permissions.allow")
+print(f"review-agent: added to permissions.allow: {', '.join(missing)}")
 PY
 
 echo

@@ -11,15 +11,30 @@ Dependencies: `git`, `gh`, `python3`. Nothing else. No standalone `jq` — every
 here runs through `gh --jq`, which is built in. Do not read files outside this
 directory and the repository under review.
 
-**Search with Grep and Glob, read with Read.** Shell out only for `git`, `gh`, and
-`python3` where a reference file gives it explicitly — the content hashing and the
-thread join in `reference/intake.md` are the only two. The previous version made
-14,249 Bash calls against 2 Grep calls and paid for it in context and in quoting bugs.
+**Search with Grep and Glob, read with Read.** Shell out only for `git`, `gh`,
+`python3`, and the self-update step below. A reference file gives each `python3` use
+explicitly: the content hashing and the thread join in `reference/intake.md` are the
+only two. The previous version made 14,249 Bash calls against 2 Grep calls and paid
+for it in context and in quoting bugs.
 
 **Every word you publish follows `reference/ste-writing.md`.** That covers commit
 messages, issue bodies, thread replies, and the summary. Read it the first time you
 write one, not at Stage 5. Stage 4 commits and files issues before the summary
 exists.
+
+---
+
+## Before Stage 0: self-update
+
+```bash
+~/.claude/skills/review-agent/self-update.sh
+```
+
+The script fast-forwards the installed clone from `main`, at most once every six
+hours. If it prints `updated` for the directory this file lives in, read this file
+again and restart from the top. The copy in your context is the old version. If it
+prints `update skipped`, `update blocked`, or `update failed`, or nothing, or if the
+script is missing, continue. A stale skill still reviews.
 
 ---
 

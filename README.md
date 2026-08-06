@@ -11,16 +11,27 @@ Needs `git`, `gh`, `python3`. Nothing else.
 curl -fsSL https://raw.githubusercontent.com/prelint/review-agent/main/install.sh | bash
 ```
 
-Clones into `~/.claude/skills/review-agent` and adds one rule to
-`permissions.allow` in `~/.claude/settings.json`, so Claude Code reads this skill's own
-files without prompting for each one. Re-run it to update.
+Clones into `~/.claude/skills/review-agent` and adds two rules to `permissions.allow`
+in `~/.claude/settings.json`. Claude Code then reads this skill's files and runs its
+update script without prompting.
+
+After that the skill keeps itself current. Each run starts with `self-update.sh`,
+which fast-forwards the clone from `main`, at most once every six hours. Offline it
+stays quiet and the review runs on the version it has. A re-run of `install.sh` also
+updates.
+
+An install from before self-update exists never gains it on its own: the pull is the
+one path that could deliver the update step, and the old SKILL.md never pulls. Run
+`install.sh` once more on such an install. That adds the update path and the
+permission rule it needs.
 
 It backs up `settings.json` before writing, keeps its file mode, and refuses to touch it
 if it is not valid JSON. If it is a symlink, the write follows it rather than replacing
 it, so a dotfiles repo stays intact.
 
 Updating only ever fast-forwards `main` from this remote. A checkout on another branch
-or another remote is left alone.
+or another remote is left alone. The self-update also skips a checkout with local
+edits.
 
 To read the script before running it, clone first:
 
