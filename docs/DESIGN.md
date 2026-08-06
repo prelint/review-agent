@@ -16,7 +16,29 @@ reviewing. A review skill should be readable in one sitting by the person who ha
 to debug it at 2am.
 
 State lives in the repo under review (git history, PR threads) or in a single
-run-scoped ledger file. Nothing is written to the user's home directory.
+run-scoped ledger file. A run writes nothing to the user's home directory outside
+the skill's own install.
+
+## Self-update
+
+Of the four repos this skill was ported from, three ship no update path at all.
+Installed copies drift from upstream until a person notices. gstack is the
+exception. Its machinery is heavy: a version check in every skill preamble, a
+four-option consent prompt, snooze state with backoff, and telemetry.
+
+`self-update.sh` replaces that with one fast-forward pull before Stage 0. The
+pinned clone makes the consent prompt unnecessary. install.sh guarantees a clean
+checkout of our `main`, so a fast-forward cannot conflict. The README says the
+skill updates itself, so the user consents at install. The script refuses any
+other checkout: wrong remote, wrong branch, or local edits. It checks the remote
+at most once every six hours, stays quiet offline, and exits 0 on every path. A
+stale skill still reviews. After an update, SKILL.md restarts from the top,
+because the copy in context predates the pull. The throttle stamp lives inside
+the clone's own `.git/`, so the tree stays clean.
+
+The alternative was a SessionStart hook, gstack's team mode. It adds no per-run
+latency, but it runs in every project on every session, whether or not the skill
+runs. Pull-on-invoke matches the scope of one skill.
 
 ## The five failures this replaces
 

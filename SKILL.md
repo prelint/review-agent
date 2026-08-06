@@ -23,6 +23,19 @@ exists.
 
 ---
 
+## Before Stage 0: self-update
+
+```bash
+~/.claude/skills/review-agent/self-update.sh
+```
+
+The script fast-forwards the installed clone from `main`, at most once every six
+hours. If it prints `updated`, read this file again and restart from the top. The
+copy in your context is the old version. If it prints `update skipped` or nothing,
+or if it is missing, continue. A stale skill still reviews.
+
+---
+
 ## Stage 0: Bind the run
 
 ```bash

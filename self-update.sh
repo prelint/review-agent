@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Fast-forwards the installed clone from main. SKILL.md runs this before Stage 0.
+# Checks the remote at most once every six hours. Refuses any checkout that is not
+# the pinned clone install.sh creates. Exits 0 on every path: a stale skill still
+# reviews, and this script must never stop a run.
+set -uo pipefail
+
+REPO="https://github.com/prelint/review-agent.git"
+BRANCH="main"
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STAMP="${SKILL_DIR}/.git/self-update-stamp"
+THROTTLE_SECONDS=$((6 * 60 * 60))
+
+say() { echo "review-agent: $*" >&2; }
+
+[ -d "${SKILL_DIR}/.git" ] || { say "update skipped: not a git checkout"; exit 0; }
+
+# Compare remotes as https://host/owner/repo, so ssh and .git forms match.
+canonical_url() {
+  printf '%s' "$1" | sed -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
+}
+
+origin="$(git -C "${SKILL_DIR}" remote get-url origin 2>/dev/null || true)"
+if [ "$(canonical_url "${origin}")" != "$(canonical_url "${REPO}")" ]; then
+  say "update skipped: origin is ${origin:-missing}, not ${REPO}"
+  exit 0
+fi
+
+branch="$(git -C "${SKILL_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+if [ "${branch}" != "${BRANCH}" ]; then
+  say "update skipped: checkout is on '${branch}', not '${BRANCH}'"
+  exit 0
+fi
+
+if [ -n "$(git -C "${SKILL_DIR}" status --porcelain -uno)" ]; then
+  say "update skipped: checkout has local edits"
+  exit 0
+fi
+
+now=$(date +%s)
+if [ -f "${STAMP}" ]; then
+  last=$(cat "${STAMP}" 2>/dev/null || echo 0)
+  case "${last}" in '' | *[!0-9]*) last=0 ;; esac
+  [ $((now - last)) -lt "${THROTTLE_SECONDS}" ] && exit 0
+fi
+# Stamp before the pull, so a failed attempt also waits out the throttle.
+echo "${now}" >"${STAMP}"
+
+before=$(git -C "${SKILL_DIR}" rev-parse HEAD)
+if ! GIT_TERMINAL_PROMPT=0 git -C "${SKILL_DIR}" \
+  -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=10 \
+  pull --ff-only --quiet origin "${BRANCH}" >/dev/null 2>&1; then
+  say "update skipped: no fast-forward from origin (offline or diverged)"
+  exit 0
+fi
+after=$(git -C "${SKILL_DIR}" rev-parse HEAD)
+
+if [ "${before}" != "${after}" ]; then
+  say "updated ${before:0:7}..${after:0:7}. Read SKILL.md again before you continue."
+fi
+exit 0
