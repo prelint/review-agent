@@ -679,8 +679,8 @@ the summary itself out of the reviewer ledger.
 ```
 <verdict in one line: what is blocking, or that nothing is>
 
-Blocker (<file:line>): <problem>. <fix>.
-Required (<file:line>): <problem>. <fix>.
+Blocker: <file:line>. <problem>. <fix>.
+Required: <file:line>. <problem>. <fix>.
 
 Coverage: clean (money, security, tenancy). Cleared: red-team (7 checks).
 Reviewer items: N fixed, N rebutted, N deferred.
