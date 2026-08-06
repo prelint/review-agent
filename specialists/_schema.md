@@ -90,7 +90,7 @@ JSON, one object per line, nothing else. No prose before or after.
 | `failure` | yes | Concrete: inputs or interleaving → wrong outcome. "Could be unsafe" is not a failure scenario. |
 | `evidence` | yes | Verbatim source. This is the quote gate. |
 | `fix` | yes | The specific change. "Consider reviewing this" is not a fix. |
-| `fingerprint` | yes | Exactly `path:anchor:category`, for the `path`, `anchor` and `category` on this same object; Stage 2 drops a finding whose value does not match those fields, and keeps the rest of the response. See below. |
+| `fingerprint` | yes | Exactly `path:anchor:category` — join the `path`, `anchor` and `category` fields on this same object with colons; copy them, do not retype them. Stage 2 re-derives the canonical value from those three fields, so a mismatch is corrected and named rather than fatal; only a missing `path`, `anchor` or `category` drops the finding. See below. |
 | `test_stub` | no | A failing test that would catch it, if you can write one cheaply |
 
 ### Not dispatched
