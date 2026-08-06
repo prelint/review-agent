@@ -20,6 +20,11 @@ which fast-forwards the clone from `main`, at most once every six hours. Offline
 stays quiet and the review runs on the version it has. A re-run of `install.sh` also
 updates.
 
+An install from before self-update exists never gains it on its own: the pull is the
+one path that could deliver the update step, and the old SKILL.md never pulls. Run
+`install.sh` once more on such an install. That adds the update path and the
+permission rule it needs.
+
 It backs up `settings.json` before writing, keeps its file mode, and refuses to touch it
 if it is not valid JSON. If it is a symlink, the write follows it rather than replacing
 it, so a dotfiles repo stays intact.
