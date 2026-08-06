@@ -79,5 +79,5 @@ if ! ff_err=$(git -C "${SKILL_DIR}" merge --ff-only --quiet "origin/${BRANCH}" 2
   say "update failed: ${ff_err}"
   exit 0
 fi
-say "updated ${before:0:7}..${after:0:7}. Read SKILL.md again before you continue."
+say "updated ${before:0:7}..${after:0:7} in ${SKILL_DIR}. If that is the copy you are running, read its SKILL.md again before you continue."
 exit 0

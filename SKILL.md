@@ -31,9 +31,10 @@ exists.
 ```
 
 The script fast-forwards the installed clone from `main`, at most once every six
-hours. If it prints `updated`, read this file again and restart from the top. The
-copy in your context is the old version. If it prints `update skipped` or nothing,
-or if it is missing, continue. A stale skill still reviews.
+hours. If it prints `updated` for the directory this file lives in, read this file
+again and restart from the top. The copy in your context is the old version. If it
+prints `update skipped`, `update blocked`, or `update failed`, or nothing, or if the
+script is missing, continue. A stale skill still reviews.
 
 ---
 
