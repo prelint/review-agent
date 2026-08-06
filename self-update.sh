@@ -17,7 +17,7 @@ say() { echo "review-agent: $*" >&2; }
 
 # Compare remotes as https://host/owner/repo, so ssh and .git forms match.
 canonical_url() {
-  printf '%s' "$1" | sed -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
+  printf '%s' "$1" | sed -e 's#^ssh://git@github\.com/#https://github.com/#' -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
 }
 
 origin="$(git -C "${SKILL_DIR}" remote get-url origin 2>/dev/null || true)"

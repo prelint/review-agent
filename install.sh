@@ -21,7 +21,7 @@ done
 
 # Compare remotes as https://host/owner/repo, so ssh and .git forms match.
 canonical_url() {
-  printf '%s' "$1" | sed -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
+  printf '%s' "$1" | sed -e 's#^ssh://git@github\.com/#https://github.com/#' -e 's#^git@github\.com:#https://github.com/#' -e 's#\.git$##' -e 's#/$##'
 }
 
 if [ -d "${SKILL_DIR}/.git" ]; then
