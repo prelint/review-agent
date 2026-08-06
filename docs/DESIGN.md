@@ -40,6 +40,12 @@ The alternative was a SessionStart hook, gstack's team mode. It adds no per-run
 latency, but it runs in every project on every session, whether or not the skill
 runs. Pull-on-invoke matches the scope of one skill.
 
+Main is the release channel, and this repo treats it as stable. Self-update ships
+every commit on main to every install inside six hours, so the channel policy is
+part of the mechanism. Every change reaches main through a PR, and this skill
+reviews every PR before merge. Work that is not ready for every install stays on
+its branch.
+
 ## The five failures this replaces
 
 | Failure | Evidence | Fix |
