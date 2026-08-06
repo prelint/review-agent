@@ -41,6 +41,8 @@ now=$(date +%s)
 if [ -f "${STAMP}" ]; then
   last=$(cat "${STAMP}" 2>/dev/null || echo 0)
   case "${last}" in '' | *[!0-9]*) last=0 ;; esac
+  # A future stamp (clock skew, a restored VM) would throttle forever: expire it.
+  [ "${last}" -gt "${now}" ] && last=0
   [ $((now - last)) -lt "${THROTTLE_SECONDS}" ] && exit 0
 fi
 # Stamp before the network step, so a failed attempt also waits out the throttle.
