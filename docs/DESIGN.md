@@ -48,7 +48,7 @@ runs. Pull-on-invoke matches the scope of one skill.
 | The loop closed on the founder's desk | 13 times in two weeks the founder pasted a comment back and asked "did you address this?" | Stage 5 cannot finish until every ledger item resolves to a commit, a rebuttal, or a deferral. |
 | Dirty worktrees | Old rule, verbatim: *"Never commit, push, or create PRs — that's /ship's job."* 1,347 edits made under it. 11% of sessions ended with an uncommitted code edit; two ended on the words "Fixing it." | One finding, one commit, immediately. An interrupted run leaves a clean tree. |
 | Uncapped output | 226 posted comment bodies: median 1,718 chars, p90 4,180, max 10,289. The worst was 10 KB reporting *"0 blocking, 6 informational"*. | Hard caps in Stage 5, and nothing posts when nothing blocks. |
-| Everything through Bash | 14,249 Bash calls vs 2,113 Read and 2 Grep. 88 tool errors followed. | Stage 2 requires the native search tools; `gh` and `git` are the only sanctioned shell. |
+| Everything through Bash | 14,249 Bash calls vs 2,113 Read and 2 Grep. 88 tool errors followed. | Stage 2 requires the native search tools; `gh`, `git`, and the pre-stage self-update are the only sanctioned shell. |
 
 ## What the rewrite dropped
 
