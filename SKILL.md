@@ -246,11 +246,19 @@ is a response any part of which can be trusted — so none of it enters `coverag
 `findings`. Dropping only the mislabelled object would leave the rest of a response that
 just tried to forge its own corroboration.
 
-**A malformed fingerprint drops that finding alone.** If it is not exactly
-`path:anchor:category` for the `path`, `anchor` and `category` the finding itself carries,
-Stage 3 cannot key it and the lens is otherwise answering honestly. Drop the finding, name
-it in the session output, and keep the rest of the response — including its `end` count,
-which still has to add up against what was sent, not against what survived.
+**A mismatched fingerprint is re-derived, never dropped.** The canonical value is
+`path:anchor:category`, composed from the fields on the same finding. When the emitted
+string differs, rebuild it from those three fields and keep the finding. The triple is
+the authoritative source: each field is individually required, and the quote gate checks
+the anchor. The fingerprint is a copy the lens maintains by hand, and a hand-kept copy
+drifts. prelint/prelint PR #5493 dropped a real finding over one character (`foo()` in
+the fingerprint, `foo(` in the anchor).
+
+Re-derivation is also the safer direction. A fingerprint that disagrees with its own
+fields can smuggle nothing, because the rebuilt value wins. Name each correction in the
+session output, and read a lens with several corrections skeptically. Drop a finding
+only when its `path`, `anchor` or `category` is missing or empty, because then there is
+nothing to derive from. The `end` count still has to add up against what was sent.
 
 After validating a response, consume its `end` terminator and write every `clean`,
 `cleared`, and `not-dispatched` object to the ledger's `coverage` array. Coverage is
