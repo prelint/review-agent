@@ -243,8 +243,8 @@ reaches a subagent, which is the defence that actually matters.
 "Stage 5 cannot finish while any entry is `open`" holds for **one sequential run
 against one PR**.
 
-The ledger is per-run state under `.review-agent/`, gitignored, local to the process.
-Two agents on the same PR each build their own from their own Stage 1 fetch:
+The ledger is per-run state under `.git/review-agent/`, which git never tracks, local to
+the process. Two agents on the same PR each build their own from their own Stage 1 fetch:
 
 - A comment arriving after run A's Stage 1 is invisible to run A's Stage 5. A closes
   its ledger honestly and the PR still has an open item.
@@ -265,7 +265,8 @@ routine, the fix is a lease on the PR, not a shared ledger.
 
 ### GitHub is the ledger that survives
 
-`.review-agent/` is gitignored and does not outlive the run, so the *next* run started
+Run state does not reach the next run. The fleet gives each PR a fresh worktree, and
+`git worktree remove` deletes `.git/review-agent/` with it. So the *next* run started
 cold: every item took the "No previous hash → New item" row, and `substance_hash` — the
 field built to tell a typo from a new claim — had nothing to compare against. Worse,
 intake skipped `author == SELF`, which threw away the only record of what the last run
@@ -299,8 +300,8 @@ a secret in the repo is not a secret.
 
 ## The ledger holds our findings too
 
-Nine findings, nine commits, and `.review-agent/pr-10.json` recorded none of them. The
-file had one array, `items`, so intake had a ledger and the review did not. A finding
+Nine findings, nine commits, and `pr-10.json` recorded none of them. The file had one
+array, `items`, so intake had a ledger and the review did not. A finding
 cut by the five-finding cap or suppressed by the silence rule left no trace anywhere,
 and `surviving_blockers` was an integer Stage 4 decremented by hand with nothing
 checking a decrement against a real fix.

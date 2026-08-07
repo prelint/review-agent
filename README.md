@@ -109,9 +109,11 @@ evidence decides, not the login.
 
 ## What it assumes about your repo
 
-Nothing on disk survives a run — `.review-agent/` is gitignored. What has to outlive one
-lives in two places GitHub already keeps: the markers in the summary comment, and a
-`Finding:` trailer on each fix commit. That is why the git workflow below matters at all.
+A run never reads disk state left by an earlier run. Run state lives under
+`.git/review-agent/`, which git never tracks, so your repo needs no gitignore entry and
+no file of ours ever reaches a diff. What has to outlive one run lives in two places
+GitHub already keeps: the markers in the summary comment, and a `Finding:` trailer on
+each fix commit. That is why the git workflow below matters at all.
 
 - **It pushes to the PR branch** — `git push origin HEAD`, never a force-push, never a
   rewrite, never another branch. A fork PR needs *Allow edits by maintainers*. Nothing in

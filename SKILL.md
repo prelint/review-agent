@@ -87,7 +87,8 @@ fi
 
 SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
                                            # prior comments to rebuild the last ledger
-RUN_DIR="$WORKDIR/.review-agent"
+RUN_DIR="$(git rev-parse --absolute-git-dir)/review-agent"   # git never tracks .git, so
+                                                             # no repo needs a gitignore entry
 FETCH_DIR="$RUN_DIR/fetch-stage1"
 LEDGER="$RUN_DIR/pr-${PR}.json"
 mkdir -p "$FETCH_DIR"
@@ -135,8 +136,8 @@ reviewing their own work on purpose, and no string check reaches that.
 **A matching SHA is necessary and not sufficient — the tree has to be clean too.**
 `git diff "$DIFF_BASE"` and every specialist's copy of it read the *working tree*, not
 `HEAD`, so an uncommitted tracked edit is reviewed as if the PR contained it. `-uno`
-because untracked files cannot reach that diff, and `.review-agent/` is gitignored, so
-the run's own state never trips the gate.
+because untracked files cannot reach that diff, and `RUN_DIR` sits inside `.git`, which
+is not part of the working tree, so the run's own state never trips the gate.
 
 **Confirm `SELF` is non-empty in the same breath.** `gh api user` 403s for a GitHub App
 or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — and the
