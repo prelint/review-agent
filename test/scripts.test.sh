@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for the python scripts in scripts/. Runs offline; needs python3.
+# Tests for the python scripts in scripts/. Runs offline; needs git and python3.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,11 +17,18 @@ check() {
   fi
 }
 
+# Fixture repo. File arguments must live under RUN_DIR
+# (<git-dir>/review-agent), so every fixture goes there.
+git init --quiet "${TMP}/repo"
+RA="${TMP}/repo/.git/review-agent"
+mkdir -p "${RA}"
+in_repo() { (cd "${TMP}/repo" && "$@"); }
+
 # --- hash-bodies.py ---
 
 hashes() {
   printf '{"body": %s}\n' "$1" \
-    | python3 "${SCRIPTS}/hash-bodies.py" \
+    | in_repo python3 "${SCRIPTS}/hash-bodies.py" \
     | python3 -c 'import json,sys; o=json.load(sys.stdin); print(o["body_hash"], o["substance_hash"])'
 }
 
@@ -49,23 +56,28 @@ read -r _ S13 <<<"$(hashes '"claim text"')"
 check "unicode trailing punctuation strips" "same" "$([ "$S12" = "$S13" ] && echo same)"
 
 read -r B10 S10 <<<"$(hashes 'null')"
-read -r B11 S11 <<<"$(printf '{"surface": "review"}\n' | python3 "${SCRIPTS}/hash-bodies.py" \
+read -r B11 S11 <<<"$(printf '{"surface": "review"}\n' | in_repo python3 "${SCRIPTS}/hash-bodies.py" \
   | python3 -c 'import json,sys; o=json.load(sys.stdin); print(o["body_hash"], o["substance_hash"])')"
 check "null body hashes like missing body" "same" "$([ "$B10 $S10" = "$B11 $S11" ] && echo same)"
 
+printf '{"id": 7, "body": "x"}\n' > "${RA}/items.jsonl"
+check "file argument under RUN_DIR works" "7" \
+  "$(in_repo python3 "${SCRIPTS}/hash-bodies.py" "${RA}/items.jsonl" \
+     | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')"
+
 # --- join-threads.py ---
 
-cat > "${TMP}/comments.jsonl" <<'EOF'
+cat > "${RA}/comments.jsonl" <<'EOF'
 {"id": 1, "in_reply_to": null}
 {"id": 2, "in_reply_to": 1}
 {"id": 3, "in_reply_to": 99}
 EOF
-cat > "${TMP}/threads.jsonl" <<'EOF'
+cat > "${RA}/threads.jsonl" <<'EOF'
 {"id": "T1", "comments": {"nodes": [{"databaseId": 1}]}}
 {"id": "T3", "comments": {"nodes": [{"databaseId": 42}]}}
 EOF
 
-out="$(python3 "${SCRIPTS}/join-threads.py" "${TMP}/comments.jsonl" "${TMP}/threads.jsonl" 2>"${TMP}/err")"
+out="$(in_repo python3 "${SCRIPTS}/join-threads.py" "${RA}/comments.jsonl" "${RA}/threads.jsonl" 2>/dev/null)"
 rc=$?
 check "reply joins through its root" "T1" \
   "$(printf '%s\n' "$out" | python3 -c 'import json,sys; print([json.loads(l)["thread_id"] for l in sys.stdin][1])')"
@@ -73,17 +85,17 @@ check "missing parent yields null" "None" \
   "$(printf '%s\n' "$out" | python3 -c 'import json,sys; print([json.loads(l)["thread_id"] for l in sys.stdin][2])')"
 check "paginated-out root exits 3" "3" "$rc"
 
-cat > "${TMP}/threads-ok.jsonl" <<'EOF'
+cat > "${RA}/threads-ok.jsonl" <<'EOF'
 {"id": "T1", "comments": {"nodes": [{"databaseId": 1}]}}
 {"id": "T2", "comments": {"nodes": []}}
 EOF
-printf '{"id": 1, "in_reply_to": null}\n' > "${TMP}/comments-ok.jsonl"
-python3 "${SCRIPTS}/join-threads.py" "${TMP}/comments-ok.jsonl" "${TMP}/threads-ok.jsonl" >/dev/null 2>&1
+printf '{"id": 1, "in_reply_to": null}\n' > "${RA}/comments-ok.jsonl"
+in_repo python3 "${SCRIPTS}/join-threads.py" "${RA}/comments-ok.jsonl" "${RA}/threads-ok.jsonl" >/dev/null 2>&1
 check "deleted-root thread is not a mismatch" "0" "$?"
 
 # --- ledger-counts.py ---
 
-cat > "${TMP}/ledger.json" <<'EOF'
+cat > "${RA}/ledger.json" <<'EOF'
 {
   "items": [
     {"claims": [
@@ -99,41 +111,60 @@ cat > "${TMP}/ledger.json" <<'EOF'
   ]
 }
 EOF
-check "open counts claims and findings" "2" "$(python3 "${SCRIPTS}/ledger-counts.py" open "${TMP}/ledger.json")"
-check "blockers split closed sets per kind" "3" "$(python3 "${SCRIPTS}/ledger-counts.py" blockers "${TMP}/ledger.json")"
-python3 "${SCRIPTS}/ledger-counts.py" open "${TMP}/absent.json" >/dev/null 2>&1
+check "open counts claims and findings" "2" \
+  "$(in_repo python3 "${SCRIPTS}/ledger-counts.py" open "${RA}/ledger.json")"
+check "blockers split closed sets per kind" "3" \
+  "$(in_repo python3 "${SCRIPTS}/ledger-counts.py" blockers "${RA}/ledger.json")"
+in_repo python3 "${SCRIPTS}/ledger-counts.py" open "${RA}/absent.json" >/dev/null 2>&1
 check "missing ledger exits non-zero" "1" "$?"
-python3 "${SCRIPTS}/ledger-counts.py" nonsense "${TMP}/ledger.json" >/dev/null 2>&1
+in_repo python3 "${SCRIPTS}/ledger-counts.py" nonsense "${RA}/ledger.json" >/dev/null 2>&1
 check "unknown mode exits 2" "2" "$?"
 
 # --- json-body.py ---
 
 body='reply with `backticks` and "quotes" and $(pwd)'
-roundtrip="$(printf '%s' "$body" | python3 "${SCRIPTS}/json-body.py" \
+roundtrip="$(printf '%s' "$body" | in_repo python3 "${SCRIPTS}/json-body.py" \
   | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin)["body"])')"
-check "json-body round-trips shell metacharacters" "$body" "$roundtrip"
+check "json-body round-trips a piped body" "$body" "$roundtrip"
+
+printf 'reply text' > "${RA}/reply.md"
+check "json-body reads a RUN_DIR file argument" '{"body": "reply text"}' \
+  "$(in_repo python3 "${SCRIPTS}/json-body.py" "${RA}/reply.md")"
 
 # --- jsonl-to-json.py ---
 
-printf '{"a": 1}\n\n{"b": 2}\n' > "${TMP}/rows.jsonl"
+printf '{"a": 1}\n\n{"b": 2}\n' > "${RA}/rows.jsonl"
 check "jsonl-to-json skips blank lines" '[{"a": 1}, {"b": 2}]' \
-  "$(python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/rows.jsonl")"
-check "jsonl-to-json reads stdin" '[{"a": 1}]' \
-  "$(printf '{"a": 1}\n' | python3 "${SCRIPTS}/jsonl-to-json.py")"
+  "$(in_repo python3 "${SCRIPTS}/jsonl-to-json.py" "${RA}/rows.jsonl")"
+check "jsonl-to-json reads piped stdin" '[{"a": 1}]' \
+  "$(printf '{"a": 1}\n' | in_repo python3 "${SCRIPTS}/jsonl-to-json.py")"
 
-# --- containment ---
+# --- containment: RUN_DIR is the only root ---
 
-# The run owns the working directory, the git directory, and tmp. A path
-# outside all three must die unread, whichever script gets it.
-mkdir -p "${TMP}/inside"
-printf '{"token": "sensitive"}\n' > "${TMP}/secret.json"
-out="$(cd "${TMP}/inside" && TMPDIR="${TMP}/inside" python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/secret.json" 2>"${TMP}/err")"
-rc=$?
-check "outside path is refused" "1" "$rc"
-check "outside path is not printed" "" "$out"
-check "refusal names the boundary" "outside" \
-  "$(grep -o outside "${TMP}/err" | head -1)"
-out="$(cd "${TMP}/inside" && TMPDIR="${TMP}/inside" python3 "${SCRIPTS}/ledger-counts.py" open "${TMP}/secret.json" 2>/dev/null)"
-check "ledger-counts refuses outside path" "" "$out"
+printf '{"token": "sensitive"}\n' > "${TMP}/tmp-secret.json"
+printf '{"token": "sensitive"}\n' > "${TMP}/repo/wt-secret.json"
+
+out="$(in_repo python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/tmp-secret.json" 2>"${TMP}/err")"
+check "temp-directory path is refused" "1" "$?"
+check "temp-directory content is not printed" "" "$out"
+check "refusal names RUN_DIR" "RUN_DIR" "$(grep -o RUN_DIR "${TMP}/err" | head -1)"
+
+out="$(in_repo python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/repo/wt-secret.json" 2>/dev/null)"
+check "working-tree path is refused" "1" "$?"
+check "working-tree content is not printed" "" "$out"
+
+out="$(in_repo python3 "${SCRIPTS}/ledger-counts.py" open "${TMP}/tmp-secret.json" 2>/dev/null)"
+check "ledger-counts refuses an outside path" "" "$out"
+
+out="$(cd "${TMP}/repo" && python3 "${SCRIPTS}/json-body.py" < "${TMP}/tmp-secret.json" 2>/dev/null)"
+check "stdin file redirect from outside is refused" "1" "$?"
+check "redirected content is not printed" "" "$out"
+
+out="$(cd "${TMP}/repo" && python3 "${SCRIPTS}/json-body.py" < "${RA}/reply.md" 2>/dev/null)"
+check "stdin file redirect from RUN_DIR passes" '{"body": "reply text"}' "$out"
+
+(cd "${TMP}" && python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/tmp-secret.json") >/dev/null 2>"${TMP}/err2"
+check "outside a git checkout everything is refused" "1" "$?"
+check "no-checkout refusal says why" "git" "$(grep -o git "${TMP}/err2" | head -1)"
 
 exit "$fail"

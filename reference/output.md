@@ -342,13 +342,14 @@ repository, and a required check that nothing reliably posts blocks every merge.
 Inline findings get inline replies **on their own thread**, never as a top-level
 comment:
 
-**Never interpolate a body into a shell command.** Build the JSON with the shipped
-script and pipe it in. Replies quote code, so they carry backticks, and `-f body="$REPLY"`
-hands those to the shell: this file's own review posted three replies whose every quoted
-term had been deleted by command substitution, marker intact and sentences gutted.
+**Never interpolate a body into a shell command.** Write the reply to a file under
+`$RUN_DIR`, then let the shipped script build the JSON. Replies quote code, so they
+carry backticks, and `-f body="$REPLY"` hands those to the shell: this file's own
+review posted three replies whose every quoted term had been deleted by command
+substitution, marker intact and sentences gutted.
 
 ```bash
-python3 ~/.claude/skills/review-agent/scripts/json-body.py < reply.md \
+python3 ~/.claude/skills/review-agent/scripts/json-body.py "$RUN_DIR/reply.md" \
   | gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" --input -
 ```
 

@@ -15,7 +15,8 @@ directory and the repository under review.
 `python3`, and the self-update step below. Run `python3` only on the scripts this
 skill ships in `scripts/`, and invoke each one as
 `python3 ~/.claude/skills/review-agent/scripts/<name>.py` so the command matches the
-allow rule `install.sh` writes. Never run `python3 -c` for a job a shipped script
+allow rule `install.sh` writes. Each script refuses a file path outside `$RUN_DIR`,
+including a `< file` redirect. Never run `python3 -c` for a job a shipped script
 covers: the reference files name one for each. A job no script covers may run
 inline. The inline call prompts, and the prompt means a script is missing, so file
 an issue on prelint/review-agent. The previous version made 14,249 Bash calls

@@ -15,7 +15,7 @@ import re
 import sys
 import unicodedata
 
-from containment import open_contained
+from containment import contained_stdin, open_contained
 
 
 def _img_alt(match: re.Match) -> str:
@@ -64,7 +64,7 @@ def sha256(text: str) -> str:
 
 
 def main() -> int:
-    source = open_contained(sys.argv[1]) if len(sys.argv) > 1 else sys.stdin
+    source = open_contained(sys.argv[1]) if len(sys.argv) > 1 else contained_stdin()
     for line in source:
         if not line.strip():
             continue
