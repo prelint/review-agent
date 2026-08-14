@@ -14,9 +14,11 @@ after writing the joined output.
 import json
 import sys
 
+from containment import open_contained
+
 
 def read_jsonl(path: str) -> list:
-    with open(path, encoding="utf-8") as f:
+    with open_contained(path) as f:
         return [json.loads(line) for line in f if line.strip()]
 
 
@@ -48,10 +50,13 @@ def main() -> int:
         print(json.dumps(c))
 
     # Only comments whose in_reply_to is null start threads. Counting all
-    # inline comments would fire on every thread that has a reply.
+    # inline comments would fire on every thread that has a reply. Compare
+    # joinable threads, not all threads: a thread whose first comment was
+    # deleted can never match a root and is a documented state, not a
+    # pagination failure.
     roots = sum(1 for c in comments if not c.get("in_reply_to"))
-    check = f"join-threads: {len(threads)} threads, {roots} thread roots"
-    if len(threads) != roots:
+    check = f"join-threads: {len(root_to_thread)} joinable threads, {roots} thread roots"
+    if len(root_to_thread) != roots:
         print(check + " - MISMATCH, pagination may have failed", file=sys.stderr)
         return 3
     print(check, file=sys.stderr)

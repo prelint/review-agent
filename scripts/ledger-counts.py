@@ -11,6 +11,8 @@ reference/output.md, section 5.
 import json
 import sys
 
+from containment import open_contained
+
 CLOSED_CLAIM = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
 CLOSED_FINDING = {"fixed", "posted", "deferred", "rebutted", "dropped"}
 BLOCKER_CLOSED_CLAIM = {"fixed", "rebutted", "unresolvable"}
@@ -22,7 +24,7 @@ def main() -> int:
         print("usage: ledger-counts.py open|blockers LEDGER", file=sys.stderr)
         return 2
     try:
-        with open(sys.argv[2], encoding="utf-8") as f:
+        with open_contained(sys.argv[2]) as f:
             led = json.load(f)
         claims = [c for i in led["items"] for c in i["claims"]]
         findings = led.get("findings", [])

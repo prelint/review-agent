@@ -44,6 +44,10 @@ read -r _ S8 <<<"$(hashes '"claim text <!-- hidden marker -->"')"
 read -r _ S9 <<<"$(hashes '"claim text."')"
 check "html comment and trailing punctuation strip" "same" "$([ "$S8" = "$S9" ] && echo same)"
 
+read -r _ S12 <<<"$(hashes '"claim text…"')"
+read -r _ S13 <<<"$(hashes '"claim text"')"
+check "unicode trailing punctuation strips" "same" "$([ "$S12" = "$S13" ] && echo same)"
+
 read -r B10 S10 <<<"$(hashes 'null')"
 read -r B11 S11 <<<"$(printf '{"surface": "review"}\n' | python3 "${SCRIPTS}/hash-bodies.py" \
   | python3 -c 'import json,sys; o=json.load(sys.stdin); print(o["body_hash"], o["substance_hash"])')"
@@ -58,7 +62,7 @@ cat > "${TMP}/comments.jsonl" <<'EOF'
 EOF
 cat > "${TMP}/threads.jsonl" <<'EOF'
 {"id": "T1", "comments": {"nodes": [{"databaseId": 1}]}}
-{"id": "T2", "comments": {"nodes": []}}
+{"id": "T3", "comments": {"nodes": [{"databaseId": 42}]}}
 EOF
 
 out="$(python3 "${SCRIPTS}/join-threads.py" "${TMP}/comments.jsonl" "${TMP}/threads.jsonl" 2>"${TMP}/err")"
@@ -67,14 +71,15 @@ check "reply joins through its root" "T1" \
   "$(printf '%s\n' "$out" | python3 -c 'import json,sys; print([json.loads(l)["thread_id"] for l in sys.stdin][1])')"
 check "missing parent yields null" "None" \
   "$(printf '%s\n' "$out" | python3 -c 'import json,sys; print([json.loads(l)["thread_id"] for l in sys.stdin][2])')"
-check "count mismatch exits 3" "3" "$rc"
+check "paginated-out root exits 3" "3" "$rc"
 
 cat > "${TMP}/threads-ok.jsonl" <<'EOF'
 {"id": "T1", "comments": {"nodes": [{"databaseId": 1}]}}
+{"id": "T2", "comments": {"nodes": []}}
 EOF
 printf '{"id": 1, "in_reply_to": null}\n' > "${TMP}/comments-ok.jsonl"
 python3 "${SCRIPTS}/join-threads.py" "${TMP}/comments-ok.jsonl" "${TMP}/threads-ok.jsonl" >/dev/null 2>&1
-check "matching counts exit 0" "0" "$?"
+check "deleted-root thread is not a mismatch" "0" "$?"
 
 # --- ledger-counts.py ---
 
@@ -115,5 +120,20 @@ check "jsonl-to-json skips blank lines" '[{"a": 1}, {"b": 2}]' \
   "$(python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/rows.jsonl")"
 check "jsonl-to-json reads stdin" '[{"a": 1}]' \
   "$(printf '{"a": 1}\n' | python3 "${SCRIPTS}/jsonl-to-json.py")"
+
+# --- containment ---
+
+# The run owns the working directory, the git directory, and tmp. A path
+# outside all three must die unread, whichever script gets it.
+mkdir -p "${TMP}/inside"
+printf '{"token": "sensitive"}\n' > "${TMP}/secret.json"
+out="$(cd "${TMP}/inside" && TMPDIR="${TMP}/inside" python3 "${SCRIPTS}/jsonl-to-json.py" "${TMP}/secret.json" 2>"${TMP}/err")"
+rc=$?
+check "outside path is refused" "1" "$rc"
+check "outside path is not printed" "" "$out"
+check "refusal names the boundary" "outside" \
+  "$(grep -o outside "${TMP}/err" | head -1)"
+out="$(cd "${TMP}/inside" && TMPDIR="${TMP}/inside" python3 "${SCRIPTS}/ledger-counts.py" open "${TMP}/secret.json" 2>/dev/null)"
+check "ledger-counts refuses outside path" "" "$out"
 
 exit "$fail"

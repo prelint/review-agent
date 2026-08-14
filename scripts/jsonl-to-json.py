@@ -4,5 +4,7 @@
 import json
 import sys
 
-source = open(sys.argv[1], encoding="utf-8") if len(sys.argv) > 1 else sys.stdin
+from containment import open_contained
+
+source = open_contained(sys.argv[1]) if len(sys.argv) > 1 else sys.stdin
 print(json.dumps([json.loads(line) for line in source if line.strip()]))

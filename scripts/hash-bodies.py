@@ -13,6 +13,9 @@ import hashlib
 import json
 import re
 import sys
+import unicodedata
+
+from containment import open_contained
 
 
 def _img_alt(match: re.Match) -> str:
@@ -46,8 +49,12 @@ def normalise(body: str) -> str:
     s = re.sub(r"[*_`]", "", s)
     # 6. Collapse whitespace runs to one space; strip the ends.
     s = re.sub(r"\s+", " ", s).strip()
-    # 7. Strip trailing punctuation from the whole string.
-    s = re.sub(r"[!-/:-@\[-`{-~]+$", "", s).rstrip()
+    # 7. Strip trailing punctuation from the whole string. Unicode categories
+    #    P and S cover the ASCII punctuation class plus its non-ASCII
+    #    equivalents, so an appended ellipsis or fullwidth stop cannot
+    #    re-open an unchanged item.
+    while s and (unicodedata.category(s[-1])[0] in "PS" or s[-1].isspace()):
+        s = s[:-1]
     # 8. Casefold.
     return s.casefold()
 
@@ -57,7 +64,7 @@ def sha256(text: str) -> str:
 
 
 def main() -> int:
-    source = open(sys.argv[1], encoding="utf-8") if len(sys.argv) > 1 else sys.stdin
+    source = open_contained(sys.argv[1]) if len(sys.argv) > 1 else sys.stdin
     for line in source:
         if not line.strip():
             continue

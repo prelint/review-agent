@@ -148,10 +148,12 @@ silence, so a clean run carrying a single top-level comment would announce
 "10 item(s) fixed but not resolvable". The run that produced those numbers filed them
 `fixed` and `informational` instead, which was right and undocumented.
 
-**Verify the count.** The script compares distinct thread IDs against the number of
-inline comments **whose `in_reply_to` is null**, because only those start threads.
-It prints both counts to stderr and exits 3 on a mismatch. A genuine mismatch means
-pagination failed and Stage 5 must not claim it resolved everything.
+**Verify the count.** The script compares joinable thread IDs against the number of
+inline comments **whose `in_reply_to` is null**, because only those start threads. A
+thread whose first comment was deleted cannot join, so it does not count. The script
+prints both counts to stderr and exits 3 on a mismatch. On exit 3, pagination may
+have failed: Stage 5 marks every inline item with a null `thread_id` unresolvable
+and must not claim it resolved everything.
 
 On a PR with no inline comments the check passes vacuously, which is correct.
 
@@ -213,6 +215,11 @@ normalise differently; so do "must" and "must not".
 comparison below is worthless and every item re-opens. Where the previous ledger and a
 fresh hash disagree on an item nobody touched, the bug is here — say so rather than
 treating it as an edit.
+
+The exception is a change to the shipped script itself. The first run after one can
+move `substance_hash` on items nobody touched. A `fixed` claim takes the re-verify
+path below and closes with its same SHA. A `deferred` or `rebutted` claim re-opens
+and gets decided once more, and its prior reason stays in the thread record.
 
 Compare against the previous run's ledger, rebuilt below:
 
