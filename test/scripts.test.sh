@@ -55,6 +55,10 @@ read -r _ S12 <<<"$(hashes '"claim text…"')"
 read -r _ S13 <<<"$(hashes '"claim text"')"
 check "unicode trailing punctuation strips" "same" "$([ "$S12" = "$S13" ] && echo same)"
 
+read -r _ S14 <<<"$(hashes '"the maximum is 5€"')"
+read -r _ S15 <<<"$(hashes '"the maximum is 5"')"
+check "trailing currency symbol stays substantive" "moved" "$([ "$S14" != "$S15" ] && echo moved)"
+
 read -r B10 S10 <<<"$(hashes 'null')"
 read -r B11 S11 <<<"$(printf '{"surface": "review"}\n' | in_repo python3 "${SCRIPTS}/hash-bodies.py" \
   | python3 -c 'import json,sys; o=json.load(sys.stdin); print(o["body_hash"], o["substance_hash"])')"

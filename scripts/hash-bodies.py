@@ -49,11 +49,12 @@ def normalise(body: str) -> str:
     s = re.sub(r"[*_`]", "", s)
     # 6. Collapse whitespace runs to one space; strip the ends.
     s = re.sub(r"\s+", " ", s).strip()
-    # 7. Strip trailing punctuation from the whole string. Unicode categories
-    #    P and S cover the ASCII punctuation class plus its non-ASCII
-    #    equivalents, so an appended ellipsis or fullwidth stop cannot
-    #    re-open an unchanged item.
-    while s and (unicodedata.category(s[-1])[0] in "PS" or s[-1].isspace()):
+    # 7. Strip trailing punctuation from the whole string: Unicode category P
+    #    plus whitespace, so an appended ellipsis or fullwidth stop cannot
+    #    re-open an unchanged item. Not category S: a trailing currency or
+    #    math symbol ("5€") is part of the claim, and erasing it would let an
+    #    altered claim keep its hash.
+    while s and (unicodedata.category(s[-1]).startswith("P") or s[-1].isspace()):
         s = s[:-1]
     # 8. Casefold.
     return s.casefold()
