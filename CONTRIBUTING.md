@@ -59,6 +59,17 @@ Then run the self-lint in `reference/ste-writing.md` over the diff.
 
 Then check: does the first line of each section state the rule?
 
+## A new API write needs a gate review
+
+**A PR that makes the skill call a new `gh api` endpoint or verb must name it in
+the PR body.** Consuming repos allow `gh api` broadly and gate only the destructive
+verbs and endpoints with hook patterns (prelint/prelint keeps them in
+`.agent/hooks/damage-control/patterns.yaml`, with a regression suite beside them).
+A new write no pattern covers runs silently there. Naming the write in the PR body
+is what triggers the reviewer to extend those patterns and their tests in the same
+change window. The same rule covers a new script in `scripts/`: say what it reads
+and writes.
+
 ## Reviewing a PR here
 
 **Every PR to this repo is reviewed by this skill.** No exceptions, including PRs that
