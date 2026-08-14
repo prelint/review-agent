@@ -260,22 +260,10 @@ has blocked every clean head:
 ```bash
 LEDGER_UNREADABLE=
 
-OPEN_CLAIMS=$(python3 -c 'import json,sys
-led = json.load(open(sys.argv[1]))
-closed_claim   = {"fixed", "rebutted", "deferred", "informational", "unresolvable"}
-closed_finding = {"fixed", "posted", "deferred", "rebutted", "dropped"}
-print(sum(1 for i in led["items"] for c in i["claims"] if c["status"] not in closed_claim)
-    + sum(1 for f in led.get("findings", []) if f.get("status") not in closed_finding))' "$LEDGER") \
+OPEN_CLAIMS=$(python3 ~/.claude/skills/review-agent/scripts/ledger-counts.py open "$LEDGER") \
   || LEDGER_UNREADABLE=1
 
-BLOCKERS=$(python3 -c 'import json,sys
-led = json.load(open(sys.argv[1]))
-print(sum(1 for i in led["items"] for c in i["claims"]
-          if c.get("severity") == "BLOCKER"
-          and c.get("status") not in {"fixed", "rebutted", "unresolvable"})
-    + sum(1 for f in led.get("findings", [])
-          if f.get("severity") == "BLOCKER"
-          and f.get("status") not in {"fixed", "rebutted"}))' "$LEDGER") \
+BLOCKERS=$(python3 ~/.claude/skills/review-agent/scripts/ledger-counts.py blockers "$LEDGER") \
   || LEDGER_UNREADABLE=1
 
 if [ -n "$LEDGER_UNREADABLE" ]; then
@@ -354,13 +342,13 @@ repository, and a required check that nothing reliably posts blocks every merge.
 Inline findings get inline replies **on their own thread**, never as a top-level
 comment:
 
-**Never interpolate a body into a shell command.** Build the JSON in `python3` and pipe
-it in. Replies quote code, so they carry backticks, and `-f body="$REPLY"` hands those to
-the shell: this file's own review posted three replies whose every quoted term had been
-deleted by command substitution, marker intact and sentences gutted.
+**Never interpolate a body into a shell command.** Build the JSON with the shipped
+script and pipe it in. Replies quote code, so they carry backticks, and `-f body="$REPLY"`
+hands those to the shell: this file's own review posted three replies whose every quoted
+term had been deleted by command substitution, marker intact and sentences gutted.
 
 ```bash
-python3 -c 'import json,sys; print(json.dumps({"body": sys.stdin.read()}))' < reply.md \
+python3 ~/.claude/skills/review-agent/scripts/json-body.py < reply.md \
   | gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" --input -
 ```
 
