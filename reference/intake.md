@@ -745,7 +745,7 @@ output and calibration.
 **Finding statuses.** `open`, `fixed` (a commit SHA), `posted` (it went in the summary
 and the author owns it), `deferred` (a reason and an issue link), `rebutted` (the
 evidence disproving our own claim), `dropped` (the summary never carried it — record
-which of `output.md`'s three causes kept it out). Not `informational` or `unresolvable`: a
+which of `output.md`'s four causes kept it out). Not `informational` or `unresolvable`: a
 finding of ours always asks for something, and it has no thread to fail to close.
 
 **`BLOCKERS` is derived, never stored.** Count two sets: findings whose `severity` is
