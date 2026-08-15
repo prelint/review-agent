@@ -154,19 +154,33 @@ blocks — so decide it in this section and let section 7 post exactly what is m
 `status`: every run that posted a finding would then count it open and red a clean head.
 
 `dropped` is the ending the author never reads, so it is the one that has to record why.
-Three causes, all legitimate:
+Four causes, all legitimate. `cap` and `budget` are separate values because they are
+separate mechanisms, and a reader that had to tell them apart by severity would get a
+budget-cut nit wrong:
 
-- **The cap.** Section 7's "plus N similar" line is the count; a `dropped` finding
-  missing from it has vanished.
-- **Silence.** The final checklist permits silence only when the remaining findings are
+- **`cap`, the five-finding cap.** Section 7's "plus N similar" line is the count. A
+  `dropped` finding missing from it has vanished.
+- **`budget`, the 2,000 visible characters.** Section 7 counts what it cut, in one of two
+  lines. A non-blocking finding is counted in "plus N similar". A blocker is counted in
+  the omitted-blocker line, which also names it where the budget allows.
+- **`silence`.** The final checklist permits silence only when the remaining findings are
   `NIT`/`FYI` and no ledger item needed a reply. Those low-severity findings are dropped,
   not forgotten.
-- **Dedupe.** `verification.md` finds a candidate — a reviewer item by `path` and line, a
+- **`dedupe`.** `verification.md` finds a candidate — a reviewer item by `path` and line, a
   finding from an earlier run by `site_key` — then verifies it is the same defect before
   suppression. Record the item or site key it merged into.
 
-A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
-that nothing blocking survived, and dedupe never suppresses a blocker.
+A `BLOCKER` is `dropped` for `budget` alone, and only when section 7's summary counts it.
+The five-finding cap is on non-blocking findings, silence requires that nothing blocking
+survived, and dedupe never suppresses a blocker.
+
+**A restored `dropped` blocker is an obligation, not a candidate.** Intake loads it from
+its marker at `dropped`. Do not wait for a lens to re-find it. Section 5's count already
+holds it against the head, so a run that neither posts nor closes it leaves the check red
+with nothing visible, which is the failure the omitted-blocker line exists to stop.
+Re-verify it at the current head. If it still holds, it posts this run, ahead of any
+blocker first found this run. If it does not, close it `rebutted` and quote the code that
+refutes it. The author may have fixed it since, and a blind re-post is a false blocker.
 
 ### Coverage evidence
 
@@ -572,11 +586,11 @@ Otherwise, one top-level comment. Hard caps:
   first trailer marker; HTML marker lines and the blank line before them are excluded.
   GitHub receives the visible body plus the trailer, so the raw comment may exceed 2,000
   while the part a human reads may not. **When the visible budget binds, cut in this
-  order:** the coverage line's detail — the not-dispatched reasons first, then the clean,
-  cleared and not-dispatched lens names — leaving its counts; then non-blocking findings,
-  down to the count line; then prose. Never delete the coverage counts, or the four
-  visible lines silence cannot suppress — an unreadable ledger, a dead lens,
-  `unresolvable` items, failed deliveries. Those are the summary's whole reason for
+  order:** the coverage line's detail (the not-dispatched reasons first, then the clean,
+  cleared and not-dispatched lens names) leaving its counts, then non-blocking findings
+  down to the count line, then prose. Blockers give last. Never delete the coverage
+  counts, the omitted-blocker count below, or the four visible lines silence cannot
+  suppress — an unreadable ledger, a dead lens, `unresolvable` items, failed deliveries. Those are the summary's whole reason for
   existing on a run that would otherwise be quiet. Excluding the trailer does not make the
   budget loose — the mandatory visible lines still spend it — so which line gives has to
   be written down rather than decided in the moment.
@@ -586,7 +600,32 @@ Otherwise, one top-level comment. Hard caps:
   only visible element whose cost grows with the number of lenses rather than with what
   the review found, so it is what a wide run should spend first. And cutting a finding to
   keep a lens name mislabels the ledger: that finding is recorded `dropped` with reason
-  `cap`, on a run where the 5-finding cap never bound.
+  `budget`, which says the visible limit cut it and the five-finding cap never bound.
+
+  **When blockers alone overflow the budget, count every one you cut.** First drop the fix
+  clause from each blocker, which leaves `Blocker: <file:line>. <problem>.` If the budget
+  still binds, keep the blockers that fit and add one line for the rest:
+
+  ```
+  Plus 3 blockers not listed: api/pay.py:88, api/pay.py:140, web/cart.ts:23.
+  ```
+
+  **That line is bounded, like the coverage line.** It degrades in one step: name the
+  locations that fit, then close with `and N more.` If even that does not fit, post the
+  count alone.
+
+  ```
+  Plus 12 blockers not listed.
+  ```
+
+  The count is never removed. Each blocker it counts is `dropped` with reason `budget`.
+  Its trailer marker still carries `BLOCKER` and its `site_key`, which is what the next
+  run re-posts it from. Without the line the reviewer gets a red check and no sign that a
+  blocker exists.
+
+  **Cut this run's new blockers before one the previous run already cut.** A cut blocker
+  comes back at `dropped` with a location and no description. Cutting it twice repeats a
+  run that told the reviewer nothing new.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
@@ -610,7 +649,9 @@ Otherwise, one top-level comment. Hard caps:
   only way a silently-unread trailer differs from a PR we never posted on — so a summary
   written without one halts the next run instead of being read.
 - **A status with a destination carries it.** `"status":"deferred","issue":42` and
-  `"status":"dropped","why":"cap"` — one of `cap`, `silence`, `dedupe`. `posted` and
+  `"status":"dropped","why":"budget"` — one of `cap`, `budget`, `silence`, `dedupe`. An
+  older marker reading `cap` where the visible limit did the cutting stays valid, and
+  section 5 owns which value a new one takes. `posted` and
   `rebutted` need nothing more: the reason is the visible text beside the marker. A
   status restored without its destination is a status nothing can act on — a deferral
   whose issue is unrecoverable reads as handled and points nowhere.
@@ -676,7 +717,8 @@ Reviewer items: N fixed, N rebutted, N deferred.
 ```
 
 Line one is the verdict. Not what you did, not what is coming, not how many agents
-ran. Findings ordered by severity, not by discovery order.
+ran. Findings ordered by severity, not by discovery order, so a cut takes the least
+severe first.
 
 ---
 
