@@ -165,8 +165,9 @@ Three causes, all legitimate:
   finding from an earlier run by `site_key` — then verifies it is the same defect before
   suppression. Record the item or site key it merged into.
 
-A `BLOCKER` is never `dropped`: the cap is on non-blocking findings, silence requires
-that nothing blocking survived, and dedupe never suppresses a blocker.
+A `BLOCKER` is `dropped` for one cause only: the character budget cut it, and section 7's
+summary names it. The five-finding cap is on non-blocking findings, silence requires that
+nothing blocking survived, and dedupe never suppresses a blocker.
 
 ### Coverage evidence
 
@@ -583,9 +584,10 @@ Otherwise, one top-level comment. Hard caps:
   first trailer marker; HTML marker lines and the blank line before them are excluded.
   GitHub receives the visible body plus the trailer, so the raw comment may exceed 2,000
   while the part a human reads may not. **When the visible budget binds, cut in this
-  order:** the coverage line's detail — the not-dispatched reasons first, then the clean,
-  cleared and not-dispatched lens names — leaving its counts; then non-blocking findings,
-  down to the count line; then prose. Never delete the coverage counts, or the four
+  order:** the coverage line's detail (the not-dispatched reasons first, then the clean,
+  cleared and not-dispatched lens names) leaving its counts, then non-blocking findings
+  down to the count line, then prose. Blockers give last. Never delete the coverage
+  counts, the omitted-blocker line below, or the four
   visible lines silence cannot suppress — an unreadable ledger, a dead lens,
   `unresolvable` items, failed deliveries. Those are the summary's whole reason for
   existing on a run that would otherwise be quiet. Excluding the trailer does not make the
@@ -598,6 +600,19 @@ Otherwise, one top-level comment. Hard caps:
   the review found, so it is what a wide run should spend first. And cutting a finding to
   keep a lens name mislabels the ledger: that finding is recorded `dropped` with reason
   `cap`, on a run where the 5-finding cap never bound.
+
+  **When blockers alone overflow the budget, name every one you cut.** First drop the fix
+  clause from each blocker, which leaves `Blocker: <file:line>. <problem>.` If the budget
+  still binds, keep the blockers that fit and add one line for the rest:
+
+  ```
+  Plus 3 blockers not listed: api/pay.py:88, api/pay.py:140, web/cart.ts:23.
+  ```
+
+  Never delete that line. Each blocker it names is `dropped` with reason `cap`. Its
+  trailer marker still carries `BLOCKER`, so section 5's count stays nonzero and the next
+  run recovers it. Without the line the reviewer gets a red check and no finding to act
+  on, which is worse than an oversized comment.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
@@ -687,7 +702,8 @@ Reviewer items: N fixed, N rebutted, N deferred.
 ```
 
 Line one is the verdict. Not what you did, not what is coming, not how many agents
-ran. Findings ordered by severity, not by discovery order.
+ran. Findings ordered by severity, not by discovery order, so a cut takes the least
+severe first.
 
 ---
 
