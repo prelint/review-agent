@@ -156,8 +156,10 @@ blocks — so decide it in this section and let section 7 post exactly what is m
 `dropped` is the ending the author never reads, so it is the one that has to record why.
 Three causes, all legitimate:
 
-- **The cap.** Section 7's "plus N similar" line is the count; a `dropped` finding
-  missing from it has vanished.
+- **The cap.** Section 7 counts what it left out, in one of two lines. A non-blocking
+  finding is counted in "plus N similar". A blocker is counted in the omitted-blocker
+  line, which also names it where the budget allows. A `dropped` finding missing from
+  both lines has vanished.
 - **Silence.** The final checklist permits silence only when the remaining findings are
   `NIT`/`FYI` and no ledger item needed a reply. Those low-severity findings are dropped,
   not forgotten.
@@ -166,7 +168,7 @@ Three causes, all legitimate:
   suppression. Record the item or site key it merged into.
 
 A `BLOCKER` is `dropped` for one cause only: the character budget cut it, and section 7's
-summary names it. The five-finding cap is on non-blocking findings, silence requires that
+summary counts it. The five-finding cap is on non-blocking findings, silence requires that
 nothing blocking survived, and dedupe never suppresses a blocker.
 
 ### Coverage evidence
@@ -587,9 +589,8 @@ Otherwise, one top-level comment. Hard caps:
   order:** the coverage line's detail (the not-dispatched reasons first, then the clean,
   cleared and not-dispatched lens names) leaving its counts, then non-blocking findings
   down to the count line, then prose. Blockers give last. Never delete the coverage
-  counts, the omitted-blocker line below, or the four
-  visible lines silence cannot suppress — an unreadable ledger, a dead lens,
-  `unresolvable` items, failed deliveries. Those are the summary's whole reason for
+  counts, the omitted-blocker count below, or the four visible lines silence cannot
+  suppress — an unreadable ledger, a dead lens, `unresolvable` items, failed deliveries. Those are the summary's whole reason for
   existing on a run that would otherwise be quiet. Excluding the trailer does not make the
   budget loose — the mandatory visible lines still spend it — so which line gives has to
   be written down rather than decided in the moment.
@@ -601,7 +602,7 @@ Otherwise, one top-level comment. Hard caps:
   keep a lens name mislabels the ledger: that finding is recorded `dropped` with reason
   `cap`, on a run where the 5-finding cap never bound.
 
-  **When blockers alone overflow the budget, name every one you cut.** First drop the fix
+  **When blockers alone overflow the budget, count every one you cut.** First drop the fix
   clause from each blocker, which leaves `Blocker: <file:line>. <problem>.` If the budget
   still binds, keep the blockers that fit and add one line for the rest:
 
@@ -609,10 +610,18 @@ Otherwise, one top-level comment. Hard caps:
   Plus 3 blockers not listed: api/pay.py:88, api/pay.py:140, web/cart.ts:23.
   ```
 
-  Never delete that line. Each blocker it names is `dropped` with reason `cap`. Its
-  trailer marker still carries `BLOCKER`, so section 5's count stays nonzero and the next
-  run recovers it. Without the line the reviewer gets a red check and no finding to act
-  on, which is worse than an oversized comment.
+  **That line is bounded, like the coverage line.** It degrades in one step: name the
+  locations that fit, then close with `and N more.` If even that does not fit, post the
+  count alone.
+
+  ```
+  Plus 12 blockers not listed.
+  ```
+
+  The count is never removed. Each blocker it counts is `dropped` with reason `cap`. Its
+  trailer marker still carries `BLOCKER` and its `site_key`. So section 5's count stays
+  nonzero and the next run recovers the locations. Without the line the reviewer gets a
+  red check and no sign that a blocker exists.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
 - Every finding carries a severity prefix and a `file:line`.
