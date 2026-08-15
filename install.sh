@@ -10,6 +10,7 @@ SETTINGS="${HOME}/.claude/settings.json"
 RULES=(
   'Read(~/.claude/skills/review-agent/**)'
   'Bash(~/.claude/skills/review-agent/self-update.sh)'
+  'Bash(python3 ~/.claude/skills/review-agent/scripts/*)'
 )
 
 for dep in git python3; do

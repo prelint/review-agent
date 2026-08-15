@@ -12,10 +12,15 @@ here runs through `gh --jq`, which is built in. Do not read files outside this
 directory and the repository under review.
 
 **Search with Grep and Glob, read with Read.** Shell out only for `git`, `gh`,
-`python3`, and the self-update step below. A reference file gives each `python3` use
-explicitly: the content hashing and the thread join in `reference/intake.md` are the
-only two. The previous version made 14,249 Bash calls against 2 Grep calls and paid
-for it in context and in quoting bugs.
+`python3`, and the self-update step below. Run `python3` only on the scripts this
+skill ships in `scripts/`, and invoke each one as
+`python3 ~/.claude/skills/review-agent/scripts/<name>.py` so the command matches the
+allow rule `install.sh` writes. Each script refuses a file path outside `$RUN_DIR`,
+including a `< file` redirect. Never run `python3 -c` for a job a shipped script
+covers: the reference files name one for each. A job no script covers may run
+inline. The inline call prompts, and the prompt means a script is missing, so file
+an issue on prelint/review-agent. The previous version made 14,249 Bash calls
+against 2 Grep calls and paid for it in context and in quoting bugs.
 
 **Every word you publish follows `reference/ste-writing.md`.** That covers commit
 messages, issue bodies, thread replies, and the summary. Read it the first time you

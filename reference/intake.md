@@ -78,8 +78,8 @@ PR.
 `--paginate` emits one JSON array per page, so `--jq '.[] | ...'` streams objects
 across every page and the output is JSONL. **Do not add `--slurp`** — `gh` rejects
 `--slurp` together with `--jq` outright (`the --slurp option is not supported with
---jq or --template`). If you need a single array, build it in `python3` from the
-JSONL; standalone `jq` is not a dependency here.
+--jq or --template`). If you need a single array, run `scripts/jsonl-to-json.py` on
+the JSONL; standalone `jq` is not a dependency here.
 
 ### Thread state, for resolving later
 
@@ -121,40 +121,26 @@ The two fetches above are separate datasets and nothing connects them. Without t
 join the ledger's `thread_id` is null, `resolveReviewThread` has no argument, and
 Stage 5 replies to everything and resolves nothing.
 
-The key is the thread's first comment:
+The key is the thread's first comment. A reply carries its parent's thread, so the
+script walks each comment's `in_reply_to` chain to the thread starter, then joins on
+the starter's `databaseId`:
 
-```python
-# Build both lookups first. thread.comments.nodes[0].databaseId is the REST id of
-# the comment that started the thread; nodes can be empty on a deleted comment.
-comment_by_id  = {c["id"]: c for c in inline_comments}
-root_to_thread = {
-    t["comments"]["nodes"][0]["databaseId"]: t["id"]
-    for t in threads
-    if t["comments"]["nodes"]
-}
-
-for c in inline_comments:
-    root, seen = c["id"], set()
-    while True:                                   # walk up to the thread starter
-        parent = (comment_by_id.get(root) or {}).get("in_reply_to")
-        if not parent or parent in seen:          # .get(): a parent may be missing
-            break                                 # `seen`: never loop on a cycle
-        seen.add(root)
-        root = parent
-    c["thread_id"] = root_to_thread.get(root)     # None means the join failed
+```bash
+python3 ~/.claude/skills/review-agent/scripts/join-threads.py \
+  "$FETCH_DIR/comments-inline.jsonl" "$FETCH_DIR/threads.jsonl" \
+  > "$FETCH_DIR/comments-joined.jsonl"
 ```
 
-Three things the loop has to survive, all seen on real PRs: a parent comment that is
+Three things the script survives, all seen on real PRs: a parent comment that is
 not in the fetched set (paginated out, or deleted), an empty `comments.nodes` on a
-thread whose first comment was deleted, and — defensively — a cycle. Any of them
-yields `thread_id = None` on an inline comment, which is the explicit unresolvable
+thread whose first comment was deleted, and (defensively) a cycle. Any of them
+yields a null `thread_id` on an inline comment, which is the explicit unresolvable
 below, never a crash.
 
-A reply carries its parent's thread, so resolve the chain to its root before looking
-up. **On an `inline` item**, a `thread_id` of `None` is a fetch or pagination failure —
+**On an `inline` item**, a null `thread_id` is a fetch or pagination failure.
 Stage 5 must treat that item as unresolvable and say so, never silently skip it.
 
-**On `top`, `review` and `description` items, `None` is the correct value.** They have no
+**On `top`, `review` and `description` items, null is the correct value.** They have no
 thread to join, so nothing failed and nothing is owed. Applied to every surface, the rule reads
 ten of the thirteen items on this repo's PR #10 as unresolvable — every review body and
 every top-level comment — and `output.md` makes `unresolvable` a status that overrides
@@ -162,18 +148,19 @@ silence, so a clean run carrying a single top-level comment would announce
 "10 item(s) fixed but not resolvable". The run that produced those numbers filed them
 `fixed` and `informational` instead, which was right and undocumented.
 
-**Verify the count.** Compare distinct thread IDs against the number of inline
-comments **whose `in_reply_to` is null** — only those start threads. Counting all
-inline comments makes the check fire on every thread that has a reply, including our
-own replies from a previous run. A genuine mismatch means pagination failed and Stage
-5 must not claim it resolved everything.
+**Verify the count.** The script compares joinable thread IDs against the number of
+inline comments **whose `in_reply_to` is null**, because only those start threads. A
+thread whose first comment was deleted cannot join, so it does not count. The script
+prints both counts to stderr and exits 3 on a mismatch. On exit 3, pagination may
+have failed: Stage 5 marks every inline item with a null `thread_id` unresolvable
+and must not claim it resolved everything.
 
 On a PR with no inline comments the check passes vacuously, which is correct.
 
 ### Reading these files back
 
 `--paginate` with `--jq` writes JSONL: one object per line, not a JSON array. Read it
-line by line in `python3` — `[json.loads(l) for l in open(path)]`. Standalone `jq` is
+back with `scripts/jsonl-to-json.py`, which emits one array. Standalone `jq` is
 not a dependency, and it would reject the concatenated objects anyway without `-s`.
 
 ---
@@ -197,16 +184,17 @@ below to catch silent edits.
 A timestamp says something changed. A hash says whether it mattered — but only if the
 hash is taken over the part that matters.
 
-Hash the body twice:
+Hash every body with the shipped script, which adds both fields to each JSONL object:
 
-```python
-body_hash      = sha256(body)                    # any byte changed
-substance_hash = sha256(normalise(body))         # the claim changed
+```bash
+python3 ~/.claude/skills/review-agent/scripts/hash-bodies.py "$FETCH_DIR/comments-top.jsonl"
 ```
 
-`normalise()` strips what a reviewer can edit without changing what they are asking
-for. Apply these steps **in this order** — the hash is a contract between runs, and two
-implementations that differ by a step re-open every item on the next pass:
+`body_hash` is sha256 over the raw body: any byte changed. `substance_hash` is sha256
+over `normalise(body)`: the claim changed. `normalise()` strips what a reviewer can
+edit without changing what they are asking for. It applies these steps **in this
+order**. The hash is a contract between runs, and the script is its one
+implementation. Change this list and the script in the same commit:
 
 1. Strip HTML comments, `<script>` and `<style>` blocks entirely.
 2. **Replace `<img …>` with its `alt` text**, not with nothing. Verdict badges live in
@@ -227,6 +215,11 @@ normalise differently; so do "must" and "must not".
 comparison below is worthless and every item re-opens. Where the previous ledger and a
 fresh hash disagree on an item nobody touched, the bug is here — say so rather than
 treating it as an edit.
+
+The exception is a change to the shipped script itself. The first run after one can
+move `substance_hash` on items nobody touched. A `fixed` claim takes the re-verify
+path below and closes with its same SHA. A `deferred` or `rebutted` claim re-opens
+and gets decided once more, and its prior reason stays in the thread record.
 
 Compare against the previous run's ledger, rebuilt below:
 
