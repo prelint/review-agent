@@ -7,12 +7,12 @@ Needs `git`, `gh`, `python3`. Nothing else.
 
 ## Install
 
-Install it for a team. The skill calls `gh` signed in as a user. A GitHub App token
-stops the run at Stage 0 ([why](#what-it-assumes-about-your-repo)).
+Install it per team. `gh` must be signed in as a user
+([why](#what-it-assumes-about-your-repo)).
 
 ### Claude Code
 
-Add this to the `.claude/settings.json` of a repository your team works in:
+Add this to a team repository's `.claude/settings.json`:
 
 ```json
 {
@@ -25,31 +25,13 @@ Add this to the `.claude/settings.json` of a repository your team works in:
 }
 ```
 
-It enables the plugin for everyone who works in that repository. After a member trusts
-the repository folder, they run `/plugin install review-agent@review-agent` once, then
-`/review-agent:review-agent`. A member who does not install it does not get it.
-
-Remove a clone install at `~/.claude/skills/review-agent` before you install the
-plugin. With both, `/review-agent` runs the clone and not the plugin.
-
-Claude Code does not update the plugin on its own. Turn on auto-update for
-`review-agent` in `/plugin`, or run `/plugin marketplace update review-agent`. The
-plugin has no `version`, so every commit on `main` is a new version.
-
-The skill allows its own scripts only for the turn that starts it. If you reply during
-a run, Claude Code asks before the next script call.
-
-Cloud sessions are untested. Their GitHub proxy serves only a fixed set of GraphQL
-queries, and Stages 1 and 5 read and resolve review threads through GraphQL.
-Organization plugin sync on claude.ai loads the plugin in Cowork and cloud sessions.
-Both are untested, and the skill cannot run in a claude.ai chat.
+Each member runs `/plugin install review-agent@review-agent`, then
+`/review-agent:review-agent`. Remove a clone install first.
 
 ### Cursor
 
-A team admin opens **Dashboard -> Plugins**, chooses **Import from Repo** under **Team
-Marketplaces**, and enters `https://github.com/prelint/review-agent`. The admin then
-sets who gets the plugin. With **Default Off**, each member chooses whether to install
-it from **Customize**. This needs a Teams or Enterprise plan.
+A team admin imports `https://github.com/prelint/review-agent` into the team's plugins
+in the Cursor dashboard.
 
 ### Self-updating clone
 
@@ -192,6 +174,8 @@ blocker: three lenses would have silently skipped themselves.
 Stage 4 has never run against an unfamiliar codebase — different test environment,
 different layout, a failing test it has to write. A clean result means the lenses found
 nothing, not that the pipeline is proven. Don't use it as a merge gate yet.
+
+Plugin installs are tested only in local Claude Code sessions.
 
 Not built: per-repo overrides, and calibration
 ([`reference/calibration.md`](reference/calibration.md) says plainly what is missing).
