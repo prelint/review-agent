@@ -7,6 +7,9 @@ Needs `git`, `gh`, `python3`. Nothing else.
 
 ## Install
 
+In a cloud session, `gh` must use a user token. A GitHub App token stops the run at
+Stage 0 ([why](#what-it-assumes-about-your-repo)).
+
 ### Claude Code
 
 ```
