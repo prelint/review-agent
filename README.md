@@ -7,13 +7,41 @@ Needs `git`, `gh`, `python3`. Nothing else.
 
 ## Install
 
+Install it per team. `gh` must be signed in as a user
+([why](#what-it-assumes-about-your-repo)).
+
+### Claude Code
+
+Add this to a team repository's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "review-agent": {
+      "source": { "source": "github", "repo": "prelint/review-agent" }
+    }
+  },
+  "enabledPlugins": { "review-agent@review-agent": true }
+}
+```
+
+Each member runs `/plugin install review-agent@review-agent`, then
+`/review-agent:review-agent`. Remove a clone install first.
+
+### Cursor
+
+A team admin imports `https://github.com/prelint/review-agent` into the team's plugins
+in the Cursor dashboard.
+
+### Self-updating clone
+
 ```
 curl -fsSL https://raw.githubusercontent.com/prelint/review-agent/refs/heads/main/install.sh | bash
 ```
 
-Clones into `~/.claude/skills/review-agent` and adds two rules to `permissions.allow`
+Clones into `~/.claude/skills/review-agent` and adds three rules to `permissions.allow`
 in `~/.claude/settings.json`. Claude Code then reads this skill's files and runs its
-update script without prompting.
+scripts without prompting.
 
 After that the skill keeps itself current. Each run starts with `self-update.sh`,
 which fast-forwards the clone from `main`, at most once every six hours. Offline it
@@ -24,6 +52,10 @@ An install from before self-update exists never gains it on its own: the pull is
 one path that could deliver the update step, and the old SKILL.md never pulls. Run
 `install.sh` once more on such an install. That adds the update path and the
 permission rule it needs.
+
+If self-update prints `update skipped: checkout has local edits` and you made no
+edits, the clone predates untracked bytecode. Every script run changed a tracked
+`.pyc` file. Run `install.sh` once more. It restores that file and pulls.
 
 It backs up `settings.json` before writing, keeps its file mode, and refuses to touch it
 if it is not valid JSON. If it is a symlink, the write follows it rather than replacing
@@ -142,6 +174,8 @@ blocker: three lenses would have silently skipped themselves.
 Stage 4 has never run against an unfamiliar codebase — different test environment,
 different layout, a failing test it has to write. A clean result means the lenses found
 nothing, not that the pipeline is proven. Don't use it as a merge gate yet.
+
+Plugin installs are tested only in local Claude Code sessions.
 
 Not built: per-repo overrides, and calibration
 ([`reference/calibration.md`](reference/calibration.md) says plainly what is missing).

@@ -9,8 +9,8 @@ If a rule has no evidence behind it, it does not belong in this repo.
 Requires `git`, `gh`, `python3`. Nothing else — no standalone `jq`, since every
 filter runs through `gh --jq`, which is built in.
 
-No gstack, no plugin marketplace, no `~/.claude/skills/...` reads, no `~/.gstack/`
-state, no telemetry, no gbrain. The previous skill loaded 165 KB on every
+No gstack, no other plugin or skill to load, no reads from other skills in
+`~/.claude/skills/`, no `~/.gstack/` state, no telemetry, no gbrain. The previous skill loaded 165 KB on every
 invocation, 46% of which was shared harness preamble that had nothing to do with
 reviewing. A review skill should be readable in one sitting by the person who has
 to debug it at 2am.
@@ -45,6 +45,20 @@ every commit on main to every install inside six hours, so the channel policy is
 part of the mechanism. Every change reaches main through a PR, and this skill
 reviews every PR before merge. Work that is not ready for every install stays on
 its branch.
+
+## Distribution
+
+Teams install it as a Claude Code plugin or a Cursor plugin. The self-updating clone
+stays. Both tools load the root `SKILL.md` as a single-skill plugin, so
+the layout does not change. The alternative was the Agent Plugins standard, which
+Cursor supports. Claude Code does not read its root `plugin.json`, and the standard
+needs `skills/review-agent/SKILL.md`. That move breaks every clone install, so each
+tool gets its own manifest.
+
+A plugin install is not a git checkout, so self-update skips it. The tool's plugin
+update replaces it instead. The manifests carry no `version`, so each
+commit on main is a new version, and the release-channel rule above covers plugin
+installs too.
 
 ## The five failures this replaces
 

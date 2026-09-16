@@ -274,10 +274,10 @@ has blocked every clean head:
 ```bash
 LEDGER_UNREADABLE=
 
-OPEN_CLAIMS=$(python3 ~/.claude/skills/review-agent/scripts/ledger-counts.py open "$LEDGER") \
+OPEN_CLAIMS=$(python3 $SKILL_DIR/scripts/ledger-counts.py open "$LEDGER") \
   || LEDGER_UNREADABLE=1
 
-BLOCKERS=$(python3 ~/.claude/skills/review-agent/scripts/ledger-counts.py blockers "$LEDGER") \
+BLOCKERS=$(python3 $SKILL_DIR/scripts/ledger-counts.py blockers "$LEDGER") \
   || LEDGER_UNREADABLE=1
 
 if [ -n "$LEDGER_UNREADABLE" ]; then
@@ -363,7 +363,7 @@ review posted three replies whose every quoted term had been deleted by command
 substitution, marker intact and sentences gutted.
 
 ```bash
-python3 ~/.claude/skills/review-agent/scripts/json-body.py "$RUN_DIR/reply.md" \
+python3 $SKILL_DIR/scripts/json-body.py "$RUN_DIR/reply.md" \
   | gh api "repos/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" --input -
 ```
 

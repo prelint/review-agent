@@ -1,0 +1,9 @@
+{
+  "name": "review-agent",
+  "description": "Review a pull request end to end, fix accepted findings one commit at a time, and prove every open comment is closed.",
+  "author": {
+    "name": "Prelint"
+  },
+  "repository": "https://github.com/prelint/review-agent",
+  "license": "MIT"
+}

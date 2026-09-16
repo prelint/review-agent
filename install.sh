@@ -9,8 +9,8 @@ SKILL_DIR="${HOME}/.claude/skills/review-agent"
 SETTINGS="${HOME}/.claude/settings.json"
 RULES=(
   'Read(~/.claude/skills/review-agent/**)'
-  'Bash(~/.claude/skills/review-agent/self-update.sh)'
-  'Bash(python3 ~/.claude/skills/review-agent/scripts/*)'
+  "Bash(${SKILL_DIR}/self-update.sh)"
+  "Bash(python3 ${SKILL_DIR}/scripts/*)"
 )
 
 for dep in git python3; do
@@ -40,6 +40,9 @@ if [ -d "${SKILL_DIR}/.git" ]; then
     exit 1
   fi
   echo "review-agent: updating ${SKILL_DIR}"
+  # Older clones track bytecode that every script run rewrites. Restore it so the pull
+  # can remove it.
+  git -C "${SKILL_DIR}" checkout HEAD -- scripts/__pycache__ 2>/dev/null || true
   git -C "${SKILL_DIR}" pull --ff-only origin "${BRANCH}"
 elif [ -e "${SKILL_DIR}" ]; then
   echo "review-agent: ${SKILL_DIR} exists and is not a git checkout." >&2
