@@ -29,7 +29,8 @@ The skill allows its own scripts only for the turn that starts it. If you reply 
 a run, Claude Code asks before the next script call.
 
 Cloud sessions do not load plugins from your user settings. To use the skill there, add
-this to the repository's `.claude/settings.json`:
+this to the repository's `.claude/settings.json`. It turns the plugin on for everyone
+who works in that repository:
 
 ```json
 {
