@@ -25,10 +25,12 @@ Add this to the `.claude/settings.json` of a repository your team works in:
 }
 ```
 
-It turns the plugin on for everyone who works in that repository. After a member trusts
+It enables the plugin for everyone who works in that repository. After a member trusts
 the repository folder, they run `/plugin install review-agent@review-agent` once, then
-`/review-agent:review-agent`. Use one install method: with the clone install too,
-`/review-agent` runs the clone and not the plugin.
+`/review-agent:review-agent`. A member who does not install it does not get it.
+
+Remove a clone install at `~/.claude/skills/review-agent` before you install the
+plugin. With both, `/review-agent` runs the clone and not the plugin.
 
 Claude Code does not update the plugin on its own. Turn on auto-update for
 `review-agent` in `/plugin`, or run `/plugin marketplace update review-agent`. The
@@ -46,8 +48,8 @@ Both are untested, and the skill cannot run in a claude.ai chat.
 
 A team admin opens **Dashboard -> Plugins**, chooses **Import from Repo** under **Team
 Marketplaces**, and enters `https://github.com/prelint/review-agent`. The admin then
-sets who gets the plugin, and members install it from **Customize**. This needs a
-Teams or Enterprise plan.
+sets who gets the plugin. With **Default Off**, each member chooses whether to install
+it from **Customize**. This needs a Teams or Enterprise plan.
 
 ### Self-updating clone
 
