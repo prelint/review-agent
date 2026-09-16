@@ -1,0 +1,12 @@
+{
+  "name": "review-agent",
+  "owner": {
+    "name": "Prelint"
+  },
+  "plugins": [
+    {
+      "name": "review-agent",
+      "source": "./"
+    }
+  ]
+}
