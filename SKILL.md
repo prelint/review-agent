@@ -17,9 +17,8 @@ directory and the repository under review.
 skill ships in `scripts/`, and invoke each one as
 `python3 ${CLAUDE_SKILL_DIR}/scripts/<name>.py`, with the directory written out, so
 the command matches the `allowed-tools` rule above. `${CLAUDE_SKILL_DIR}` is the
-directory that holds this file. The reference files call it `$SKILL_DIR`. Each script
-refuses a file path outside `$RUN_DIR`,
-including a `< file` redirect. Never run `python3 -c` for a job a shipped script
+directory that holds this file, and Stage 0 binds it as `$SKILL_DIR`. Each script
+refuses a file path outside `$RUN_DIR`, including a `< file` redirect. Never run `python3 -c` for a job a shipped script
 covers: the reference files name one for each. A job no script covers may run
 inline. The inline call prompts, and the prompt means a script is missing, so file
 an issue on prelint/review-agent. The previous version made 14,249 Bash calls
@@ -99,6 +98,7 @@ RUN_DIR="$(git rev-parse --absolute-git-dir)/review-agent"   # git never tracks 
                                                              # no repo needs a gitignore entry
 FETCH_DIR="$RUN_DIR/fetch-stage1"
 LEDGER="$RUN_DIR/pr-${PR}.json"
+SKILL_DIR="${CLAUDE_SKILL_DIR}"            # where scripts/ lives; plugin and clone differ
 mkdir -p "$FETCH_DIR"
 ```
 
