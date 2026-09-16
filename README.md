@@ -43,6 +43,11 @@ who works in that repository:
 }
 ```
 
+To give `gh` a user token there, connect GitHub with `/web-setup`, or set `GH_TOKEN` in
+the cloud environment settings. Anyone who uses that environment can read `GH_TOKEN`.
+Cloud sessions are untested. Their GitHub proxy serves only a fixed set of GraphQL
+queries, and Stages 1 and 5 read and resolve review threads through GraphQL.
+
 ### Cursor
 
 In **Customize**, choose **From GitHub Repository** and enter
