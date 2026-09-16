@@ -18,7 +18,8 @@ Stage 0 ([why](#what-it-assumes-about-your-repo)).
 ```
 
 Run `/review-agent:review-agent`. The Claude desktop app lists the plugin in its
-plugin browser after you add the marketplace.
+plugin browser after you add the marketplace. Use one install method: with the clone
+install too, `/review-agent` runs the clone and not the plugin.
 
 Claude Code does not update a third-party marketplace on its own. Turn on auto-update
 for `review-agent` in `/plugin`, or run `/plugin marketplace update review-agent`. The
