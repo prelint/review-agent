@@ -9,8 +9,8 @@ SKILL_DIR="${HOME}/.claude/skills/review-agent"
 SETTINGS="${HOME}/.claude/settings.json"
 RULES=(
   'Read(~/.claude/skills/review-agent/**)'
-  'Bash(~/.claude/skills/review-agent/self-update.sh)'
-  'Bash(python3 ~/.claude/skills/review-agent/scripts/*)'
+  "Bash(${SKILL_DIR}/self-update.sh)"
+  "Bash(python3 ${SKILL_DIR}/scripts/*)"
 )
 
 for dep in git python3; do

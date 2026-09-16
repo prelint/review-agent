@@ -126,7 +126,7 @@ script walks each comment's `in_reply_to` chain to the thread starter, then join
 the starter's `databaseId`:
 
 ```bash
-python3 ~/.claude/skills/review-agent/scripts/join-threads.py \
+python3 $SKILL_DIR/scripts/join-threads.py \
   "$FETCH_DIR/comments-inline.jsonl" "$FETCH_DIR/threads.jsonl" \
   > "$FETCH_DIR/comments-joined.jsonl"
 ```
@@ -187,7 +187,7 @@ hash is taken over the part that matters.
 Hash every body with the shipped script, which adds both fields to each JSONL object:
 
 ```bash
-python3 ~/.claude/skills/review-agent/scripts/hash-bodies.py "$FETCH_DIR/comments-top.jsonl"
+python3 $SKILL_DIR/scripts/hash-bodies.py "$FETCH_DIR/comments-top.jsonl"
 ```
 
 `body_hash` is sha256 over the raw body: any byte changed. `substance_hash` is sha256

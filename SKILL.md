@@ -1,6 +1,7 @@
 ---
 name: review-agent
 description: Review a pull request end to end — read every reviewer's feedback and the PR's own description, find real bugs across specialist lenses, verify each finding twice, fix what's accepted one commit at a time, then prove every open item is closed before posting. Use when reviewing a PR, responding to review comments from any bot or human, or driving a PR to merge-ready.
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*) Bash(${CLAUDE_SKILL_DIR}/self-update.sh)
 ---
 
 # Review agent
@@ -14,8 +15,10 @@ directory and the repository under review.
 **Search with Grep and Glob, read with Read.** Shell out only for `git`, `gh`,
 `python3`, and the self-update step below. Run `python3` only on the scripts this
 skill ships in `scripts/`, and invoke each one as
-`python3 ~/.claude/skills/review-agent/scripts/<name>.py` so the command matches the
-allow rule `install.sh` writes. Each script refuses a file path outside `$RUN_DIR`,
+`python3 ${CLAUDE_SKILL_DIR}/scripts/<name>.py`, with the directory written out, so
+the command matches the `allowed-tools` rule above. `${CLAUDE_SKILL_DIR}` is the
+directory that holds this file. The reference files call it `$SKILL_DIR`. Each script
+refuses a file path outside `$RUN_DIR`,
 including a `< file` redirect. Never run `python3 -c` for a job a shipped script
 covers: the reference files name one for each. A job no script covers may run
 inline. The inline call prompts, and the prompt means a script is missing, so file
@@ -32,7 +35,7 @@ exists.
 ## Before Stage 0: self-update
 
 ```bash
-~/.claude/skills/review-agent/self-update.sh
+${CLAUDE_SKILL_DIR}/self-update.sh
 ```
 
 The script fast-forwards the installed clone from `main`, at most once every six
