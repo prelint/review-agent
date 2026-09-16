@@ -39,6 +39,8 @@ a run, Claude Code asks before the next script call.
 
 Cloud sessions are untested. Their GitHub proxy serves only a fixed set of GraphQL
 queries, and Stages 1 and 5 read and resolve review threads through GraphQL.
+Organization plugin sync on claude.ai loads the plugin in Cowork and cloud sessions.
+Both are untested, and the skill cannot run in a claude.ai chat.
 
 ### Cursor
 
@@ -46,18 +48,6 @@ A team admin opens **Dashboard -> Plugins**, chooses **Import from Repo** under 
 Marketplaces**, and enters `https://github.com/prelint/review-agent`. The admin then
 sets who gets the plugin, and members install it from **Customize**. This needs a
 Teams or Enterprise plan.
-
-### Claude apps
-
-Organization sync on claude.ai reads only a private repository. Add this entry to the
-`plugins` list of your organization's private `marketplace.json`:
-
-```json
-{ "name": "review-agent", "source": { "source": "github", "repo": "prelint/review-agent" } }
-```
-
-Claude Code then loads it in cloud sessions for each member who has it enabled. The
-skill needs a checkout it can push to, so it does not run in a claude.ai chat.
 
 ### Self-updating clone
 
