@@ -82,6 +82,10 @@ one path that could deliver the update step, and the old SKILL.md never pulls. R
 `install.sh` once more on such an install. That adds the update path and the
 permission rule it needs.
 
+If self-update prints `update skipped: checkout has local edits` and you made no
+edits, the clone predates untracked bytecode. Every script run changed a tracked
+`.pyc` file. Run `install.sh` once more. It restores that file and pulls.
+
 It backs up `settings.json` before writing, keeps its file mode, and refuses to touch it
 if it is not valid JSON. If it is a symlink, the write follows it rather than replacing
 it, so a dotfiles repo stays intact.
