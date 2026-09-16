@@ -41,7 +41,7 @@ latency, but it runs in every project on every session, whether or not the skill
 runs. Pull-on-invoke matches the scope of one skill.
 
 Main is the release channel, and this repo treats it as stable. Self-update ships
-every commit on main to every install inside six hours, so the channel policy is
+every commit on main to every clone inside six hours, so the channel policy is
 part of the mechanism. Every change reaches main through a PR, and this skill
 reviews every PR before merge. Work that is not ready for every install stays on
 its branch.
@@ -57,8 +57,8 @@ tool gets its own manifest.
 
 A plugin install is not a git checkout, so self-update skips it. The tool's plugin
 update replaces it instead. The manifests carry no `version`, so each
-commit on main is a new version, and the release-channel rule above covers plugin
-installs too.
+commit on main is a new version. The host tool decides when a plugin install takes it,
+so the six-hour window above holds only for clones.
 
 ## The five failures this replaces
 
