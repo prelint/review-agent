@@ -7,30 +7,12 @@ Needs `git`, `gh`, `python3`. Nothing else.
 
 ## Install
 
-In a cloud session, `gh` must use a user token. A GitHub App token stops the run at
-Stage 0 ([why](#what-it-assumes-about-your-repo)).
+Install it for a team. The skill calls `gh` signed in as a user. A GitHub App token
+stops the run at Stage 0 ([why](#what-it-assumes-about-your-repo)).
 
 ### Claude Code
 
-```
-/plugin marketplace add prelint/review-agent
-/plugin install review-agent@review-agent
-```
-
-Run `/review-agent:review-agent`. The Claude desktop app lists the plugin in its
-plugin browser after you add the marketplace. Use one install method: with the clone
-install too, `/review-agent` runs the clone and not the plugin.
-
-Claude Code does not update a third-party marketplace on its own. Turn on auto-update
-for `review-agent` in `/plugin`, or run `/plugin marketplace update review-agent`. The
-plugin has no `version`, so every commit on `main` is a new version.
-
-The skill allows its own scripts only for the turn that starts it. If you reply during
-a run, Claude Code asks before the next script call.
-
-Cloud sessions do not load plugins from your user settings. To use the skill there, add
-this to the repository's `.claude/settings.json`. It turns the plugin on for everyone
-who works in that repository:
+Add this to the `.claude/settings.json` of a repository your team works in:
 
 ```json
 {
@@ -43,30 +25,39 @@ who works in that repository:
 }
 ```
 
-To give `gh` a user token there, connect GitHub with `/web-setup`, or set `GH_TOKEN` in
-the cloud environment settings. Anyone who uses that environment can read `GH_TOKEN`.
+It turns the plugin on for everyone who works in that repository. After a member trusts
+the repository folder, they run `/plugin install review-agent@review-agent` once, then
+`/review-agent:review-agent`. Use one install method: with the clone install too,
+`/review-agent` runs the clone and not the plugin.
+
+Claude Code does not update the plugin on its own. Turn on auto-update for
+`review-agent` in `/plugin`, or run `/plugin marketplace update review-agent`. The
+plugin has no `version`, so every commit on `main` is a new version.
+
+The skill allows its own scripts only for the turn that starts it. If you reply during
+a run, Claude Code asks before the next script call.
+
 Cloud sessions are untested. Their GitHub proxy serves only a fixed set of GraphQL
 queries, and Stages 1 and 5 read and resolve review threads through GraphQL.
 
 ### Cursor
 
-In **Customize**, choose **From GitHub Repository** and enter
-`https://github.com/prelint/review-agent`. Then install `review-agent`. On a Teams
-plan, an admin can import the same URL as a team marketplace in **Dashboard ->
-Plugins**.
+A team admin opens **Dashboard -> Plugins**, chooses **Import from Repo** under **Team
+Marketplaces**, and enters `https://github.com/prelint/review-agent`. The admin then
+sets who gets the plugin, and members install it from **Customize**. This needs a
+Teams or Enterprise plan.
 
 ### Claude apps
 
-Organization sync on claude.ai reads only a private marketplace repository, and this
-one is public. List the plugin in your organization's private marketplace:
+Organization sync on claude.ai reads only a private repository. Add this entry to the
+`plugins` list of your organization's private `marketplace.json`:
 
 ```json
 { "name": "review-agent", "source": { "source": "github", "repo": "prelint/review-agent" } }
 ```
 
 Claude Code then loads it in cloud sessions for each member who has it enabled. The
-skill needs `git`, `gh`, and a checkout it can push to. It does not run in a
-claude.ai chat.
+skill needs a checkout it can push to, so it does not run in a claude.ai chat.
 
 ### Self-updating clone
 

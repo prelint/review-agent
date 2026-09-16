@@ -48,15 +48,15 @@ its branch.
 
 ## Distribution
 
-One repository installs three ways: a Claude Code plugin, a Cursor plugin, and the
-self-updating clone. Both tools load the root `SKILL.md` as a single-skill plugin, so
+Teams install it as a Claude Code plugin or a Cursor plugin. The self-updating clone
+stays. Both tools load the root `SKILL.md` as a single-skill plugin, so
 the layout does not change. The alternative was the Agent Plugins standard, which
 Cursor supports. Claude Code does not read its root `plugin.json`, and the standard
 needs `skills/review-agent/SKILL.md`. That move breaks every clone install, so each
 tool gets its own manifest.
 
-A plugin install is not a git checkout, so self-update skips it. The tool's
-marketplace refresh updates it instead. The manifests carry no `version`, so each
+A plugin install is not a git checkout, so self-update skips it. The tool's plugin
+update replaces it instead. The manifests carry no `version`, so each
 commit on main is a new version, and the release-channel rule above covers plugin
 installs too.
 
