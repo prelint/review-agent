@@ -19,8 +19,8 @@ commit message this skill writes. Applies to this repository's own prose too:
 Does not apply to code, identifiers, command syntax, or quoted output. Does not
 apply to text you quote from a reviewer. Quote it as written.
 
-Applies to text you write or edit from now on. Do not sweep existing files to
-convert them. A file converts when you next have a reason to touch it.
+Applies to text you write or edit from now on. Do not convert existing files in
+bulk. A file converts when you next have a reason to touch it.
 
 ## Two modes
 
