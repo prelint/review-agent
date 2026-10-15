@@ -72,8 +72,8 @@ and split anything over 25 words.
 
 - No semicolons. Write two sentences.
 - No em dashes. The standard permits them. We ban them, decided 2026-08-04,
-  because the em dash is the strongest slop tell in our own text. Use a period, a
-  comma, or parentheses.
+  because the em dash is the strongest slop tell in our own text. Use a period,
+  a comma, or parentheses.
 
 **Structure**
 
@@ -100,4 +100,3 @@ Run this before you commit prose, post a comment, or return text.
 6. Same thing named two ways? Pick one name.
 7. Any label expanded into a sentence only to add an article? Make it a label
    again.
-
