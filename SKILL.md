@@ -25,7 +25,7 @@ an issue on prelint/review-agent. The previous version made 14,249 Bash calls
 against 2 Grep calls and paid for it in context and in quoting bugs.
 
 **Every word you publish follows `reference/ste-writing.md`.** That covers commit
-messages, issue bodies, thread replies, the summary, and the `--check` report. Read it
+messages, issue bodies, thread replies, the summary, and the `--read-only` report. Read it
 the first time you write one, not at Stage 5. Stage 4 commits and files issues before
 the summary exists.
 
@@ -45,9 +45,9 @@ script is missing, continue. A stale skill still reviews.
 
 ---
 
-## Read-only mode: `--check`
+## Read-only mode: `--read-only`
 
-**With `--check`, the run reviews the PR, prints a report, and changes nothing.** It
+**With `--read-only`, the run reviews the PR, prints a report, and changes nothing.** It
 makes no commit, push, comment, reply, thread resolve, commit status, or issue. It
 writes only its fetch files in `$RUN_DIR`.
 
@@ -75,9 +75,9 @@ gives the run a read-only token.
 
 ## Stage 0: Bind the run
 
-**Write `CHECK` and `PR_ARG` into the block from the arguments of the run.** A Bash call
-has no positional arguments, so the shell cannot read them. If an argument starts with
-`-` and is not `--check`, stop and name it. A wrong flag must not start a full run.
+**Write `READ_ONLY` into the block from the arguments of the run.** If an argument
+starts with `-` and is not `--read-only`, stop and name it. A wrong flag must not start
+a full run.
 
 ```bash
 if ! gh auth status -h github.com >/dev/null 2>&1; then
@@ -85,11 +85,10 @@ if ! gh auth status -h github.com >/dev/null 2>&1; then
   exit 1
 fi
 
-CHECK=no                                   # write yes when the caller passed --check
-PR_ARG=                                    # write the PR number when the caller passed one
+READ_ONLY=no                               # yes when the caller passed --read-only
 
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-PR=${PR_ARG:-$(gh pr view --json number --jq .number)}
+PR=${1:-$(gh pr view --json number --jq .number)}
 if [ -z "$PR" ]; then
   echo "review-agent: no pull request was supplied or found for this checkout" >&2
   exit 1
@@ -127,13 +126,13 @@ if [ -n "$(git status --porcelain -uno)" ]; then
   exit 1
 fi
 
-if [ "$CHECK" = no ]; then                 # a --check run posts nothing and needs no SELF
-  SELF=$(gh api user --jq .login)          # who we post as; Stage 1 reads our own
-fi                                         # prior comments to rebuild the last ledger
 RUN_DIR="$(git rev-parse --absolute-git-dir)/review-agent"   # git never tracks .git, so
                                                              # no repo needs a gitignore entry
-if [ "$CHECK" = yes ]; then
-  RUN_DIR="$RUN_DIR/check"                 # its own directory, so no full run reads its files
+if [ "$READ_ONLY" = yes ]; then            # the mode posts nothing and needs no SELF
+  RUN_DIR="$RUN_DIR/read-only"             # own directory: no full run reads its files
+else
+  SELF=$(gh api user --jq .login)          # who we post as. Stage 1 reads our own
+                                           # prior comments to rebuild the last ledger
 fi
 FETCH_DIR="$RUN_DIR/fetch-stage1"
 LEDGER="$RUN_DIR/pr-${PR}.json"
@@ -191,7 +190,7 @@ or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — an
 substitution leaves the empty string with nothing to catch it. Both duplicate-review
 guards compare against `SELF`, so an empty one makes them match nothing, and the fleet
 posts a fresh full review on an unchanged head every hour with no signal anywhere.
-A `--check` run binds no `SELF` and skips this check.
+A `--read-only` run binds no `SELF` and skips this check.
 
 If the PR is closed or merged, stop. Say so and stop.
 
@@ -212,7 +211,7 @@ The short version, because getting it wrong is how the last one failed:
 - Content-hash each surface so a no-op edit does not re-trigger and a real one does.
 - **Rebuild the previous ledger** from the markers on our own prior comments before
   classifying. Do not skip them — they are the only record that survives a run.
-  A `--check` run has no previous ledger to rebuild.
+  A `--read-only` run has no previous ledger to rebuild.
 
 Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, in the
 schema `reference/intake.md` defines. That file owns the field list; a second copy here
@@ -220,7 +219,7 @@ would drift from it. **Status lives on a claim, never on the item** —
 one comment carrying fourteen numbered points is fourteen claims with fourteen statuses,
 and an item closes when every one of them does. Everything downstream is measured
 against this file.
-A `--check` run holds the ledger in the session and writes no ledger file.
+A `--read-only` run holds the ledger in the session and writes no ledger file.
 
 The ledger's second array, `findings`, is ours. Stage 1 writes it empty, Stage 3 fills
 it, Stage 4 and Stage 5 close it. Our findings get a status for the same reason
@@ -230,7 +229,7 @@ Stage 2 fills it.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
-A `--check` run never stops here.
+A `--read-only` run never stops here.
 
 ### Trust
 
@@ -392,7 +391,8 @@ entry each at `status: "open"`, carrying its fingerprint, site key, categories,
 supporting specialists, severity, raw score, and gate reason. A finding that is not in
 the ledger is one nothing can hold you to.
 
-**A `--check` run ends here.** Read `reference/report.md`, print the report, and stop.
+**A `--read-only` run ends here.** Read `reference/report.md`, print the report, and
+stop.
 
 ---
 

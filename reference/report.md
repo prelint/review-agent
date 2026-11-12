@@ -1,6 +1,6 @@
-# The `--check` report
+# The `--read-only` report
 
-A `--check` run prints this report after Stage 3 and stops.
+A `--read-only` run prints this report after Stage 3 and stops.
 
 This file also owns the finding line and the lens lines. The summary of a full run uses
 both, and `output.md` points to the first two sections. A full run reads no further.
@@ -37,7 +37,7 @@ that has no lens to name.
   they do not, join their reasons.
 - **`No answer from:`** names each dead lens. Its part of the review is missing.
 
-## The report: a `--check` run only
+## The report: a `--read-only` run only
 
 ```
 <finding lines>
@@ -66,5 +66,5 @@ VERDICT: <N> findings
   The word stays `findings` for every count. Print nothing after this line.
 - **A clean review** prints the lens lines that apply, then `VERDICT: 0 findings`.
 - **Two summary lines are not in the report**: the first-line verdict and
-  `Reviewer items:`. The `VERDICT:` line replaces the first, and a `--check` run fixes
-  no reviewer item.
+  `Reviewer items:`. The `VERDICT:` line replaces the first, and a `--read-only` run
+  fixes no reviewer item.

@@ -608,26 +608,11 @@ under "not a finding" so it stops competing for them.
 
 ## Read-only mode
 
-`--check` runs Stage 0 to Stage 3, prints a report, and stops ([#63]). Two uses need
-the findings and cannot write. The first is a CI job with a read-only token. The second
-is a PR on a branch that the caller cannot push to.
+The `--read-only` flag starts the mode. It is for a CI job with a read-only token that
+belongs to no GitHub user: a GitHub App token or a GitHub Actions token. It also
+serves a PR that the caller cannot push to.
 
-Two rules of a full run blocked both uses. Stage 0 asks `gh api user` for `SELF`, and
-that call fails for a GitHub App token and for a GitHub Actions token. Stage 1 refuses
-to run when a `SELF` top-level comment carries no sentinel. So a person who wrote
-"Ready for review" on the PR could not run the skill with the same account.
-
-The mode removes both rules. `SELF` has one purpose: to find the comments that earlier
-runs posted. A run that posts no comment has none to find. So the mode binds no `SELF`,
-loads no previous run, and skips each rule that needs either.
-
-**Two alternatives lost.** The first was a stop text in the caller prompt: start a full
-run and tell the model to stop after Stage 3. Stage 0 and Stage 1 run before that text
-applies, so both rules still end the run. Each caller would also choose its own output
-format. The second was a `SELF` override, where the caller names the account. It
-removes the first rule only. A comment from that account with no marker still ends the
-run, and the run still reaches Stage 4 with a token that cannot write. A wrong name
-also fails with no signal, because the guards then match nothing.
+The mode runs Stage 0 to Stage 3, prints a report, and stops.
 
 The mode runs without four mechanisms of a full run:
 
@@ -639,7 +624,7 @@ The mode runs without four mechanisms of a full run:
 | The summary caps | kept a PR comment short | nothing: the report goes to the caller, not to the PR page |
 
 **The report format has its own file.** `reference/output.md` tells the model how to
-push and post, so a `--check` run must not read it. `reference/report.md` holds the
+push and post, so a `--read-only` run does not read it. `reference/report.md` holds the
 format, and it owns the finding line and the lens lines for both modes.
 
 **No lens, no verdict.** If no lens reviewed the diff, the run prints the reason and no
@@ -659,20 +644,13 @@ the run reads an earlier summary of this skill as an ordinary comment. The alter
 was the tier of the author. It lost because an owner who ran a full run with their own
 token would make that summary `directive`.
 
-**A `--check` run writes no ledger file.** It holds the ledger in the session, because
-no later stage reads the file. Claude Code also refuses a Write inside `.git` in a
-non-interactive run. The fetch files go to `.git/review-agent/check/`, so they do not
-replace the Stage 1 fetch of a full run.
+**A `--read-only` run writes no ledger file.** It holds the ledger in the session,
+because no later stage reads the file. Claude Code also refuses a Write inside `.git`
+in a non-interactive run. The fetch files go to `.git/review-agent/read-only/`, so they
+do not replace the Stage 1 fetch of a full run.
 
-**The mode is text that the model follows, not a mechanism that stops it.** That is the
-footing of the directive ceiling above. A caller that needs a guarantee gives the run a
-read-only token.
-
-`--check` follows `ruff format` and `cargo fmt`. Both write by default, and both use
-`--check` for "report, change nothing". One caution: GitHub also uses the word "check"
-for a commit status.
-
-[#63]: https://github.com/prelint/review-agent/issues/63
+**The mode is instructions that the model follows, and nothing enforces it.** A caller
+that needs a guarantee gives the run a read-only token.
 
 ## Known limits
 

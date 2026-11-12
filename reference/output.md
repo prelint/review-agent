@@ -713,7 +713,7 @@ Reviewer items: N fixed, N rebutted, N deferred.
 ```
 
 `report.md` owns the finding line and the lens lines. Read its two sections with those
-names and stop there. Its last section is for a `--check` run only.
+names and stop there. Its last section is for a `--read-only` run only.
 
 Line one is the verdict. Not what you did, not what is coming, not how many agents
 ran. Findings ordered by severity, not by discovery order, so a cut takes the least

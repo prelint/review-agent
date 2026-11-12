@@ -1,7 +1,7 @@
 # review-agent
 
 Reviews a pull request, fixes what it finds, and proves it closed every open comment
-before it posts. With `--check`, it prints what it found and changes nothing.
+before it posts. With `--read-only`, it prints what it found and changes nothing.
 
 Needs `git`, `gh`, `python3`. Nothing else.
 
@@ -89,9 +89,9 @@ Stage detail: [`SKILL.md`](SKILL.md), then [`reference/`](reference/).
 
 ## Read-only mode
 
-`/review-agent <PR> --check` reviews the PR, prints a report, and changes nothing: no
-commit, push, comment, reply, thread resolve, commit status, or issue. On a plugin
-install, the command is `/review-agent:review-agent <PR> --check`.
+`/review-agent <PR> --read-only` reviews the PR, prints a report, and changes nothing:
+no commit, push, comment, reply, thread resolve, commit status, or issue. On a plugin
+install, the command is `/review-agent:review-agent <PR> --read-only`.
 
 Use it where a full run cannot write:
 
@@ -189,8 +189,8 @@ each fix commit. That is why the git workflow below matters at all.
   which 403s for an App — and `SELF` is how a run finds its own last comment.
 - **One run at a time per PR.** Concurrent runs on the same PR are best effort.
 
-A `--check` run pushes nothing and binds no `SELF`. The push point and the user-token
-point do not apply to it.
+A `--read-only` run pushes nothing and binds no `SELF`. The push point and the
+user-token point do not apply to it.
 
 ## Status
 
