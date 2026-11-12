@@ -606,6 +606,74 @@ citation is half a finding.
 focused grep per named risk, never a general crawl. `red-team` lists the four shapes
 under "not a finding" so it stops competing for them.
 
+## Read-only mode
+
+`--check` runs Stage 0 to Stage 3, prints a report, and stops ([#63]). Two uses need
+the findings and cannot write. The first is a CI job with a read-only token. The second
+is a PR on a branch that the caller cannot push to.
+
+Two rules of a full run blocked both uses. Stage 0 asks `gh api user` for `SELF`, and
+that call fails for a GitHub App token and for a GitHub Actions token. Stage 1 refuses
+to run when a `SELF` top-level comment carries no sentinel. So a person who wrote
+"Ready for review" on the PR could not run the skill with the same account.
+
+The mode removes both rules. `SELF` has one purpose: to find the comments that earlier
+runs posted. A run that posts no comment has none to find. So the mode binds no `SELF`,
+loads no previous run, and skips each rule that needs either.
+
+**Two alternatives lost.** The first was a stop text in the caller prompt: start a full
+run and tell the model to stop after Stage 3. Stage 0 and Stage 1 run before that text
+applies, so both rules still end the run. Each caller would also choose its own output
+format. The second was a `SELF` override, where the caller names the account. It
+removes the first rule only. A comment from that account with no marker still ends the
+run, and the run still reaches Stage 4 with a token that cannot write. A wrong name
+also fails with no signal, because the guards then match nothing.
+
+The mode runs without four mechanisms of a full run:
+
+| Not in the mode | What it did | What does its job now |
+|---|---|---|
+| The previous-run load | carried each decision to the next run | nothing: each run is a full review |
+| The stop for a prior review at the same head | stopped a second review of an unchanged head | nothing: the caller decides when to run |
+| Dedupe against a reviewer claim | dropped our copy and answered the reviewer in Stage 4 | the finding stays, with `Also raised by <URL>` |
+| The summary caps | kept a PR comment short | nothing: the report goes to the caller, not to the PR page |
+
+**The report format has its own file.** `reference/output.md` tells the model how to
+push and post, so a `--check` run must not read it. `reference/report.md` holds the
+format, and it owns the finding line and the lens lines for both modes.
+
+**No lens, no verdict.** If no lens reviewed the diff, the run prints the reason and no
+`VERDICT:` line. A dead lens does not block a full run. Here `VERDICT: 0 findings` would
+read as a clean review.
+
+**The report carries a `Note:` line.** Two rules ask for a note in the final output or
+in the summary: an attack in third-party text, and a scorer that looks dead. The
+alternative was an earlier message. It lost because a CI job reads only the last
+message.
+
+**`Filtered:` names a lens whose findings all died.** That lens is not `clean`, so no
+other line names it.
+
+**A comment with a `review-agent:` marker is `claim` tier in the mode.** With no `SELF`,
+the run reads an earlier summary of this skill as an ordinary comment. The alternative
+was the tier of the author. It lost because an owner who ran a full run with their own
+token would make that summary `directive`.
+
+**A `--check` run writes no ledger file.** It holds the ledger in the session, because
+no later stage reads the file. Claude Code also refuses a Write inside `.git` in a
+non-interactive run. The fetch files go to `.git/review-agent/check/`, so they do not
+replace the Stage 1 fetch of a full run.
+
+**The mode is text that the model follows, not a mechanism that stops it.** That is the
+footing of the directive ceiling above. A caller that needs a guarantee gives the run a
+read-only token.
+
+`--check` follows `ruff format` and `cargo fmt`. Both write by default, and both use
+`--check` for "report, change nothing". One caution: GitHub also uses the word "check"
+for a commit status.
+
+[#63]: https://github.com/prelint/review-agent/issues/63
+
 ## Known limits
 
 **Cost scales with lens count, not diff size.** Every lens is dispatched on every
