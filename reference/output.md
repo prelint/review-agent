@@ -645,9 +645,10 @@ Otherwise, one top-level comment. Hard caps:
 - Every posted summary carries one sentinel marker even when no state markers remain:
   `<!-- review-agent: {"summary":true} -->`. It identifies our carrier comment without
   pretending to restore an item or finding. **It is not optional.** `intake.md` refuses to
-  run on a `SELF` top-level comment whose trailer yields no sentinel, because that is the
-  only way a silently-unread trailer differs from a PR we never posted on — so a summary
-  written without one halts the next run instead of being read.
+  run when a `SELF` top-level comment holds a JSON marker and `prior.sentinel` is false.
+  So a summary that carries state markers and no sentinel stops the next run. A summary
+  with no marker at all is worse: the next run reads it as a reviewer's item and answers
+  it.
 - **A status with a destination carries it.** `"status":"deferred","issue":42` and
   `"status":"dropped","why":"budget"` — one of `cap`, `budget`, `silence`, `dedupe`. An
   older marker reading `cap` where the visible limit did the cutting stays valid, and
