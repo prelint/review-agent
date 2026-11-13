@@ -1,7 +1,8 @@
 # review-agent
 
 Reviews a pull request, fixes what it finds, and proves it closed every open comment
-before it posts. With `--read-only`, it prints what it found and changes nothing.
+before it posts. With `--read-only`, it prints what it found and changes nothing. That
+mode is an instruction, not a hard block ([Read-only mode](#read-only-mode)).
 
 Needs `git`, `gh`, `python3`. Nothing else.
 
