@@ -495,7 +495,8 @@ For each item, before any trust decision:
 1. **Is it addressed to us?** A comment that passes all three marker rules above is the
    previous run's record, parsed there; it is not an item and does not enter the ledger.
    Everything else is an item, including a comment from `SELF` carrying no marker we
-   would read. Skip resolved threads whose hash has not changed.
+   would read. Such a `SELF` comment gets its tier from the two fields in "Trust tiers",
+   as any other comment does. Skip resolved threads whose hash has not changed.
 2. **Is it outdated?** Two sources, and they disagree: `position == null` on the REST
    comment, and `isOutdated` on the GraphQL thread. Take the union — outdated if
    **either** says so. Trusting `position` alone marks a comment live whose thread
