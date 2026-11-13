@@ -166,12 +166,26 @@ the same conclusion `SKILL.md` reaches about its stacked-commit gate. The gap pr
 this change — it is recorded here because dropping row one left nothing else to contradict
 a forged trailer.
 
+**The sentinel refusal now needs a JSON marker, as `reference/intake.md` defines it**
+([#66]). The refusal in row three stopped a run on every `SELF` top-level comment when no
+sentinel parsed, a plain "Ready for review" included. The same text stopped a run on a
+top-level comment that holds only legacy markers, and this repo has ten of those. No run
+reproduced either stop. The alternative was a test on the bare text `review-agent:`. It
+lost because people here write about markers: two comments on PR #65 hold that text and no
+marker.
+
+**Nothing now catches a summary that lost every marker.** The old refusal stopped the run
+on it. The next run reads it as a comment of its author and makes it an item, at the tier
+of that author. Verification still decides each claim of that item on evidence. A test on
+the shape of the summary lost, because a person can write a `Coverage:` line too.
+
 [#11]: https://github.com/prelint/review-agent/issues/11
 [#13]: https://github.com/prelint/review-agent/issues/13
 [#14]: https://github.com/prelint/review-agent/issues/14
 [#18]: https://github.com/prelint/review-agent/issues/18
 [#23]: https://github.com/prelint/review-agent/issues/23
 [#26]: https://github.com/prelint/review-agent/issues/26
+[#66]: https://github.com/prelint/review-agent/issues/66
 
 ## Reading the changing review body
 
