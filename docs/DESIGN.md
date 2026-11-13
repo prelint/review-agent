@@ -614,6 +614,17 @@ serves a PR that the caller cannot push to.
 
 The mode runs Stage 0 to Stage 3, prints a report, and stops.
 
+**Two alternatives lost.** The first was a stop text in the caller prompt: start a full
+run and tell the model to stop after Stage 3. Stage 0 and Stage 1 run before that text
+applies. Stage 0 still asks `gh api user` for `SELF`, and that call fails for a token
+with no user. Stage 1 still refuses to run when a `SELF` top-level comment carries no
+sentinel. Each caller would also choose its own output format.
+
+The second was a `SELF` override, where the caller names the account. It removes the
+`gh api user` call only. A comment from that account with no marker still ends the
+run, and the run still reaches Stage 4 with a token that cannot write. A wrong name
+also fails with no signal, because the guards then match nothing.
+
 The mode runs without four mechanisms of a full run:
 
 | Not in the mode | What it did | What does its job now |
