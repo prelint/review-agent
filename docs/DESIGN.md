@@ -137,7 +137,7 @@ characters on them before a single visible character.
 |---|---|---|
 | The marker on a `fixed` finding | carried the ending across runs so the finding was not re-found | the `Finding: <specialist>/<fingerprint>` commit trailer, read by key and compared whole |
 | The marker on an all-informational threadless item | carried the classification across runs | nothing — the item is reclassified from scratch, which costs one verification pass and cannot lose a fix, rebuttal or deferral, since none of those is informational |
-| "Zero findings carried while one of our summary comments exists" as a refusal | caught a summary whose markers we failed to read | `prior.sentinel`, whose absence on a `SELF` top-level comment is itself a refusal |
+| "Zero findings carried while one of our summary comments exists" as a refusal | caught a summary whose markers we failed to read | `prior.sentinel`, whose absence is itself a refusal when a `SELF` top-level comment holds a JSON marker |
 | "Never the markers" in the cut order | kept the visible budget from eating durable state | nothing needs it — the visible cap no longer measures the trailer, so the cut order never reaches it |
 
 **The substring hazard is closed, and it took two passes.** Row one made the commit
