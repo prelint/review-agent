@@ -175,6 +175,13 @@ and no anchor at all.
   **A `BLOCKER` is not suppressed this way either**, for a sharper version of the reason
   above: the trailer is a commit message, and on a PR the author writes those.
 
+**A `--read-only` run suppresses nothing here.** It has no fix stage to answer a
+reviewer in, and it reads no earlier run.
+
+- First arm: match as written, then keep the finding at `open`. Add the `url` of the
+  reviewer comment to the `raised_by` list of the finding.
+- Second and third arms: skip both. Do not read posted findings or `Finding:` trailers.
+
 Every suppression is a real ending. Record it as `dropped`, with the ledger item or
 `site_key` it merged into. A suppressed finding with no status sits `open` forever and
 reds a clean head.
@@ -195,6 +202,7 @@ anchors upward on that exactly as it would on a previous score, and the raw numb
 being independent of the thing it is supposed to be checked against — which is the whole
 reason this filter still runs on a corroborated finding at all. Pass the defect, the
 evidence and the fix; withhold who found it and how many.
+In a `--read-only` run, withhold `raised_by` too.
 
 ### Rubric — pass this text unchanged
 

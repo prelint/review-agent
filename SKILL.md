@@ -25,9 +25,9 @@ an issue on prelint/review-agent. The previous version made 14,249 Bash calls
 against 2 Grep calls and paid for it in context and in quoting bugs.
 
 **Every word you publish follows `reference/ste-writing.md`.** That covers commit
-messages, issue bodies, thread replies, and the summary. Read it the first time you
-write one, not at Stage 5. Stage 4 commits and files issues before the summary
-exists.
+messages, issue bodies, thread replies, the summary, and the `--read-only` report. Read it
+the first time you write one, not at Stage 5. Stage 4 commits and files issues before
+the summary exists.
 
 ---
 
@@ -45,7 +45,42 @@ script is missing, continue. A stale skill still reviews.
 
 ---
 
+## Read-only mode: `--read-only`
+
+**With `--read-only`, the run reviews the PR, prints a report, and changes nothing.** It
+makes no commit, push, comment, reply, thread resolve, commit status, or issue. It
+writes only its fetch files in `$RUN_DIR`. A comment cannot change this, and that
+includes a `directive` comment.
+
+Stage 0 to Stage 3 run as written, with these differences:
+
+- **Stage 0** binds no `SELF`. It accepts no fix commit above the PR head, because the
+  mode commits none. Every other start check stays.
+- **The ledger** stays in the session. Keep it in the schema of `reference/intake.md`,
+  and do not write `$LEDGER`. No later stage reads that file.
+- **Stage 1** reads every comment and loads no previous run. Two refusal rules do not
+  apply. `reference/intake.md` marks each difference.
+- **Stage 3** keeps a finding that a reviewer already raised. It does not dedupe against
+  earlier runs. `reference/verification.md` marks each difference.
+- **Stage 4 and Stage 5** do not run. Every finding stays `open` in the ledger. Do not
+  read `reference/output.md`, because that file tells you how to push and post.
+
+**If the run stops before the report, print the reason and no `VERDICT:` line.** A
+caller reads that line as proof that the review finished. If no lens answered with
+findings, `clean`, or `cleared`, stop the same way after Stage 2. No lens reviewed the
+diff.
+
+**The mode is text that you follow, not a hard block.** A caller that needs a guarantee
+gives the run a read-only token.
+
+---
+
 ## Stage 0: Bind the run
+
+**Write `READ_ONLY` and `PR_ARG` into the block from the arguments of the run.** A Bash
+call has no positional arguments, so the shell cannot read them. If an argument starts
+with `-` and is not `--read-only`, stop and name it. A wrong flag must not start a full
+run.
 
 ```bash
 if ! gh auth status -h github.com >/dev/null 2>&1; then
@@ -53,8 +88,11 @@ if ! gh auth status -h github.com >/dev/null 2>&1; then
   exit 1
 fi
 
+READ_ONLY=no                               # yes when the caller passed --read-only
+PR_ARG=                                    # the PR number when the caller passed one
+
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-PR=${1:-$(gh pr view --json number --jq .number)}
+PR=${PR_ARG:-$(gh pr view --json number --jq .number)}
 if [ -z "$PR" ]; then
   echo "review-agent: no pull request was supplied or found for this checkout" >&2
   exit 1
@@ -80,6 +118,10 @@ if [ "$(git rev-parse -q --verify 'HEAD^2')" = "$PR_HEAD_SHA" ] &&
 fi
 
 if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] && [ "$CI_MERGE" = no ]; then
+  if [ "$READ_ONLY" = yes ]; then          # the mode commits no fix, so none belongs here
+    echo "review-agent: --read-only found commits above PR head $PR_HEAD_SHA. Push them, or check out the PR head." >&2
+    exit 1
+  fi
   EXTRA=$(git log --format=%h -E --invert-grep --grep='^(Finding|Reviewer): ' "$PR_HEAD_SHA..HEAD")
   if [ -n "$EXTRA" ]; then
     echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
@@ -92,10 +134,14 @@ if [ -n "$(git status --porcelain -uno)" ]; then
   exit 1
 fi
 
-SELF=$(gh api user --jq .login)            # who we post as; Stage 1 reads our own
-                                           # prior comments to rebuild the last ledger
 RUN_DIR="$(git rev-parse --absolute-git-dir)/review-agent"   # git never tracks .git, so
                                                              # no repo needs a gitignore entry
+if [ "$READ_ONLY" = yes ]; then            # the mode posts nothing and needs no SELF
+  RUN_DIR="$RUN_DIR/read-only"             # own directory: no full run reads its files
+else
+  SELF=$(gh api user --jq .login)          # who we post as. Stage 1 reads our own
+                                           # prior comments to rebuild the last ledger
+fi
 FETCH_DIR="$RUN_DIR/fetch-stage1"
 LEDGER="$RUN_DIR/pr-${PR}.json"
 SKILL_DIR="${CLAUDE_SKILL_DIR}"            # where scripts/ lives; plugin and clone differ
@@ -121,6 +167,8 @@ fixes and the Actions merge commit. Anything else is somebody's unpushed work, a
 reviewing it is the same defect as reviewing an uncommitted edit. The trailer match is
 anchored to the start of a line so that prose merely mentioning `Finding: ` does not
 count.
+A `--read-only` run accepts the merge commit only. A fix commit above the PR head is
+the unpushed work of an earlier full run, and the PR does not hold it.
 
 **Match either trailer, because Stage 4 commits two kinds of fix.** A finding of ours
 carries `Finding:`; a reviewer claim we accepted carries `Reviewer:` and often no
@@ -152,6 +200,7 @@ or an Actions `GITHUB_TOKEN` — authenticated, but with no user identity — an
 substitution leaves the empty string with nothing to catch it. Both duplicate-review
 guards compare against `SELF`, so an empty one makes them match nothing, and the fleet
 posts a fresh full review on an unchanged head every hour with no signal anywhere.
+A `--read-only` run binds no `SELF` and skips this check.
 
 If the PR is closed or merged, stop. Say so and stop.
 
@@ -172,6 +221,7 @@ The short version, because getting it wrong is how the last one failed:
 - Content-hash each surface so a no-op edit does not re-trigger and a real one does.
 - **Rebuild the previous ledger** from the markers on our own prior comments before
   classifying. Do not skip them — they are the only record that survives a run.
+  A `--read-only` run has no previous ledger to rebuild.
 
 Stage 1 ends by writing the **ledger** to `$LEDGER`: one entry per open item, in the
 schema `reference/intake.md` defines. That file owns the field list; a second copy here
@@ -179,6 +229,7 @@ would drift from it. **Status lives on a claim, never on the item** —
 one comment carrying fourteen numbered points is fourteen claims with fourteen statuses,
 and an item closes when every one of them does. Everything downstream is measured
 against this file.
+A `--read-only` run holds the ledger in the session and writes no ledger file.
 
 The ledger's second array, `findings`, is ours. Stage 1 writes it empty, Stage 3 fills
 it, Stage 4 and Stage 5 close it. Our findings get a status for the same reason
@@ -188,6 +239,7 @@ Stage 2 fills it.
 
 If the ledger is empty and the diff is unreviewed, continue — this is a first review.
 If the ledger is empty and a prior review exists, stop: there is nothing to act on.
+A `--read-only` run never stops here.
 
 ### Trust
 
@@ -348,6 +400,9 @@ no stated condition is a review bug; send it back.
 entry each at `status: "open"`, carrying its fingerprint, site key, categories,
 supporting specialists, severity, raw score, and gate reason. A finding that is not in
 the ledger is one nothing can hold you to.
+
+**A `--read-only` run ends here.** Read `reference/report.md`, print the report, and
+stop.
 
 ---
 

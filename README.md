@@ -1,7 +1,8 @@
 # review-agent
 
 Reviews a pull request, fixes what it finds, and proves it closed every open comment
-before it posts.
+before it posts. With `--read-only`, it prints what it found and changes nothing. That
+mode is an instruction, not a hard block ([Read-only mode](#read-only-mode)).
 
 Needs `git`, `gh`, `python3`. Nothing else.
 
@@ -87,6 +88,40 @@ Restart Claude Code, then `/review-agent`.
 
 Stage detail: [`SKILL.md`](SKILL.md), then [`reference/`](reference/).
 
+## Read-only mode
+
+`/review-agent <PR> --read-only` reviews the PR, prints a report, and changes nothing:
+no commit, push, comment, reply, thread resolve, commit status, or issue. On a plugin
+install, the command is `/review-agent:review-agent <PR> --read-only`.
+
+The mode is an instruction that the model follows, not a hard block. If you need a
+guarantee, give the run a read-only token.
+
+Use it where a full run cannot write:
+
+- **A CI job.** A read-only token is enough. The token can belong to no user, because
+  the run never asks GitHub for its account name.
+- **A PR you cannot push to.** A fork PR needs no *Allow edits by maintainers*.
+
+The run needs a checkout of the PR branch and `gh` with read access to the repo. The
+checkout needs the history back to the base branch. In GitHub Actions, set
+`fetch-depth: 0` on `actions/checkout`.
+
+The flag needs a copy of the skill that has the mode. An older copy does not know the
+flag, and it starts a full run. Before the first `--read-only` run, update the copy:
+run `install.sh` again, or update the plugin.
+
+The run reads every comment and answers none. It does not remember earlier runs, so each run
+is a full review.
+
+The report lists every finding that passed the filters, then what each lens covered. A
+finished review ends with `VERDICT: <N> findings`. A run that stops early prints the
+reason and no `VERDICT:` line, so "no findings" and "no review" never look the same.
+[`reference/report.md`](reference/report.md) has the format.
+
+The report has no size limit. If the caller posts the report to the PR page, the caller
+sets the limit.
+
 ## Why it exists
 
 Two weeks of logs: 2,600 sessions, 454 reviews, 53 PRs. Five things kept going wrong.
@@ -161,6 +196,9 @@ each fix commit. That is why the git workflow below matters at all.
 - **It authenticates as a user, not a GitHub App.** `SELF` comes from `gh api user`,
   which 403s for an App — and `SELF` is how a run finds its own last comment.
 - **One run at a time per PR.** Concurrent runs on the same PR are best effort.
+
+A `--read-only` run pushes nothing and binds no `SELF`. The push point and the
+user-token point do not apply to it.
 
 ## Status
 

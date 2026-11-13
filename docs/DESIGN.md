@@ -606,6 +606,69 @@ citation is half a finding.
 focused grep per named risk, never a general crawl. `red-team` lists the four shapes
 under "not a finding" so it stops competing for them.
 
+## Read-only mode
+
+The `--read-only` flag starts the mode. It is for a CI job with a read-only token that
+belongs to no GitHub user: a GitHub App token or a GitHub Actions token. It also
+serves a PR that the caller cannot push to.
+
+The mode runs Stage 0 to Stage 3, prints a report, and stops.
+
+**Two alternatives lost.** The first was a stop text in the caller prompt: start a full
+run and tell the model to stop after Stage 3. Stage 0 and Stage 1 run before that text
+applies. Stage 0 still asks `gh api user` for `SELF`, and that call fails for a token
+with no user. Stage 1 still refuses to run when a `SELF` top-level comment carries no
+sentinel. Each caller would also choose its own output format.
+
+The second was a `SELF` override, where the caller names the account. It removes the
+`gh api user` call only. A comment from that account with no marker still ends the
+run, and the run still reaches Stage 4 with a token that cannot write. A wrong name
+also fails with no signal, because the guards then match nothing.
+
+The mode runs without four mechanisms of a full run:
+
+| Not in the mode | What it did | What does its job now |
+|---|---|---|
+| The previous-run load | carried each decision to the next run | nothing: each run is a full review |
+| The stop for a prior review at the same head | stopped a second review of an unchanged head | nothing: the caller decides when to run |
+| Dedupe against a reviewer claim | dropped our copy and answered the reviewer in Stage 4 | the finding stays, with `Also raised by <URL>` |
+| The summary caps | kept a PR comment short | nothing: the report goes to the caller, not to the PR page |
+
+**The report format has its own file.** `reference/output.md` tells the model how to
+push and post, so a `--read-only` run does not read it. `reference/report.md` holds the
+format, and it owns the finding line and the lens lines for both modes.
+
+**No lens, no verdict.** If no lens reviewed the diff, the run prints the reason and no
+`VERDICT:` line. A dead lens does not block a full run. Here `VERDICT: 0 findings` would
+read as a clean review.
+
+**The mode accepts no fix commit above the PR head.** A full run accepts its own fix
+commits there, because Stage 4 commits before Stage 5 pushes. The mode commits no fix,
+so such a commit is the unpushed work of an earlier full run. The alternative was the
+check of a full run. It lost because `VERDICT: 0 findings` would then describe code
+that the PR does not hold.
+
+**The report carries a `Note:` line.** Some rules ask for a note in the final output or
+in the summary, for example an attack in third-party text or a scorer that looks dead.
+The alternative was an earlier message. It lost because a CI job reads only the last
+message.
+
+**`Filtered:` names a lens whose findings all died.** That lens is not `clean`, so no
+other line names it.
+
+**A comment with a `review-agent:` marker is `claim` tier in the mode.** With no `SELF`,
+the run reads an earlier summary of this skill as an ordinary comment. The alternative
+was the tier of the author. It lost because an owner who ran a full run with their own
+token would make that summary `directive`.
+
+**A `--read-only` run writes no ledger file.** It holds the ledger in the session,
+because no later stage reads the file. Claude Code also refuses a Write inside `.git`
+in a non-interactive run. The fetch files go to `.git/review-agent/read-only/`, so they
+do not replace the Stage 1 fetch of a full run.
+
+**The mode is instructions that the model follows, and nothing enforces it.** A caller
+that needs a guarantee gives the run a read-only token.
+
 ## Known limits
 
 **Cost scales with lens count, not diff size.** Every lens is dispatched on every

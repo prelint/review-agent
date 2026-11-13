@@ -193,12 +193,8 @@ objects into findings or give them finding statuses.
 When a summary is posted for any reason, include **one** compact coverage line. It carries
 all three answers — clean, cleared and not-dispatched — because they answer one question
 between them, and the not-dispatched reasons this file requires in a posted summary have
-nowhere else to go:
-
-```
-Coverage: clean (money, security, tenancy). Cleared: red-team (7 checks).
-Not dispatched: data-migration, tenancy (no migration or per-tenant query in the diff).
-```
+nowhere else to go. `report.md` owns its form: the `Coverage:` and `Not dispatched:`
+lines under "The lens lines".
 
 This line does not break silence by itself. A clean review may still post nothing; its
 full coverage remains in the session output.
@@ -545,7 +541,8 @@ Ledger unreadable: nothing in this run was reconciled. Re-run before trusting it
 **A dead lens.** Stage 2 requires naming a lens that did not answer, and silence would
 delete exactly that. A run reporting a clean review while an always-on lens died reports
 coverage it does not have — and at fleet cadence nobody is watching the session output,
-so the summary is the only place it can land. One line, and it does not block:
+so the summary is the only place it can land. One line, and it does not block. It is
+the `No answer from:` line that `report.md` owns, plus one sentence:
 
 ```
 No answer from: coherence. That lens's coverage is missing from this review.
@@ -628,7 +625,7 @@ Otherwise, one top-level comment. Hard caps:
   run that told the reviewer nothing new.
 - **5 non-blocking findings** maximum. Beyond that: "plus N similar, not listed." Each
   one you leave out is `dropped` in the ledger, and N is that count.
-- Every finding carries a severity prefix and a `file:line`.
+- Every finding uses the finding line that `report.md` owns.
 - Every non-fixed finding carries an invisible marker so it can be found again later:
   `<!-- review-agent: {"fingerprint":"<f>","site_key":"<path:anchor>","specialist":"money","category":"money","categories":["correctness","money"],"corroborated_by":["correctness","money"],"score":68,"gate_reason":"corroboration","severity":"REQUIRED","status":"posted"} -->`.
   `severity` and `status` are not optional — section 5's counters read exactly those two
@@ -709,12 +706,14 @@ the summary itself out of the reviewer ledger.
 ```
 <verdict in one line: what is blocking, or that nothing is>
 
-Blocker: <file:line>. <problem>. <fix>.
-Required: <file:line>. <problem>. <fix>.
+<finding lines>
 
-Coverage: clean (money, security, tenancy). Cleared: red-team (7 checks).
+<lens lines>
 Reviewer items: N fixed, N rebutted, N deferred.
 ```
+
+`report.md` owns the finding line and the lens lines. Read its two sections with those
+names and stop there. Its last section is for a `--read-only` run only.
 
 Line one is the verdict. Not what you did, not what is coming, not how many agents
 ran. Findings ordered by severity, not by discovery order, so a cut takes the least
