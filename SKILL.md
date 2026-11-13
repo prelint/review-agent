@@ -77,9 +77,10 @@ gives the run a read-only token.
 
 ## Stage 0: Bind the run
 
-**Write `READ_ONLY` into the block from the arguments of the run.** If an argument
-starts with `-` and is not `--read-only`, stop and name it. A wrong flag must not start
-a full run.
+**Write `READ_ONLY` and `PR_ARG` into the block from the arguments of the run.** A Bash
+call has no positional arguments, so the shell cannot read them. If an argument starts
+with `-` and is not `--read-only`, stop and name it. A wrong flag must not start a full
+run.
 
 ```bash
 if ! gh auth status -h github.com >/dev/null 2>&1; then
@@ -88,9 +89,10 @@ if ! gh auth status -h github.com >/dev/null 2>&1; then
 fi
 
 READ_ONLY=no                               # yes when the caller passed --read-only
+PR_ARG=                                    # the PR number when the caller passed one
 
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-PR=${1:-$(gh pr view --json number --jq .number)}
+PR=${PR_ARG:-$(gh pr view --json number --jq .number)}
 if [ -z "$PR" ]; then
   echo "review-agent: no pull request was supplied or found for this checkout" >&2
   exit 1
