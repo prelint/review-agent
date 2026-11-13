@@ -103,6 +103,10 @@ The run needs a checkout of the PR branch and `gh` with read access to the repo.
 checkout needs the history back to the base branch. In GitHub Actions, set
 `fetch-depth: 0` on `actions/checkout`.
 
+The flag needs a copy of the skill that has the mode. An older copy does not know the
+flag, and it starts a full run. Before the first `--read-only` run, update the copy:
+run `install.sh` again, or update the plugin.
+
 The run reads every comment and answers none. It does not remember earlier runs, so each run
 is a full review.
 
