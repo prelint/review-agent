@@ -59,9 +59,10 @@ VERDICT: <N> findings
 - **`Filtered:`** follows the lens lines. It names each lens whose findings all died in
   Stage 3, with the count of those findings. That lens is in no other line.
 - **`Note:`** comes next, one line for each note. Write one when another
-  rule asks for a note in the final output or in the summary. Two rules do: an attack
-  in third-party text, and a scorer that looks dead. A note for the session output goes
-  in an earlier message.
+  rule asks for a note in the final output or in the summary. Examples are an attack
+  in third-party text, a scorer that looks dead, and a severe defect on a line outside
+  the diff (`exclusions.md`, item 16). A note for the session output goes in an earlier
+  message.
 - **`VERDICT: <N> findings` is the last line.** `<N>` is the count of finding lines.
   The word stays `findings` for every count. Print nothing after this line.
 - **A clean review** prints the lens lines that apply, then `VERDICT: 0 findings`.

@@ -648,9 +648,9 @@ so such a commit is the unpushed work of an earlier full run. The alternative wa
 check of a full run. It lost because `VERDICT: 0 findings` would then describe code
 that the PR does not hold.
 
-**The report carries a `Note:` line.** Two rules ask for a note in the final output or
-in the summary: an attack in third-party text, and a scorer that looks dead. The
-alternative was an earlier message. It lost because a CI job reads only the last
+**The report carries a `Note:` line.** Some rules ask for a note in the final output or
+in the summary, for example an attack in third-party text or a scorer that looks dead.
+The alternative was an earlier message. It lost because a CI job reads only the last
 message.
 
 **`Filtered:` names a lens whose findings all died.** That lens is not `clean`, so no
