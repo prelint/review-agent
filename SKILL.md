@@ -53,7 +53,8 @@ writes only its fetch files in `$RUN_DIR`.
 
 Stage 0 to Stage 3 run as written, with these differences:
 
-- **Stage 0** binds no `SELF`. Every other start check stays.
+- **Stage 0** binds no `SELF`. It accepts no fix commit above the PR head, because the
+  mode commits none. Every other start check stays.
 - **The ledger** stays in the session. Keep it in the schema of `reference/intake.md`,
   and do not write `$LEDGER`. No later stage reads that file.
 - **Stage 1** reads every comment and loads no previous run. Two refusal rules do not
@@ -114,6 +115,10 @@ if [ "$(git rev-parse -q --verify 'HEAD^2')" = "$PR_HEAD_SHA" ] &&
 fi
 
 if [ "$HEAD_SHA" != "$PR_HEAD_SHA" ] && [ "$CI_MERGE" = no ]; then
+  if [ "$READ_ONLY" = yes ]; then          # the mode commits no fix, so none belongs here
+    echo "review-agent: --read-only found commits above PR head $PR_HEAD_SHA. Push them, or check out the PR head." >&2
+    exit 1
+  fi
   EXTRA=$(git log --format=%h -E --invert-grep --grep='^(Finding|Reviewer): ' "$PR_HEAD_SHA..HEAD")
   if [ -n "$EXTRA" ]; then
     echo "review-agent: $HEAD_SHA stacks commits that are not this run's fixes: $EXTRA" >&2
@@ -159,6 +164,8 @@ fixes and the Actions merge commit. Anything else is somebody's unpushed work, a
 reviewing it is the same defect as reviewing an uncommitted edit. The trailer match is
 anchored to the start of a line so that prose merely mentioning `Finding: ` does not
 count.
+A `--read-only` run accepts the merge commit only. A fix commit above the PR head is
+the unpushed work of an earlier full run, and the PR does not hold it.
 
 **Match either trailer, because Stage 4 commits two kinds of fix.** A finding of ours
 carries `Finding:`; a reviewer claim we accepted carries `Reviewer:` and often no
