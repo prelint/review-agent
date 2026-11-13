@@ -119,6 +119,9 @@ finished review ends with `VERDICT: <N> findings`. A run that stops early prints
 reason and no `VERDICT:` line, so "no findings" and "no review" never look the same.
 [`reference/report.md`](reference/report.md) has the format.
 
+The report has no size limit. If the caller posts the report to the PR page, the caller
+sets the limit.
+
 ## Why it exists
 
 Two weeks of logs: 2,600 sessions, 454 reviews, 53 PRs. Five things kept going wrong.
