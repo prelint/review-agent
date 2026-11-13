@@ -93,6 +93,9 @@ Stage detail: [`SKILL.md`](SKILL.md), then [`reference/`](reference/).
 no commit, push, comment, reply, thread resolve, commit status, or issue. On a plugin
 install, the command is `/review-agent:review-agent <PR> --read-only`.
 
+The mode is an instruction that the model follows, not a hard block. If you need a
+guarantee, give the run a read-only token.
+
 Use it where a full run cannot write:
 
 - **A CI job.** A read-only token is enough. The token can belong to no user, because
@@ -114,9 +117,6 @@ The report lists every finding that passed the filters, then what each lens cove
 finished review ends with `VERDICT: <N> findings`. A run that stops early prints the
 reason and no `VERDICT:` line, so "no findings" and "no review" never look the same.
 [`reference/report.md`](reference/report.md) has the format.
-
-The mode is an instruction that the model follows, not a hard block. If you need a
-guarantee, give the run a read-only token.
 
 ## Why it exists
 
