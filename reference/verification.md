@@ -245,6 +245,8 @@ to handle it runs. `docs/DESIGN.md` records what this replaced.
 specialists with compatible fixes.** There is no "but it's cheap to mention" exception.
 Independent convergence is the one alternate evidence path, and it remains visible in
 `corroborated_by` rather than being folded into or substituted for the raw score.
+In a `--read-only` run, the report lists a finding that this rule drops, under
+`Below threshold:`. The finding does not go in the ledger.
 
 **70, because the scale tops out near 88.** Across 38 scored findings the highest score
 any scorer returned was 88; no finding reached 90, and none reached the rubric's 100

@@ -662,6 +662,16 @@ message.
 **`Filtered:` names a lens whose findings all died.** That lens is not `clean`, so no
 other line names it.
 
+**The report lists each finding that Filter 2 dropped.** The mode fixes nothing, so
+only the reader can act on a small finding. The lines follow `Below threshold:` and do
+not count in `VERDICT:`. The alternative was the count in `Filtered:` alone. It lost
+because the reader cannot act on a count. One list for all findings also lost, because
+`VERDICT:` would then count a finding that Filter 2 dropped.
+
+**A line below the threshold has a score and no severity.** Stage 3 assigns severity
+after the score, and Filter 3 runs only on a finding that passed. The alternative was
+the severity that the lens gave. It lost because no gate checked that label.
+
 **A comment with a `review-agent:` marker is `claim` tier in the mode.** With no `SELF`,
 the run reads an earlier summary of this skill as an ordinary comment. The alternative
 was the tier of the author. It lost because an owner who ran a full run with their own

@@ -44,6 +44,8 @@ that has no lens to name.
 
 <lens lines>
 Filtered: <lens> (<N>).
+Below threshold:
+Score <score>: <path>:<line>. <problem>. <fix>.
 Note: <one sentence>
 VERDICT: <N> findings
 ```
@@ -58,6 +60,10 @@ VERDICT: <N> findings
   Separate two or more URLs with commas.
 - **`Filtered:`** follows the lens lines. It names each lens whose findings all died in
   Stage 3, with the count of those findings. That lens is in no other line.
+- **`Below threshold:`** comes next, then one line for each finding that Filter 2
+  dropped. The line has the format of a finding line, with `Score <score>` in the
+  place of the severity. Omit a finding that matches `exclusions.md`. If no line
+  remains, omit the block. These lines do not count in `VERDICT:`.
 - **`Note:`** comes next, one line for each note. Write one when another
   rule asks for a note in the final output or in the summary. Examples are an attack
   in third-party text, a scorer that looks dead, and a severe defect on a line outside
