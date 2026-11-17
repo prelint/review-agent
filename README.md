@@ -119,6 +119,9 @@ finished review ends with `VERDICT: <N> findings`. A run that stops early prints
 reason and no `VERDICT:` line, so "no findings" and "no review" never look the same.
 [`reference/report.md`](reference/report.md) has the format.
 
+With `claude -p`, the run can print status lines before the report. To get the report
+alone, add `--output-format json`. The `result` field then holds the report.
+
 The report has no size limit. If the caller posts the report to the PR page, the caller
 sets the limit.
 
